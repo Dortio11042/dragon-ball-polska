@@ -42,7 +42,7 @@
 .rarity-common{color:#ddd}.rarity-rare{color:#65e884}.rarity-epic{color:#6eb6ff}.rarity-legendary{color:#d18cff}.rarity-mythic{color:#ffad21}
 </style>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.6 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.6 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="authButton" style="margin-top:8px;background:#7b2020;border-color:#b43b3b;color:#fff" onclick="resetAccounts()">🗑️ RESETUJ KONTA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -134,6 +134,13 @@ const enemies=[
 ,{world:"masters",x:2050,y:420,name:"Wielki Mistrz",level:52,maxHp:9500,hp:9500,alive:true,respawn:0,boss:true,bossKey:"masters",rewardZeni:60000,rewardExp:8500}
 ];
 function setAuthMode(m){authMode=m;$("loginTab").classList.toggle("active",m==="login");$("registerTab").classList.toggle("active",m==="register");$("authButton").textContent=m==="login"?"ZALOGUJ SIĘ":"STWÓRZ KONTO";$("authMessage").textContent=""}
+function resetAccounts(){
+ if(!confirm("Na pewno usunąć wszystkie konta Dragon Ball Polska zapisane w tej przeglądarce?"))return;
+ const keys=[];
+ for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("dbp_account_"))keys.push(k)}
+ keys.forEach(k=>localStorage.removeItem(k));
+ $("usernameInput").value="";$("passwordInput").value="";$("authMessage").textContent="✅ Usunięto zapisane konta. Możesz stworzyć nowe konto.";
+}
 function submitAuth(){let u=$("usernameInput").value.trim(),p=$("passwordInput").value,m=$("authMessage");if(u.length<3){m.textContent="❌ Nick musi mieć minimum 3 znaki.";return}if(p.length<6){m.textContent="❌ Hasło musi mieć minimum 6 znaków.";return}let k="dbp_account_"+u.toLowerCase();if(authMode==="register"){if(localStorage.getItem(k)){m.textContent="❌ Takie konto już istnieje.";return}localStorage.setItem(k,JSON.stringify({username:u,password:p,level:1,exp:0,zeni:0,potions:0,dragonBalls:0,hp:100,x:1050,y:800,world:"valley",questKills:0,questClaimed:false,lastDaily:0,dailyStreak:0}));m.textContent="✓ Konto utworzone! Możesz się zalogować.";setAuthMode("login");return}let s=localStorage.getItem(k);if(!s){m.textContent="❌ Nie znaleziono konta.";return}let a=JSON.parse(s);if(a.password!==p){m.textContent="❌ Nieprawidłowe hasło.";return}currentUser=a;startGame()}
 function normalize(){Object.assign(currentUser,{exp:currentUser.exp??0,zeni:currentUser.zeni??0,potions:currentUser.potions??0,dragonBalls:currentUser.dragonBalls??0,questKills:currentUser.questKills??0,questClaimed:currentUser.questClaimed??false,lastDaily:currentUser.lastDaily??0,dailyStreak:currentUser.dailyStreak??0,world:currentUser.world??"valley"})}
 
