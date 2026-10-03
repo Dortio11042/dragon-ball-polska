@@ -49,7 +49,7 @@
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
 <div id="questPanel" class="panel" style="display:none"><div class="title">📜 QUEST</div><div>Pokonaj 5 Bandytów</div><div id="questProgress">0/5</div><div>500 Zeni + 100 EXP</div><button id="questClaim" class="action orange" onclick="claimQuest()">ODBIERZ</button></div>
 <div id="dailyPanel" class="panel" style="display:none"><div class="title">🎁 DZIENNA NAGRODA</div><div id="dailyText"></div><button id="dailyButton" class="action orange" onclick="claimDaily()">ODBIERZ</button></div>
-<div id="combatPanel" class="modal"><h2 id="enemyName"></h2><div class="bar"><div id="enemyHpFill" class="fill"></div></div><div id="enemyHpText"></div><p id="combatInfo">Walka!</p><button class="action orange" onclick="attackEnemy()">⚔️ ATAK</button><button class="action" onclick="usePotion()">🧪 LECZENIE</button><button class="action" onclick="closeCombat()">UCIEKAJ</button></div>
+<div id="combatPanel" class="modal"><h2 id="enemyName"></h2><div class="bar"><div id="enemyHpFill" class="fill"></div></div><div id="enemyHpText"></div><p id="combatInfo">Walka!</p><button class="action orange" onclick="attackEnemy()">⚔️ ATAK</button><button class="action" onclick="usePotion()">🧪 MAŁE +50 HP</button><button class="action" onclick="useBigPotion05()">🧪 DUŻE +100 HP</button><button class="action" onclick="useMeal05()">🍜 POSIŁEK — FULL HP</button><button class="action" onclick="closeCombat()">UCIEKAJ</button></div>
 <div id="shopPanel" class="modal"><h2>🛒 Handlarz</h2><p>Leczenie przywraca 50 HP.</p><button class="action orange" onclick="buyPotion()">Kup leczenie — 100 Zeni</button><button class="action" onclick="closeShop()">Zamknij</button></div>
 <div id="arenaPanel" class="modal"><h2>🥋 Arena Treningowa</h2><p id="arenaInfo">Pokonuj fale przeciwników i zdobywaj bonusowe EXP oraz Zeni.</p><button class="action orange" onclick="startArena()">START FALI</button><button class="action" onclick="closeArena()">Zamknij</button></div>
 <div id="toast"></div><div id="hint"></div>
@@ -72,9 +72,9 @@
 <button class="menuBtn" onclick="openDragonBalls()">🐉 Kule</button>
 </div>
 <div id="deathScreen"><div class="bigPanel"><h1>💀 ZOSTAŁEŚ POKONANY</h1><p id="deathLoss"></p><h2 id="respawnTimer">Odrodzenie za 5...</h2><button id="respawnBtn" class="actionBtn" disabled onclick="respawnPlayer()">ODRODŹ SIĘ</button></div></div>
-<div id="inventoryPanel"><div class="bigPanel"><h2>🎒 EKWIPUNEK</h2><p>Zakładaj stroje i wyposażenie, aby zdobywać bonusy.</p><div id="inventoryGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('inventoryPanel')">ZAMKNIJ</button></div></div>
+<div id="inventoryPanel"><div class="bigPanel"><h2>🎒 EKWIPUNEK</h2><p>Używaj leczenia albo zakładaj wyposażenie, aby zdobywać bonusy.</p><div id="consumablesGrid" class="grid"></div><div id="inventoryGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('inventoryPanel')">ZAMKNIJ</button></div></div>
 <div id="powersPanel"><div class="bigPanel"><h2>⚡ MOCE</h2><p>Odblokowane moce możesz założyć do 3 slotów.</p><div id="powersGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('powersPanel')">ZAMKNIJ</button></div></div>
-<div id="leaderboardPanel"><div class="bigPanel"><h2>🏆 TOPKA LEVELI</h2><p>Na razie ranking kont zapisanych w tej przeglądarce.</p><div id="leaderboardList"></div><button class="actionBtn" onclick="closeOverlay('leaderboardPanel')">ZAMKNIJ</button></div></div>
+<div id="leaderboardPanel"><div class="bigPanel"><h2>🏆 GLOBALNA TOPKA</h2><p>Ranking wszystkich wojowników Dragon Ball Polska Online — LVL, a przy remisie EXP.</p><div id="leaderboardList"></div><button class="actionBtn" onclick="closeOverlay('leaderboardPanel')">ZAMKNIJ</button></div></div>
 <div id="questNpcPanel"><div class="bigPanel"><h2>📜 Mistrz — Zadania</h2><div id="questNpcContent"></div><button class="actionBtn" onclick="closeOverlay('questNpcPanel')">ZAMKNIJ</button></div></div>
 
 
@@ -250,6 +250,11 @@ function closeOverlay(id){document.getElementById(id).style.display="none"}
 function renderPowerBar(){let b=$("powerBar");b.innerHTML="";(currentUser.equippedPowers||[]).forEach((x,i)=>b.innerHTML+=`<div class="powerSlot">${i+1}. ⚡ ${x}</div>`)}
 function openInventory(){renderInventory();openOverlay("inventoryPanel")}
 function renderInventory(){
+ let c=$("consumablesGrid");
+ if(c)c.innerHTML=`
+ <div class="card"><b>🧪 Małe leczenie</b><br>+50 HP<br>Posiadasz: <b>${currentUser.potions||0}</b><br><button class="actionBtn" onclick="usePotion();renderInventory()">UŻYJ</button></div>
+ <div class="card"><b>🧪 Duże leczenie</b><br>+100 HP<br>Posiadasz: <b>${currentUser.bigPotions||0}</b><br><button class="actionBtn" onclick="useBigPotion05();renderInventory()">UŻYJ</button></div>
+ <div class="card"><b>🍜 Posiłek</b><br>Pełne HP<br>Posiadasz: <b>${currentUser.meals||0}</b><br><button class="actionBtn" onclick="useMeal05();renderInventory()">UŻYJ</button></div>`;
  let g=$("inventoryGrid"),gear=(currentUser.inventory||[]).map(item05).filter(x=>x&&x.type!=="consumable");
  g.innerHTML=gear.length?"":"<p>Nie masz jeszcze wyposażenia. Kup je u Handlarza.</p>";
  for(const it of gear){let eq=currentUser.equipment[it.type]===it.id;g.innerHTML+=`<div class="card ${eq?"equipped":""}"><b>${it.name}</b><br>${it.desc}<br><button class="actionBtn" onclick="equipItem05('${it.id}')">${eq?"ZDEJMIJ":"ZAŁÓŻ"}</button></div>`}
@@ -261,10 +266,20 @@ function renderPowers(){
  for(const p of powers05){let unlocked=currentUser.level>=p.level,eq=currentUser.equippedPowers.includes(p.id);g.innerHTML+=`<div class="card ${eq?"equipped":""}"><b>⚡ ${p.id}</b><br>${p.desc}<br>${unlocked?"Odblokowana":"🔒 Wymagany LVL "+p.level}<br>${unlocked?`<button class="actionBtn" onclick="togglePower05('${p.id}')">${eq?"ZDEJMIJ":"ZAŁÓŻ"}</button>`:""}</div>`}
 }
 function togglePower05(id){let a=currentUser.equippedPowers,i=a.indexOf(id);if(i>=0)a.splice(i,1);else if(a.length<3)a.push(id);else return toast("Maksymalnie 3 założone moce.");renderPowers();renderPowerBar();savePlayer()}
-function openLeaderboard(){
- let rows=[];for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k&&k.startsWith("dbp_account_"))try{rows.push(JSON.parse(localStorage.getItem(k)))}catch(e){}}
- rows.sort((a,b)=>(b.level||1)-(a.level||1)||(b.exp||0)-(a.exp||0));
- $("leaderboardList").innerHTML=rows.slice(0,10).map((a,i)=>`<div class="card">${i+1}. <b>${a.username}</b> — LVL ${a.level||1} — ${a.exp||0} EXP</div>`).join("")||"<p>Brak kont.</p>";openOverlay("leaderboardPanel")
+function escapeHtml05(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+async function openLeaderboard(){
+ const list=$("leaderboardList");
+ list.innerHTML="<p>⏳ Ładowanie globalnego rankingu...</p>";openOverlay("leaderboardPanel");
+ try{
+  const {data,error}=await dbpSupabase.from("players").select("id,username,level,exp").order("level",{ascending:false}).order("exp",{ascending:false}).limit(1000);
+  if(error)throw error;
+  const rows=data||[];
+  const top=rows.slice(0,10);
+  const medals=["🥇","🥈","🥉"];
+  list.innerHTML=top.map((a,i)=>`<div class="card">${medals[i]||"#"+(i+1)} <b>${escapeHtml05(a.username)}</b> — LVL ${a.level||1} — ${Number(a.exp)||0} EXP</div>`).join("")||"<p>Brak graczy w rankingu.</p>";
+  const myIndex=rows.findIndex(a=>a.id===onlineUserId);
+  if(myIndex>=0)list.innerHTML+=`<div class="card equipped"><b>Twoja pozycja: #${myIndex+1}</b> — ${escapeHtml05(currentUser.username)} — LVL ${currentUser.level} — ${Number(currentUser.exp)||0} EXP</div>`;
+ }catch(err){console.error("Błąd topki:",err);list.innerHTML="<p>❌ Nie udało się pobrać globalnej topki. Spróbuj ponownie.</p>"}
 }
 function updateQuestUI(){
  let q=quests05[currentUser.questIndex],t=$("activeQuestText");
@@ -452,7 +467,9 @@ function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)retur
 function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
 function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
-function usePotion(){if(!currentUser.potions){toast("Brak leczenia");return}if(currentUser.hp>=maxHp()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
+function usePotion(){if(!currentUser.potions){toast("Brak małego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
+function useBigPotion05(){if(!currentUser.bigPotions){toast("Brak dużego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.bigPotions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+100);updateHUD();savePlayer();toast("🧪 +100 HP")}
+function useMeal05(){if(!currentUser.meals){toast("Brak posiłku");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.meals--;currentUser.hp=maxHp05();updateHUD();savePlayer();toast("🍜 HP uzupełnione do pełna!")}
 function openShop(){renderShop05();$("shopPanel").style.display="block"}function closeShop(){$("shopPanel").style.display="none"}function buyPotion(){if(currentUser.zeni<100){toast("Za mało Zeni");return}currentUser.zeni-=100;currentUser.potions++;updateHUD();savePlayer();toast("🧪 Kupiono leczenie")}
 function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textContent=arenaWave?`Aktualna fala: ${arenaWave} | Pokonani: ${arenaKills}/3`:"Każda fala ma 3 przeciwników. Za ukończenie fali dostajesz bonus."}function closeArena(){$("arenaPanel").style.display="none"}
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
