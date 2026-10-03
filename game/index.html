@@ -47,7 +47,7 @@
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
 <div id="questPanel" class="panel" style="display:none"><div class="title">📜 QUEST</div><div>Pokonaj 5 Bandytów</div><div id="questProgress">0/5</div><div>500 Zeni + 100 EXP</div><button id="questClaim" class="action orange" onclick="claimQuest()">ODBIERZ</button></div>
-<div id="dailyPanel" class="panel"><div class="title">🎁 DZIENNA NAGRODA</div><div id="dailyText"></div><button id="dailyButton" class="action orange" onclick="claimDaily()">ODBIERZ</button></div>
+<div id="dailyPanel" class="panel" style="display:none"><div class="title">🎁 DZIENNA NAGRODA</div><div id="dailyText"></div><button id="dailyButton" class="action orange" onclick="claimDaily()">ODBIERZ</button></div>
 <div id="combatPanel" class="modal"><h2 id="enemyName"></h2><div class="bar"><div id="enemyHpFill" class="fill"></div></div><div id="enemyHpText"></div><p id="combatInfo">Walka!</p><button class="action orange" onclick="attackEnemy()">⚔️ ATAK</button><button class="action" onclick="usePotion()">🧪 LECZENIE</button><button class="action" onclick="closeCombat()">UCIEKAJ</button></div>
 <div id="shopPanel" class="modal"><h2>🛒 Handlarz</h2><p>Leczenie przywraca 50 HP.</p><button class="action orange" onclick="buyPotion()">Kup leczenie — 100 Zeni</button><button class="action" onclick="closeShop()">Zamknij</button></div>
 <div id="arenaPanel" class="modal"><h2>🥋 Arena Treningowa</h2><p id="arenaInfo">Pokonuj fale przeciwników i zdobywaj bonusowe EXP oraz Zeni.</p><button class="action orange" onclick="startArena()">START FALI</button><button class="action" onclick="closeArena()">Zamknij</button></div>
@@ -69,7 +69,6 @@
  <button class="menuBtn" onclick="openPowers()">⚡ Moce</button>
  <button class="menuBtn" onclick="openLeaderboard()">🏆 Topka</button>
 <button class="menuBtn" onclick="openDragonBalls()">🐉 Kule</button>
-<button class="menuBtn" onclick="openDailyQuest()">📅 Daily</button>
 </div>
 <div id="deathScreen"><div class="bigPanel"><h1>💀 ZOSTAŁEŚ POKONANY</h1><p id="deathLoss"></p><h2 id="respawnTimer">Odrodzenie za 5...</h2><button id="respawnBtn" class="actionBtn" disabled onclick="respawnPlayer()">ODRODŹ SIĘ</button></div></div>
 <div id="inventoryPanel"><div class="bigPanel"><h2>🎒 EKWIPUNEK</h2><p>Zakładaj stroje i wyposażenie, aby zdobywać bonusy.</p><div id="inventoryGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('inventoryPanel')">ZAMKNIJ</button></div></div>
@@ -77,8 +76,15 @@
 <div id="leaderboardPanel"><div class="bigPanel"><h2>🏆 TOPKA LEVELI</h2><p>Na razie ranking kont zapisanych w tej przeglądarce.</p><div id="leaderboardList"></div><button class="actionBtn" onclick="closeOverlay('leaderboardPanel')">ZAMKNIJ</button></div></div>
 <div id="questNpcPanel"><div class="bigPanel"><h2>📜 Mistrz — Zadania</h2><div id="questNpcContent"></div><button class="actionBtn" onclick="closeOverlay('questNpcPanel')">ZAMKNIJ</button></div></div>
 
-<div id="dragonHud">🐉 Smocze Kule: <b id="dragonCount">0/7</b><br>☁️ Chmurka: <b id="cloudState">NIE</b></div>
+
 <div id="dragonPanel"><div class="bigPanel"><h2>🐉 SMOCZE KULE</h2><div id="dragonGrid" class="grid"></div><div id="wishArea"></div><button class="actionBtn" onclick="closeOverlay('dragonPanel')">ZAMKNIJ</button></div></div>
+
+<div id="dailyRewardNpcPanel" class="modal">
+<h2>🎁 Dzienny Opiekun</h2>
+<p id="dailyRewardNpcText">Sprawdzam nagrodę...</p>
+<button id="dailyRewardNpcButton" class="action orange" onclick="claimDaily();openDailyRewardNpc06()">ODBIERZ</button>
+<button class="action" onclick="closeOverlay('dailyRewardNpcPanel')">ZAMKNIJ</button>
+</div>
 <div id="dailyQuestPanel"><div class="bigPanel"><h2>📅 DAILY QUEST</h2><div id="dailyQuestContent"></div><button class="actionBtn" onclick="closeOverlay('dailyQuestPanel')">ZAMKNIJ</button></div></div>
 <canvas id="game"></canvas></div>
 <script>
@@ -111,11 +117,21 @@ const portals=[
 {world:"sky",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"alien",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"masters",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}];
-const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."}];
+const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."},{world:"valley",x:720,y:1050,name:"Dzienny Opiekun",text:"Mam dla ciebie codzienną nagrodę."},{world:"valley",x:1320,y:1050,name:"Łowca Dnia",text:"Mam dla ciebie codzienne zadanie."}];
 const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
  {world:"desert",x:700,y:650,name:"Pustynny Wojownik",level:5,maxHp:170,hp:170,alive:true,respawn:0},{world:"desert",x:1250,y:950,name:"Pustynny Wojownik",level:6,maxHp:200,hp:200,alive:true,respawn:0},{world:"desert",x:1750,y:650,name:"Pustynny Elita",level:7,maxHp:250,hp:250,alive:true,respawn:0},
  {world:"mountains",x:700,y:650,name:"Górski Wojownik",level:10,maxHp:330,hp:330,alive:true,respawn:0},{world:"mountains",x:1300,y:900,name:"Górski Wojownik",level:11,maxHp:380,hp:380,alive:true,respawn:0},{world:"mountains",x:1800,y:650,name:"Strażnik Góry",level:12,maxHp:450,hp:450,alive:true,respawn:0}
+
+,{world:"valley",x:2180,y:1350,name:"Boss Bandyta",level:4,maxHp:650,hp:650,alive:true,respawn:0,boss:true,bossKey:"valley",rewardZeni:1800,rewardExp:450}
+,{world:"desert",x:2050,y:420,name:"Władca Pustyni",level:8,maxHp:1200,hp:1200,alive:true,respawn:0,boss:true,bossKey:"desert",rewardZeni:4500,rewardExp:900}
+,{world:"mountains",x:2050,y:420,name:"Strażnik Gór",level:13,maxHp:1800,hp:1800,alive:true,respawn:0,boss:true,bossKey:"mountains",rewardZeni:7000,rewardExp:1300}
+,{world:"forest",x:2050,y:420,name:"Strażnik Lasu",level:17,maxHp:2400,hp:2400,alive:true,respawn:0,boss:true,bossKey:"forest",rewardZeni:10000,rewardExp:1800}
+,{world:"ice",x:2050,y:420,name:"Lodowy Strażnik",level:22,maxHp:3200,hp:3200,alive:true,respawn:0,boss:true,bossKey:"ice",rewardZeni:14000,rewardExp:2400}
+,{world:"volcano",x:2050,y:420,name:"Władca Wulkanu",level:27,maxHp:4200,hp:4200,alive:true,respawn:0,boss:true,bossKey:"volcano",rewardZeni:20000,rewardExp:3200}
+,{world:"sky",x:2050,y:420,name:"Strażnik Nieba",level:32,maxHp:5200,hp:5200,alive:true,respawn:0,boss:true,bossKey:"sky",rewardZeni:28000,rewardExp:4200}
+,{world:"alien",x:2050,y:420,name:"Dowódca Planety",level:42,maxHp:7000,hp:7000,alive:true,respawn:0,boss:true,bossKey:"alien",rewardZeni:40000,rewardExp:6000}
+,{world:"masters",x:2050,y:420,name:"Wielki Mistrz",level:52,maxHp:9500,hp:9500,alive:true,respawn:0,boss:true,bossKey:"masters",rewardZeni:60000,rewardExp:8500}
 ];
 function setAuthMode(m){authMode=m;$("loginTab").classList.toggle("active",m==="login");$("registerTab").classList.toggle("active",m==="register");$("authButton").textContent=m==="login"?"ZALOGUJ SIĘ":"STWÓRZ KONTO";$("authMessage").textContent=""}
 function submitAuth(){let u=$("usernameInput").value.trim(),p=$("passwordInput").value,m=$("authMessage");if(u.length<3){m.textContent="❌ Nick musi mieć minimum 3 znaki.";return}if(p.length<6){m.textContent="❌ Hasło musi mieć minimum 6 znaków.";return}let k="dbp_account_"+u.toLowerCase();if(authMode==="register"){if(localStorage.getItem(k)){m.textContent="❌ Takie konto już istnieje.";return}localStorage.setItem(k,JSON.stringify({username:u,password:p,level:1,exp:0,zeni:0,potions:0,dragonBalls:0,hp:100,x:1050,y:800,world:"valley",questKills:0,questClaimed:false,lastDaily:0,dailyStreak:0}));m.textContent="✓ Konto utworzone! Możesz się zalogować.";setAuthMode("login");return}let s=localStorage.getItem(k);if(!s){m.textContent="❌ Nie znaleziono konta.";return}let a=JSON.parse(s);if(a.password!==p){m.textContent="❌ Nieprawidłowe hasło.";return}currentUser=a;startGame()}
@@ -240,8 +256,9 @@ function normalize06(){
  currentUser.prestige??=0;currentUser.bossKills??={};
 }
 function updateDragonHud(){
- $("dragonCount").textContent=currentUser.dragonBallsOwned.filter(Boolean).length+"/7";
- $("cloudState").textContent=currentUser.cloudOwned?(currentUser.cloudEquipped?"ZAŁOŻONA":"POSIADANA"):"NIE";
+ let count=$("dragonCount"),cloud=$("cloudState");
+ if(count)count.textContent=currentUser.dragonBallsOwned.filter(Boolean).length+"/7";
+ if(cloud)cloud.textContent=currentUser.cloudOwned?(currentUser.cloudEquipped?"ZAŁOŻONA":"POSIADANA"):"NIE";
 }
 function grantBall(i){
  if(currentUser.dragonBallsOwned[i])return;
@@ -270,6 +287,22 @@ function today06(){return new Date().toISOString().slice(0,10)}
 function resetDaily06(){
  if(currentUser.dailyQuestDate!==today06()){currentUser.dailyQuestDate=today06();currentUser.dailyQuestKills=0;currentUser.dailyQuestClaimed=false;savePlayer()}
 }
+
+function openDailyRewardNpc06(){
+ updateDaily();
+ let left=86400000-(Date.now()-currentUser.lastDaily);
+ let ready=left<=0;
+ let b=$("dailyRewardNpcButton");
+ if(ready){
+   $("dailyRewardNpcText").innerHTML="🎁 Nagroda jest gotowa!<br>Aktualna seria: <b>"+currentUser.dailyStreak+"</b>";
+   b.disabled=false;
+ }else{
+   $("dailyRewardNpcText").innerHTML="⏳ Następna nagroda za <b>"+Math.floor(left/3600000)+"h "+Math.floor(left%3600000/60000)+"m</b><br>Seria: <b>"+currentUser.dailyStreak+"</b>";
+   b.disabled=true;
+ }
+ openOverlay("dailyRewardNpcPanel");
+}
+
 function openDailyQuest(){
  resetDaily06();let done=currentUser.dailyQuestKills>=20;
  $("dailyQuestContent").innerHTML=`<h3>⚔️ Łowca dnia</h3><p>Pokonaj 20 przeciwników.</p><p>Postęp: ${currentUser.dailyQuestKills}/20</p><p>🎁 2500 Zeni + 500 EXP</p>${done&&!currentUser.dailyQuestClaimed?'<button class="actionBtn" onclick="claimDailyQuest06()">ODBIERZ</button>':currentUser.dailyQuestClaimed?"<b>✅ Odebrane dzisiaj</b>":""}`;
@@ -316,18 +349,18 @@ function updateDaily(){let left=86400000-(Date.now()-currentUser.lastDaily);if(l
 function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)return;currentUser.dailyStreak=currentUser.lastDaily&&n-currentUser.lastDaily<190080000?currentUser.dailyStreak+1:1;let r=[100,200,300,500,700,1000,2000][Math.min(currentUser.dailyStreak,7)-1];currentUser.zeni+=r;currentUser.lastDaily=n;toast("🎁 +"+r+" Zeni");updateHUD();savePlayer()}
 function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
-function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=50+e.level*25,x=25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
+function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
 function usePotion(){if(!currentUser.potions){toast("Brak leczenia");return}if(currentUser.hp>=maxHp()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
 function openShop(){renderShop05();$("shopPanel").style.display="block"}function closeShop(){$("shopPanel").style.display="none"}function buyPotion(){if(currentUser.zeni<100){toast("Za mało Zeni");return}currentUser.zeni-=100;currentUser.potions++;updateHUD();savePlayer();toast("🧪 Kupiono leczenie")}
 function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textContent=arenaWave?`Aktualna fala: ${arenaWave} | Pokonani: ${arenaKills}/3`:"Każda fala ma 3 przeciwników. Za ukończenie fali dostajesz bonus."}function closeArena(){$("arenaPanel").style.display="none"}
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
 function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
-function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
+function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener("resize",resize);
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys[k]=true;if(k==="e")interact()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);$("passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});document.querySelectorAll(".move").forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
 function blocked(x,y){return x<0||y<0||x+player.width>2400||y+player.height>1700}
-function updateHint(){let msg="";let p=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(p)msg=`E — ${p.label}${p.min>1?" (LVL "+p.min+")":""}`;let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(n)msg="E — "+(n.name==="Handlarz"?"SKLEP":n.name==="Trener"?"ARENA":"ROZMOWA");let e=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(e)msg="E — WALKA: "+e.name;$("hint").textContent=msg;$("hint").style.display=msg?"block":"none"}
+function updateHint(){let msg="";let p=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(p)msg=`E — ${p.label}${p.min>1?" (LVL "+p.min+")":""}`;let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(n)msg="E — "+(n.name==="Handlarz"?"SKLEP":n.name==="Trener"?"ARENA":n.name==="Dzienny Opiekun"?"DZIENNA NAGRODA":n.name==="Łowca Dnia"?"DZIENNE ZADANIE":"ROZMOWA");let e=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(e)msg=e.boss?"👑 E — BOSS: "+e.name:"E — WALKA: "+e.name;$("hint").textContent=msg;$("hint").style.display=msg?"block":"none"}
 let last=performance.now(),saveTimer=0;function update(t){let dt=Math.min((t-last)/1000,.05);last=t;if(currentUser){let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){let l=Math.hypot(dx,dy);dx/=l;dy/=l}let nx=player.x+dx*player.speed*(1+speedBonus05()+cloudSpeed06())*dt,ny=player.y+dy*player.speed*(1+speedBonus05()+cloudSpeed06())*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;for(let e of enemies)if(!e.alive&&!e.arena&&Date.now()>=e.respawn){e.alive=true;e.hp=e.maxHp}updateHint();updateDaily();saveTimer+=dt;if(saveTimer>=3){savePlayer();saveTimer=0}draw()}requestAnimationFrame(update)}
 function camera(){return{x:Math.max(0,Math.min(player.x-canvas.width/2,2400-canvas.width)),y:Math.max(0,Math.min(player.y-canvas.height/2,1700-canvas.height))}}
 
@@ -361,7 +394,7 @@ function draw(){let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fil
 function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=100+(i*317)%2100,y=120+(i*193)%1400;if(Math.abs(x-1050)<180&&Math.abs(y-800)<180)continue;ctx.fillStyle="#754126";ctx.fillRect(x-c.x+14,y-c.y+30,12,25);ctx.fillStyle="#23874b";ctx.fillRect(x-c.x,y-c.y,40,38)}}else if(currentWorld==="desert"){for(let i=0;i<16;i++){let x=120+(i*401)%2100,y=140+(i*251)%1350;ctx.fillStyle="#a67c38";ctx.fillRect(x-c.x,y-c.y,45,22)}}else if(currentWorld==="mountains"){for(let i=0;i<14;i++){let x=100+(i*433)%2150,y=100+(i*277)%1400;ctx.fillStyle="#555b5e";ctx.beginPath();ctx.moveTo(x-c.x,y-c.y+90);ctx.lineTo(x-c.x+55,y-c.y);ctx.lineTo(x-c.x+110,y-c.y+90);ctx.fill()}}else{ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(600-c.x,400-c.y,1200,850);ctx.beginPath();ctx.arc(1200-c.x,825-c.y,260,0,Math.PI*2);ctx.stroke()}}
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
 function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
-function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,22,23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
+function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.boss?"#9b1c1c":e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,e.boss?30:22,e.boss?31:23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
 function drawPlayer(c){let x=player.x-c.x,y=player.y-c.y;ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(x+4,y+33,21,7);ctx.fillStyle="#173d8f";ctx.fillRect(x+5,y+27,7,11);ctx.fillRect(x+17,y+27,7,11);ctx.fillStyle="#ef7c16";ctx.fillRect(x+4,y+13,21,17);ctx.fillStyle="#183e91";ctx.fillRect(x+4,y+24,21,4);ctx.fillStyle="#e8ad78";ctx.fillRect(x+8,y+4,13,12);ctx.fillStyle="#111";ctx.fillRect(x+7,y+1,15,6);ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(player.name,x+14,y-10)}
 addEventListener("beforeunload",savePlayer);resize();
 window.addEventListener("keydown",e=>{
@@ -371,7 +404,7 @@ window.addEventListener("keydown",e=>{
    let id=currentUser.equippedPowers[n-1];if(!id)return;
    let p=powers05.find(x=>x.id===id);if(!p)return;
    activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus()+p.dmg;
-   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=50+en.level*25,x=25+en.level*10;currentUser.zeni+=z;currentUser.questKills++;registerKill(en);registerKill06(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
+   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=en.boss?(en.rewardZeni||50+en.level*25):50+en.level*25,x=en.boss?(en.rewardExp||25+en.level*10):25+en.level*10;if(en.boss){currentUser.bossKills[en.bossKey]=(currentUser.bossKills[en.bossKey]||0)+1;en.respawn=Date.now()+60000;}currentUser.zeni+=z;currentUser.questKills++;registerKill(en);registerKill06(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
    currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer();
  }
 });
