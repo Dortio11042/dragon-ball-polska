@@ -1,1 +1,913 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Dragon Ball Polska Online</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #10151d;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    image-rendering: pixelated;
+}
+
+#ui {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+
+    background: rgba(0,0,0,.72);
+    border: 3px solid #ff9d00;
+    padding: 12px 16px;
+    color: white;
+
+    box-shadow: 4px 4px 0 #000;
+}
+
+#ui strong {
+    color: #ffb000;
+}
+
+#controls {
+    color: #bbb;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+#dialog {
+    display: none;
+
+    position: fixed;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+
+    width: min(600px, 90%);
+    padding: 18px;
+
+    background: #10131c;
+    border: 4px solid white;
+    color: white;
+
+    z-index: 20;
+    box-shadow: 7px 7px 0 #000;
+}
+
+#dialog b {
+    color: #ff9d00;
+}
+
+#mobile {
+    display: none;
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    z-index: 30;
+}
+
+.mobileRow {
+    display: flex;
+    justify-content: center;
+}
+
+.moveButton {
+    width: 58px;
+    height: 58px;
+
+    border: 2px solid white;
+    background: rgba(0,0,0,.65);
+    color: white;
+
+    font-size: 25px;
+    font-weight: bold;
+
+    margin: 2px;
+    border-radius: 10px;
+
+    touch-action: none;
+}
+
+@media (max-width: 800px) {
+    #mobile {
+        display: block;
+    }
+
+    #ui {
+        font-size: 12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+    🐉 <strong>DRAGON BALL POLSKA ONLINE</strong>
+    <div id="controls">WASD / strzałki • podejdź do NPC</div>
+</div>
+
+<div id="dialog">
+    <b id="npcName">NPC</b>
+    <div id="npcText"></div>
+</div>
+
+<div id="mobile">
+
+    <div class="mobileRow">
+        <button class="moveButton" data-key="ArrowUp">▲</button>
+    </div>
+
+    <div class="mobileRow">
+        <button class="moveButton" data-key="ArrowLeft">◀</button>
+        <button class="moveButton" data-key="ArrowDown">▼</button>
+        <button class="moveButton" data-key="ArrowRight">▶</button>
+    </div>
+
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+ctx.imageSmoothingEnabled = false;
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+
+// =============================
+// ŚWIAT
+// =============================
+
+const WORLD_WIDTH = 2200;
+const WORLD_HEIGHT = 1600;
+
+const TILE = 32;
+
+
+// =============================
+// GRACZ
+// =============================
+
+const player = {
+    x: 1050,
+    y: 800,
+    width: 28,
+    height: 36,
+    speed: 220,
+    name: "Wojownik"
+};
+
+
+// =============================
+// KLAWISZE
+// =============================
+
+const keys = {};
+
+window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+
+// =============================
+// TELEFON
+// =============================
+
+document.querySelectorAll(".moveButton").forEach(button => {
+
+    const key = button.dataset.key.toLowerCase();
+
+    button.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        keys[key] = true;
+    });
+
+    button.addEventListener("pointerup", e => {
+        e.preventDefault();
+        keys[key] = false;
+    });
+
+    button.addEventListener("pointercancel", () => {
+        keys[key] = false;
+    });
+
+});
+
+
+// =============================
+// OBIEKTY
+// =============================
+
+const obstacles = [
+
+    // dom
+    {x: 250, y: 220, w: 250, h: 180, type:"house"},
+
+    // drugi dom
+    {x: 1650, y: 350, w: 260, h: 190, type:"house"},
+
+    // jezioro
+    {x: 680, y: 1080, w: 450, h: 260, type:"water"},
+
+    // skały
+    {x: 1250, y: 260, w: 100, h: 90, type:"rock"},
+    {x: 1380, y: 300, w: 80, h: 70, type:"rock"}
+
+];
+
+
+// =============================
+// DRZEWA
+// =============================
+
+const trees = [];
+
+for(let i = 0; i < 50; i++) {
+
+    let x = 80 + Math.random() * (WORLD_WIDTH - 160);
+    let y = 80 + Math.random() * (WORLD_HEIGHT - 160);
+
+    // nie stawiamy przy spawnie
+    if(Math.abs(x-player.x) < 220 && Math.abs(y-player.y) < 220) {
+        continue;
+    }
+
+    trees.push({
+        x,
+        y,
+        w: 46,
+        h: 55
+    });
+
+}
+
+
+// =============================
+// NPC
+// =============================
+
+const npcs = [
+
+    {
+        x: 930,
+        y: 650,
+        name: "Mistrz Kai",
+        text: "Witaj, Wojowniku! To dopiero początek świata Dragon Ball Polska."
+    },
+
+    {
+        x: 430,
+        y: 620,
+        name: "Podróżnik",
+        text: "Słyszałem, że gdzieś na świecie ukryto siedem Smoczych Kul..."
+    }
+
+];
+
+
+// =============================
+// KOLIZJE
+// =============================
+
+function collision(x, y, w, h, obj) {
+
+    return (
+        x < obj.x + obj.w &&
+        x + w > obj.x &&
+        y < obj.y + obj.h &&
+        y + h > obj.y
+    );
+
+}
+
+
+function blocked(x, y) {
+
+    if(
+        x < 0 ||
+        y < 0 ||
+        x + player.width > WORLD_WIDTH ||
+        y + player.height > WORLD_HEIGHT
+    ) {
+        return true;
+    }
+
+    for(const obj of obstacles) {
+
+        if(collision(
+            x,
+            y,
+            player.width,
+            player.height,
+            obj
+        )) {
+            return true;
+        }
+
+    }
+
+    for(const tree of trees) {
+
+        const trunk = {
+            x: tree.x + 13,
+            y: tree.y + 34,
+            w: 20,
+            h: 21
+        };
+
+        if(collision(
+            x,
+            y,
+            player.width,
+            player.height,
+            trunk
+        )) {
+            return true;
+        }
+
+    }
+
+    return false;
+}
+
+
+// =============================
+// UPDATE
+// =============================
+
+let lastTime = performance.now();
+
+function update(time) {
+
+    const dt = Math.min(
+        (time - lastTime) / 1000,
+        0.05
+    );
+
+    lastTime = time;
+
+    let dx = 0;
+    let dy = 0;
+
+    if(keys["w"] || keys["arrowup"]) dy -= 1;
+    if(keys["s"] || keys["arrowdown"]) dy += 1;
+    if(keys["a"] || keys["arrowleft"]) dx -= 1;
+    if(keys["d"] || keys["arrowright"]) dx += 1;
+
+    if(dx !== 0 || dy !== 0) {
+
+        const length = Math.sqrt(dx*dx + dy*dy);
+
+        dx /= length;
+        dy /= length;
+
+    }
+
+    const newX = player.x + dx * player.speed * dt;
+    const newY = player.y + dy * player.speed * dt;
+
+    if(!blocked(newX, player.y)) {
+        player.x = newX;
+    }
+
+    if(!blocked(player.x, newY)) {
+        player.y = newY;
+    }
+
+    checkNPC();
+
+    draw();
+
+    requestAnimationFrame(update);
+}
+
+
+// =============================
+// NPC DIALOG
+// =============================
+
+const dialog = document.getElementById("dialog");
+const npcName = document.getElementById("npcName");
+const npcText = document.getElementById("npcText");
+
+function checkNPC() {
+
+    let found = null;
+
+    for(const npc of npcs) {
+
+        const distance = Math.hypot(
+            player.x - npc.x,
+            player.y - npc.y
+        );
+
+        if(distance < 85) {
+            found = npc;
+            break;
+        }
+
+    }
+
+    if(found) {
+
+        dialog.style.display = "block";
+
+        npcName.textContent = found.name;
+        npcText.textContent = found.text;
+
+    } else {
+
+        dialog.style.display = "none";
+
+    }
+
+}
+
+
+// =============================
+// RYSOWANIE MAPY
+// =============================
+
+function drawGround(cameraX, cameraY) {
+
+    ctx.fillStyle = "#55a94f";
+    ctx.fillRect(
+        -cameraX,
+        -cameraY,
+        WORLD_WIDTH,
+        WORLD_HEIGHT
+    );
+
+    // pixelowe kratki trawy
+
+    ctx.fillStyle = "rgba(0,0,0,.045)";
+
+    for(let x=0; x<WORLD_WIDTH; x+=TILE) {
+
+        for(let y=0; y<WORLD_HEIGHT; y+=TILE) {
+
+            if((x/TILE + y/TILE) % 2 === 0) {
+
+                ctx.fillRect(
+                    x-cameraX,
+                    y-cameraY,
+                    TILE,
+                    TILE
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+// =============================
+// DROGI
+// =============================
+
+function drawRoads(cameraX, cameraY) {
+
+    ctx.fillStyle = "#d5b46b";
+
+    ctx.fillRect(
+        0-cameraX,
+        760-cameraY,
+        WORLD_WIDTH,
+        120
+    );
+
+    ctx.fillRect(
+        1000-cameraX,
+        0-cameraY,
+        130,
+        WORLD_HEIGHT
+    );
+
+}
+
+
+// =============================
+// DOM
+// =============================
+
+function drawHouse(obj, cameraX, cameraY) {
+
+    const x = obj.x-cameraX;
+    const y = obj.y-cameraY;
+
+    ctx.fillStyle = "#e9d3a2";
+    ctx.fillRect(x, y+55, obj.w, obj.h-55);
+
+    ctx.fillStyle = "#e65a42";
+
+    ctx.beginPath();
+    ctx.moveTo(x-20, y+65);
+    ctx.lineTo(x+obj.w/2, y);
+    ctx.lineTo(x+obj.w+20, y+65);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#754329";
+
+    ctx.fillRect(
+        x + obj.w/2 - 25,
+        y + obj.h - 70,
+        50,
+        70
+    );
+
+    ctx.fillStyle = "#75c8e8";
+
+    ctx.fillRect(
+        x+35,
+        y+90,
+        45,
+        42
+    );
+
+}
+
+
+// =============================
+// JEZIORO
+// =============================
+
+function drawWater(obj, cameraX, cameraY) {
+
+    ctx.fillStyle = "#3198d3";
+
+    ctx.fillRect(
+        obj.x-cameraX,
+        obj.y-cameraY,
+        obj.w,
+        obj.h
+    );
+
+    ctx.fillStyle = "#62c6ed";
+
+    for(let y=20; y<obj.h; y+=45) {
+
+        ctx.fillRect(
+            obj.x-cameraX+20,
+            obj.y-cameraY+y,
+            obj.w-40,
+            5
+        );
+
+    }
+
+}
+
+
+// =============================
+// SKAŁA
+// =============================
+
+function drawRock(obj, cameraX, cameraY) {
+
+    ctx.fillStyle = "#777b7f";
+
+    ctx.fillRect(
+        obj.x-cameraX,
+        obj.y-cameraY+20,
+        obj.w,
+        obj.h-20
+    );
+
+    ctx.fillStyle = "#a5aaae";
+
+    ctx.fillRect(
+        obj.x-cameraX+15,
+        obj.y-cameraY,
+        obj.w-30,
+        30
+    );
+
+}
+
+
+// =============================
+// DRZEWO
+// =============================
+
+function drawTree(tree, cameraX, cameraY) {
+
+    const x = tree.x-cameraX;
+    const y = tree.y-cameraY;
+
+    ctx.fillStyle = "#774126";
+
+    ctx.fillRect(
+        x+17,
+        y+30,
+        13,
+        25
+    );
+
+    ctx.fillStyle = "#176b38";
+
+    ctx.fillRect(
+        x+4,
+        y+7,
+        38,
+        35
+    );
+
+    ctx.fillStyle = "#23874b";
+
+    ctx.fillRect(
+        x+10,
+        y,
+        26,
+        25
+    );
+
+}
+
+
+// =============================
+// NPC
+// =============================
+
+function drawNPC(npc, cameraX, cameraY) {
+
+    const x = npc.x-cameraX;
+    const y = npc.y-cameraY;
+
+    ctx.fillStyle = "#111";
+
+    ctx.fillRect(
+        x+5,
+        y+8,
+        24,
+        28
+    );
+
+    ctx.fillStyle = "#e3ad7a";
+
+    ctx.fillRect(
+        x+10,
+        y,
+        14,
+        13
+    );
+
+    ctx.fillStyle = "#8c4dd6";
+
+    ctx.fillRect(
+        x+6,
+        y+15,
+        22,
+        20
+    );
+
+    ctx.font = "bold 12px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#000";
+    ctx.fillText(
+        npc.name,
+        x+18+2,
+        y-8+2
+    );
+
+    ctx.fillStyle = "#fff";
+    ctx.fillText(
+        npc.name,
+        x+18,
+        y-8
+    );
+
+}
+
+
+// =============================
+// GRACZ
+// =============================
+
+function drawPlayer(cameraX, cameraY) {
+
+    const x = player.x-cameraX;
+    const y = player.y-cameraY;
+
+    // cień
+
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+
+    ctx.fillRect(
+        x+4,
+        y+31,
+        21,
+        7
+    );
+
+    // nogi
+
+    ctx.fillStyle = "#173d8f";
+
+    ctx.fillRect(x+5, y+26, 7, 10);
+    ctx.fillRect(x+17, y+26, 7, 10);
+
+    // ciało
+
+    ctx.fillStyle = "#ef7c16";
+
+    ctx.fillRect(
+        x+4,
+        y+13,
+        21,
+        16
+    );
+
+    // pas
+
+    ctx.fillStyle = "#183e91";
+
+    ctx.fillRect(
+        x+4,
+        y+23,
+        21,
+        4
+    );
+
+    // głowa
+
+    ctx.fillStyle = "#e8ad78";
+
+    ctx.fillRect(
+        x+8,
+        y+4,
+        13,
+        12
+    );
+
+    // włosy
+
+    ctx.fillStyle = "#111";
+
+    ctx.fillRect(x+7, y+1, 15, 6);
+    ctx.fillRect(x+5, y+4, 5, 5);
+    ctx.fillRect(x+18, y, 5, 8);
+
+    // nick
+
+    ctx.font = "bold 13px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#000";
+
+    ctx.fillText(
+        player.name,
+        x + player.width/2 + 2,
+        y - 10 + 2
+    );
+
+    ctx.fillStyle = "#fff";
+
+    ctx.fillText(
+        player.name,
+        x + player.width/2,
+        y - 10
+    );
+
+}
+
+
+// =============================
+// DRAW
+// =============================
+
+function draw() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    let cameraX =
+        player.x -
+        canvas.width / 2 +
+        player.width / 2;
+
+    let cameraY =
+        player.y -
+        canvas.height / 2 +
+        player.height / 2;
+
+
+    cameraX = Math.max(
+        0,
+        Math.min(
+            cameraX,
+            WORLD_WIDTH - canvas.width
+        )
+    );
+
+    cameraY = Math.max(
+        0,
+        Math.min(
+            cameraY,
+            WORLD_HEIGHT - canvas.height
+        )
+    );
+
+
+    drawGround(cameraX, cameraY);
+
+    drawRoads(cameraX, cameraY);
+
+
+    // obiekty
+
+    for(const obj of obstacles) {
+
+        if(obj.type === "house") {
+            drawHouse(obj, cameraX, cameraY);
+        }
+
+        if(obj.type === "water") {
+            drawWater(obj, cameraX, cameraY);
+        }
+
+        if(obj.type === "rock") {
+            drawRock(obj, cameraX, cameraY);
+        }
+
+    }
+
+
+    // drzewa
+
+    for(const tree of trees) {
+        drawTree(tree, cameraX, cameraY);
+    }
+
+
+    // NPC
+
+    for(const npc of npcs) {
+        drawNPC(npc, cameraX, cameraY);
+    }
+
+
+    // gracz
+
+    drawPlayer(cameraX, cameraY);
+
+
+    // granica świata
+
+    ctx.strokeStyle = "#263e25";
+    ctx.lineWidth = 10;
+
+    ctx.strokeRect(
+        -cameraX,
+        -cameraY,
+        WORLD_WIDTH,
+        WORLD_HEIGHT
+    );
+
+}
+
+
+// START
+
+requestAnimationFrame(update);
+
+</script>
+
+</body>
+</html>
