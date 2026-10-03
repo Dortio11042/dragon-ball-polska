@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#070b12;color:#fff}button,input{font:inherit}
 #authScreen{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#253d79 0,#10182c 40%,#05070d 100%)}
-.authBox{width:min(430px,92%);padding:30px;background:rgba(8,13,25,.97);border:4px solid #ff9700;border-radius:14px;box-shadow:0 0 0 5px #050505,0 0 45px rgba(255,145,0,.3);text-align:center}.ball{width:85px;height:85px;margin:auto;border-radius:50%;display:grid;place-items:center;color:#c81010;font-size:22px;background:radial-gradient(circle at 35% 30%,#ffd86c,#ff9800 55%,#d55200);border:4px solid #c95b00}.authBox h1{color:#ff9d00;text-shadow:3px 3px #8e2d00,5px 5px #000}.version{color:#839dff;font-size:12px;font-weight:bold;margin-bottom:20px}.tabs{display:flex;gap:8px}.tab,.authButton,.action{padding:12px;border:2px solid #314574;border-radius:5px;background:#151f39;color:#fff;font-weight:bold;cursor:pointer}.tab{width:50%}.tab.active,.authButton,.action.orange{background:#ff9700;color:#111;border-color:#ff9700}.authBox input{width:100%;margin:6px 0;padding:14px;background:#070b13;border:2px solid #2f4168;border-radius:5px;color:#fff}.authButton{width:100%;margin-top:12px}.small{font-size:11px;color:#65728d}#authMessage{min-height:20px;color:#ffcf63;font-size:13px}A
+.authBox{width:min(430px,92%);padding:30px;background:rgba(8,13,25,.97);border:4px solid #ff9700;border-radius:14px;box-shadow:0 0 0 5px #050505,0 0 45px rgba(255,145,0,.3);text-align:center}.ball{width:85px;height:85px;margin:auto;border-radius:50%;display:grid;place-items:center;color:#c81010;font-size:22px;background:radial-gradient(circle at 35% 30%,#ffd86c,#ff9800 55%,#d55200);border:4px solid #c95b00}.authBox h1{color:#ff9d00;text-shadow:3px 3px #8e2d00,5px 5px #000}.version{color:#839dff;font-size:12px;font-weight:bold;margin-bottom:20px}.tabs{display:flex;gap:8px}.tab,.authButton,.action{padding:12px;border:2px solid #314574;border-radius:5px;background:#151f39;color:#fff;font-weight:bold;cursor:pointer}.tab{width:50%}.tab.active,.authButton,.action.orange{background:#ff9700;color:#111;border-color:#ff9700}.authBox input{width:100%;margin:6px 0;padding:14px;background:#070b13;border:2px solid #2f4168;border-radius:5px;color:#fff}.authButton{width:100%;margin-top:12px}.small{font-size:11px;color:#65728d}#authMessage{min-height:20px;color:#ffcf63;font-size:13px}
 #gameContainer{display:none;width:100%;height:100%}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
 .panel{position:fixed;z-index:120;padding:11px;background:rgba(7,10,18,.9);border:3px solid #ff9700;border-radius:7px;box-shadow:4px 4px 0 rgba(0,0,0,.55);font-size:13px}.title{font-weight:bold;color:#ffad21;margin-bottom:5px}#hud{left:15px;top:15px;min-width:220px}#worldName{top:15px;left:50%;transform:translateX(-50%);font-weight:bold}#questPanel{right:15px;top:15px;width:270px}#dailyPanel{right:15px;top:145px;width:270px}.action{padding:7px 9px;margin-top:7px}.action:disabled{opacity:.45;cursor:not-allowed}
 .modal{display:none;position:fixed;z-index:700;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92%);padding:22px;background:#0b101d;border:4px solid #ff9700;box-shadow:8px 8px #000;text-align:center}.bar{height:18px;background:#351313;border:2px solid #fff;margin:10px}.fill{height:100%;background:#d84a3c}.modal .action{margin:5px}#toast{display:none;position:fixed;z-index:1000;left:50%;top:75px;transform:translateX(-50%);padding:10px 16px;background:#111827;border:2px solid #ff9700;font-weight:bold}
@@ -41,6 +41,7 @@
 #dragonHud{position:fixed;left:15px;top:145px;z-index:330;background:rgba(7,10,18,.92);border:3px solid #ff9700;border-radius:7px;padding:9px;color:#fff;font-size:12px}
 .rarity-common{color:#ddd}.rarity-rare{color:#65e884}.rarity-epic{color:#6eb6ff}.rarity-legendary{color:#d18cff}.rarity-mythic{color:#ffad21}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
 <div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.6 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
@@ -133,8 +134,79 @@ const enemies=[
 ,{world:"alien",x:2050,y:420,name:"Dowódca Planety",level:42,maxHp:7000,hp:7000,alive:true,respawn:0,boss:true,bossKey:"alien",rewardZeni:40000,rewardExp:6000}
 ,{world:"masters",x:2050,y:420,name:"Wielki Mistrz",level:52,maxHp:9500,hp:9500,alive:true,respawn:0,boss:true,bossKey:"masters",rewardZeni:60000,rewardExp:8500}
 ];
+const SUPABASE_URL="https://hxlqfokckdlvxgapgbpa.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_kSl9bXwQPB6YRZ2vdJrRtw_w_-9qbjv";
+const dbpSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let onlineUserId=null;
+
+function authEmail06(username){
+ return username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,"_")+"@players.dragonballpolska.invalid";
+}
+function freshPlayer06(username){
+ return {username,level:1,exp:0,zeni:0,potions:0,dragonBalls:0,hp:100,x:1050,y:800,world:"valley",questKills:0,questClaimed:false,lastDaily:0,dailyStreak:0};
+}
 function setAuthMode(m){authMode=m;$("loginTab").classList.toggle("active",m==="login");$("registerTab").classList.toggle("active",m==="register");$("authButton").textContent=m==="login"?"ZALOGUJ SIĘ":"STWÓRZ KONTO";$("authMessage").textContent=""}
-function submitAuth(){let u=$("usernameInput").value.trim(),p=$("passwordInput").value,m=$("authMessage");if(u.length<3){m.textContent="❌ Nick musi mieć minimum 3 znaki.";return}if(p.length<6){m.textContent="❌ Hasło musi mieć minimum 6 znaków.";return}let k="dbp_account_"+u.toLowerCase();if(authMode==="register"){if(localStorage.getItem(k)){m.textContent="❌ Takie konto już istnieje.";return}localStorage.setItem(k,JSON.stringify({username:u,password:p,level:1,exp:0,zeni:0,potions:0,dragonBalls:0,hp:100,x:1050,y:800,world:"valley",questKills:0,questClaimed:false,lastDaily:0,dailyStreak:0}));m.textContent="✓ Konto utworzone! Możesz się zalogować.";setAuthMode("login");return}let s=localStorage.getItem(k);if(!s){m.textContent="❌ Nie znaleziono konta.";return}let a=JSON.parse(s);if(a.password!==p){m.textContent="❌ Nieprawidłowe hasło.";return}currentUser=a;startGame()}
+
+async function submitAuth(){
+ let u=$("usernameInput").value.trim(),p=$("passwordInput").value,m=$("authMessage");
+ if(u.length<3){m.textContent="❌ Nick musi mieć minimum 3 znaki.";return}
+ if(u.length>20){m.textContent="❌ Nick może mieć maksymalnie 20 znaków.";return}
+ if(!/^[A-Za-z0-9_.-]+$/.test(u)){m.textContent="❌ Nick: tylko litery, cyfry, _ . -";return}
+ if(p.length<6){m.textContent="❌ Hasło musi mieć minimum 6 znaków.";return}
+ $("authButton").disabled=true;
+ m.textContent="⏳ Łączenie z serwerem...";
+ try{
+   const email=authEmail06(u);
+   if(authMode==="register"){
+     const {data,error}=await dbpSupabase.auth.signUp({email,password:p,options:{data:{username:u}}});
+     if(error)throw error;
+     if(!data.user)throw new Error("Nie udało się utworzyć konta.");
+     onlineUserId=data.user.id;
+     const starter=freshPlayer06(u);
+     const {error:profileError}=await dbpSupabase.from("players").insert({
+       id:onlineUserId,username:u,level:1,exp:0,zeni:0,hp:100,max_hp:100,
+       world:"valley",x:1050,y:800,dragon_balls:0,
+       inventory:{},equipment:{},powers:{},game_data:starter
+     });
+     if(profileError){
+       await dbpSupabase.auth.signOut();
+       if(profileError.code==="23505")throw new Error("Taki nick już istnieje.");
+       throw profileError;
+     }
+     await dbpSupabase.auth.signOut();
+     onlineUserId=null;
+     m.textContent="✅ Konto online utworzone! Teraz się zaloguj.";
+     setAuthMode("login");
+     m.textContent="✅ Konto online utworzone! Teraz się zaloguj.";
+     return;
+   }
+
+   const {data,error}=await dbpSupabase.auth.signInWithPassword({email,password:p});
+   if(error)throw error;
+   onlineUserId=data.user.id;
+   const {data:profile,error:profileError}=await dbpSupabase.from("players").select("*").eq("id",onlineUserId).single();
+   if(profileError)throw profileError;
+   currentUser=(profile.game_data&&typeof profile.game_data==="object")?profile.game_data:freshPlayer06(profile.username);
+   currentUser.username=profile.username;
+   currentUser.level=profile.level??currentUser.level;
+   currentUser.exp=Number(profile.exp??currentUser.exp);
+   currentUser.zeni=Number(profile.zeni??currentUser.zeni);
+   currentUser.hp=profile.hp??currentUser.hp;
+   currentUser.world=profile.world??currentUser.world;
+   currentUser.x=profile.x??currentUser.x;
+   currentUser.y=profile.y??currentUser.y;
+   currentUser.dragonBalls=profile.dragon_balls??currentUser.dragonBalls;
+   startGame();
+ }catch(err){
+   console.error(err);
+   let msg=String(err?.message||err||"Błąd logowania");
+   if(/invalid login credentials/i.test(msg))msg="Nieprawidłowy nick lub hasło.";
+   if(/user already registered/i.test(msg))msg="Takie konto już istnieje.";
+   m.textContent="❌ "+msg;
+ }finally{
+   $("authButton").disabled=false;
+ }
+}
 function normalize(){Object.assign(currentUser,{exp:currentUser.exp??0,zeni:currentUser.zeni??0,potions:currentUser.potions??0,dragonBalls:currentUser.dragonBalls??0,questKills:currentUser.questKills??0,questClaimed:currentUser.questClaimed??false,lastDaily:currentUser.lastDaily??0,dailyStreak:currentUser.dailyStreak??0,world:currentUser.world??"valley"})}
 
 const shopItems05=[
@@ -338,8 +410,38 @@ const oldBuyShop06=buyShopItem05;
 buyShopItem05=function(id){if(id==="cloud")return buyCloud06();if(id==="mythicAmulet")return toast("🐉 Tego przedmiotu nie można kupić.");return oldBuyShop06(id)}
 
 function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();toast("🌍 "+worlds[currentWorld].name)}
-function logout(){savePlayer();currentUser=null;$("gameContainer").style.display="none";$("authScreen").style.display="flex";$("passwordInput").value=""}
-function savePlayer(){if(!currentUser)return;currentUser.x=Math.round(player.x);currentUser.y=Math.round(player.y);currentUser.world=currentWorld;localStorage.setItem("dbp_account_"+currentUser.username.toLowerCase(),JSON.stringify(currentUser))}
+async function logout(){
+ await savePlayer(true);
+ await dbpSupabase.auth.signOut();
+ onlineUserId=null;currentUser=null;
+ $("gameContainer").style.display="none";$("authScreen").style.display="flex";$("passwordInput").value="";
+}
+let saveBusy06=false,saveQueued06=false;
+async function savePlayer(force=false){
+ if(!currentUser||!onlineUserId)return;
+ currentUser.x=Math.round(player.x);currentUser.y=Math.round(player.y);currentUser.world=currentWorld;
+ if(saveBusy06&&!force){saveQueued06=true;return}
+ saveBusy06=true;
+ try{
+   const payload={
+     username:currentUser.username,
+     level:currentUser.level||1,
+     exp:Math.max(0,Math.round(Number(currentUser.exp)||0)),
+     zeni:Math.max(0,Math.round(Number(currentUser.zeni)||0)),
+     hp:Math.max(0,Math.round(Number(currentUser.hp)||0)),
+     max_hp:Math.max(1,Math.round(Number(typeof maxHp05==="function"?maxHp05():100)||100)),
+     world:currentWorld,
+     x:currentUser.x,y:currentUser.y,
+     dragon_balls:Math.max(0,Math.min(7,Math.round(Number(currentUser.dragonBalls)||0))),
+     game_data:currentUser
+   };
+   const {error}=await dbpSupabase.from("players").update(payload).eq("id",onlineUserId);
+   if(error)console.error("Błąd zapisu online:",error);
+ }finally{
+   saveBusy06=false;
+   if(saveQueued06){saveQueued06=false;savePlayer();}
+ }
+}
 function maxHp(){return 100+(currentUser.level-1)*20}function needExp(){return currentUser.level*100}
 function updateHUD(){if(!currentUser)return;$("playerName").textContent=player.name;$("hpText").textContent=currentUser.hp+"/"+maxHp05();$("levelText").textContent=currentUser.level;$("expText").textContent=currentUser.exp+"/"+needExp();$("zeniText").textContent=currentUser.zeni;$("potionText").textContent=currentUser.potions;$("ballsText").textContent=currentUser.dragonBalls+"/7";$("questProgress").textContent=Math.min(currentUser.questKills,5)+"/5";$("questClaim").disabled=currentUser.questKills<5||currentUser.questClaimed;$("worldName").textContent=worlds[currentWorld].name;updateDaily()}
 function toast(s){let t=$("toast");t.textContent=s;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",2200)}
