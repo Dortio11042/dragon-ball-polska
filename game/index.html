@@ -36,9 +36,13 @@
 #shopPanel{width:min(760px,94%);max-height:86vh;overflow:auto}
 .actionBtn{padding:9px 11px;margin:6px;background:#ff9700;color:#111;border:2px solid #ff9700;border-radius:5px;font-weight:bold;cursor:pointer}
 .actionBtn:disabled{opacity:.45;cursor:not-allowed}
+
+#dragonPanel,#dailyQuestPanel,#worldMapPanel{display:none;position:fixed;inset:0;z-index:1600;background:rgba(3,5,10,.95);align-items:center;justify-content:center;color:#fff}
+#dragonHud{position:fixed;left:15px;top:145px;z-index:330;background:rgba(7,10,18,.92);border:3px solid #ff9700;border-radius:7px;padding:9px;color:#fff;font-size:12px}
+.rarity-common{color:#ddd}.rarity-rare{color:#65e884}.rarity-epic{color:#6eb6ff}.rarity-legendary{color:#d18cff}.rarity-mythic{color:#ffad21}
 </style>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.5 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.6 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -64,12 +68,18 @@
  <button class="menuBtn" onclick="openInventory()">🎒 Ekwipunek</button>
  <button class="menuBtn" onclick="openPowers()">⚡ Moce</button>
  <button class="menuBtn" onclick="openLeaderboard()">🏆 Topka</button>
+<button class="menuBtn" onclick="openDragonBalls()">🐉 Kule</button>
+<button class="menuBtn" onclick="openDailyQuest()">📅 Daily</button>
 </div>
 <div id="deathScreen"><div class="bigPanel"><h1>💀 ZOSTAŁEŚ POKONANY</h1><p id="deathLoss"></p><h2 id="respawnTimer">Odrodzenie za 5...</h2><button id="respawnBtn" class="actionBtn" disabled onclick="respawnPlayer()">ODRODŹ SIĘ</button></div></div>
 <div id="inventoryPanel"><div class="bigPanel"><h2>🎒 EKWIPUNEK</h2><p>Zakładaj stroje i wyposażenie, aby zdobywać bonusy.</p><div id="inventoryGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('inventoryPanel')">ZAMKNIJ</button></div></div>
 <div id="powersPanel"><div class="bigPanel"><h2>⚡ MOCE</h2><p>Odblokowane moce możesz założyć do 3 slotów.</p><div id="powersGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('powersPanel')">ZAMKNIJ</button></div></div>
 <div id="leaderboardPanel"><div class="bigPanel"><h2>🏆 TOPKA LEVELI</h2><p>Na razie ranking kont zapisanych w tej przeglądarce.</p><div id="leaderboardList"></div><button class="actionBtn" onclick="closeOverlay('leaderboardPanel')">ZAMKNIJ</button></div></div>
 <div id="questNpcPanel"><div class="bigPanel"><h2>📜 Mistrz — Zadania</h2><div id="questNpcContent"></div><button class="actionBtn" onclick="closeOverlay('questNpcPanel')">ZAMKNIJ</button></div></div>
+
+<div id="dragonHud">🐉 Smocze Kule: <b id="dragonCount">0/7</b><br>☁️ Chmurka: <b id="cloudState">NIE</b></div>
+<div id="dragonPanel"><div class="bigPanel"><h2>🐉 SMOCZE KULE</h2><div id="dragonGrid" class="grid"></div><div id="wishArea"></div><button class="actionBtn" onclick="closeOverlay('dragonPanel')">ZAMKNIJ</button></div></div>
+<div id="dailyQuestPanel"><div class="bigPanel"><h2>📅 DAILY QUEST</h2><div id="dailyQuestContent"></div><button class="actionBtn" onclick="closeOverlay('dailyQuestPanel')">ZAMKNIJ</button></div></div>
 <canvas id="game"></canvas></div>
 <script>
 let authMode="login",currentUser=null,currentWorld="valley",activeEnemy=null,arenaWave=0,arenaKills=0;
@@ -88,7 +98,13 @@ const portals=[
  {world:"arena",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
  {world:"desert",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
  {world:"mountains",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}
-];
+,
+{x:2050,y:560,w:70,h:100,to:"forest",label:"Mroczny Las"},
+{x:2050,y:700,w:70,h:100,to:"ice",label:"Lodowa Kraina"},
+{x:2050,y:840,w:70,h:100,to:"volcano",label:"Wulkaniczna Wyspa"},
+{x:2050,y:980,w:70,h:100,to:"sky",label:"Podniebna Kraina"},
+{x:2050,y:1120,w:70,h:100,to:"alien",label:"Obca Planeta"},
+{x:2050,y:1260,w:70,h:100,to:"masters",label:"Kraina Mistrzów"}];
 const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."}];
 const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
@@ -181,7 +197,7 @@ function buyShopItem05(id){
  if(it.type!=="consumable"&&currentUser.inventory.includes(id))return toast("Już masz ten przedmiot.");
  currentUser.zeni-=it.price;
  if(id==="smallPotion")currentUser.potions++;else if(id==="bigPotion")currentUser.bigPotions++;else if(id==="meal")currentUser.meals++;else currentUser.inventory.push(id);
- updateHUD();savePlayer();renderShop05();toast("🛒 Kupiono: "+it.name)
+ updateHUD();savePlayer();renderShop05();updateDragonHud();worldGuide06();resetDaily06();toast("🛒 Kupiono: "+it.name)
 }
 let deathInterval05=null;
 function diePlayer(){
@@ -191,7 +207,98 @@ function diePlayer(){
 }
 function respawnPlayer(){currentWorld="valley";player.x=worlds.valley.spawn.x;player.y=worlds.valley.spawn.y;currentUser.hp=maxHp05();closeOverlay("deathScreen");updateHUD();savePlayer();toast("🌿 Odrodzono w Zielonej Dolinie")}
 
-function startGame(){normalize();normalize05();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();toast("🌍 "+worlds[currentWorld].name)}
+
+const extraWorlds06={
+ forest:{name:"🌲 Mroczny Las",min:15,spawn:{x:260,y:800}},
+ ice:{name:"❄️ Lodowa Kraina",min:20,spawn:{x:260,y:800}},
+ volcano:{name:"🌋 Wulkaniczna Wyspa",min:25,spawn:{x:260,y:800}},
+ sky:{name:"☁️ Podniebna Kraina",min:30,spawn:{x:260,y:800}},
+ alien:{name:"🌌 Obca Planeta",min:40,spawn:{x:260,y:800}},
+ masters:{name:"🔥 Kraina Mistrzów",min:50,spawn:{x:260,y:800}}
+};
+Object.assign(worlds,extraWorlds06);
+
+const dragonTasks=[
+"Ukończ pierwszą serię questów Mistrza",
+"Pokonaj bossa Pustyni",
+"Ukończ 10 fal Areny",
+"Ukończ serię questów w Górach",
+"Zapłać Wróżce 15 000 Zeni za wskazówkę",
+"Pokonaj bossa Wulkanicznej Wyspy",
+"Osiągnij LVL 35 i pokonaj Strażnika Kuli"
+];
+function normalize06(){
+ currentUser.dragonBallsOwned??=[false,false,false,false,false,false,false];
+ currentUser.cloudOwned??=false;currentUser.cloudEquipped??=false;
+ currentUser.dailyQuestDate??="";currentUser.dailyQuestKills??=0;currentUser.dailyQuestClaimed??=false;
+ currentUser.prestige??=0;currentUser.bossKills??={};
+}
+function updateDragonHud(){
+ $("dragonCount").textContent=currentUser.dragonBallsOwned.filter(Boolean).length+"/7";
+ $("cloudState").textContent=currentUser.cloudOwned?(currentUser.cloudEquipped?"ZAŁOŻONA":"POSIADANA"):"NIE";
+}
+function grantBall(i){
+ if(currentUser.dragonBallsOwned[i])return;
+ currentUser.dragonBallsOwned[i]=true;currentUser.dragonBalls=currentUser.dragonBallsOwned.filter(Boolean).length;
+ updateDragonHud();savePlayer();toast("🐉 Zdobyto Smoczą Kulę "+(i+1)+"★!")
+}
+function openDragonBalls(){
+ let g=$("dragonGrid");g.innerHTML="";
+ currentUser.dragonBallsOwned.forEach((v,i)=>g.innerHTML+=`<div class="card"><b>${v?"🟠":"⚫"} ${i+1}★</b><br>${v?"ZDOBYTA":dragonTasks[i]}</div>`);
+ let all=currentUser.dragonBallsOwned.every(Boolean);
+ $("wishArea").innerHTML=all?`<h3>🐉 Wszystkie 7!</h3><p>Wybierz życzenie:</p>
+ <button class="actionBtn" onclick="dragonWish('zeni')">💰 100 000 Zeni</button>
+ <button class="actionBtn" onclick="dragonWish('exp')">⚡ 5000 EXP</button>
+ <button class="actionBtn" onclick="dragonWish('item')">💎 Mityczny Amulet</button>`:"<p>Zbierz wszystkie 7, aby odblokować życzenie.</p>";
+ openOverlay("dragonPanel")
+}
+function dragonWish(type){
+ if(!currentUser.dragonBallsOwned.every(Boolean))return;
+ if(type==="zeni")currentUser.zeni+=100000;
+ if(type==="exp")addExp(5000);
+ if(type==="item"&&!currentUser.inventory.includes("mythicAmulet"))currentUser.inventory.push("mythicAmulet");
+ currentUser.dragonBallsOwned=[false,false,false,false,false,false,false];currentUser.dragonBalls=0;
+ closeOverlay("dragonPanel");updateDragonHud();updateHUD();savePlayer();toast("🐉 Życzenie spełnione! Kule rozproszyły się.")
+}
+function today06(){return new Date().toISOString().slice(0,10)}
+function resetDaily06(){
+ if(currentUser.dailyQuestDate!==today06()){currentUser.dailyQuestDate=today06();currentUser.dailyQuestKills=0;currentUser.dailyQuestClaimed=false;savePlayer()}
+}
+function openDailyQuest(){
+ resetDaily06();let done=currentUser.dailyQuestKills>=20;
+ $("dailyQuestContent").innerHTML=`<h3>⚔️ Łowca dnia</h3><p>Pokonaj 20 przeciwników.</p><p>Postęp: ${currentUser.dailyQuestKills}/20</p><p>🎁 2500 Zeni + 500 EXP</p>${done&&!currentUser.dailyQuestClaimed?'<button class="actionBtn" onclick="claimDailyQuest06()">ODBIERZ</button>':currentUser.dailyQuestClaimed?"<b>✅ Odebrane dzisiaj</b>":""}`;
+ openOverlay("dailyQuestPanel")
+}
+function claimDailyQuest06(){if(currentUser.dailyQuestKills<20||currentUser.dailyQuestClaimed)return;currentUser.dailyQuestClaimed=true;currentUser.zeni+=2500;addExp(500);savePlayer();updateHUD();openDailyQuest();toast("📅 Daily Quest ukończony!")}
+function registerKill06(enemy){
+ resetDaily06();currentUser.dailyQuestKills++;
+ // kule za progres
+ if(currentUser.questIndex>=4)grantBall(0);
+ if((currentUser.bossKills.desert||0)>=1)grantBall(1);
+ if((currentUser.arenaBest||0)>=10)grantBall(2);
+ if(currentUser.level>=15&&currentUser.totalKills>=40)grantBall(3);
+ if(currentUser.level>=25&&(currentUser.bossKills.volcano||0)>=1)grantBall(5);
+ if(currentUser.level>=35&&currentUser.totalKills>=100)grantBall(6);
+}
+function buyCloud06(){
+ if(currentUser.cloudOwned){currentUser.cloudEquipped=!currentUser.cloudEquipped;updateDragonHud();savePlayer();return toast(currentUser.cloudEquipped?"☁️ Chmurka założona!":"☁️ Chmurka schowana.")}
+ if(currentUser.level<15)return toast("🔒 Chmurka wymaga LVL 15.");
+ if(currentUser.zeni<75000)return toast("💰 Potrzebujesz 75 000 Zeni.");
+ currentUser.zeni-=75000;currentUser.cloudOwned=true;currentUser.cloudEquipped=true;updateDragonHud();updateHUD();savePlayer();toast("☁️ Kupiono Latającą Chmurkę!")
+}
+function cloudSpeed06(){return currentUser.cloudEquipped?0.60:0}
+function worldGuide06(){
+ let all=Object.entries(worlds).map(([k,w])=>`${w.name} — LVL ${w.min||1}`).join("<br>");
+ $("worldGuide").innerHTML="<b>🌍 ŚWIATY / WYMAGANY LEVEL</b><br>"+all;
+}
+function addExtraShop06(){
+ if(!shopItems05.some(x=>x.id==="cloud"))shopItems05.push({id:"cloud",name:"☁️ Latająca Chmurka",price:75000,type:"special",desc:"LVL 15 • +60% szybkości"});
+ if(!shopItems05.some(x=>x.id==="mythicAmulet"))shopItems05.push({id:"mythicAmulet",name:"🟠 Mityczny Amulet Smoka",price:999999,type:"amulet",xp:.25,desc:"+25% EXP • tylko z życzenia"});
+}
+const oldBuyShop06=buyShopItem05;
+buyShopItem05=function(id){if(id==="cloud")return buyCloud06();if(id==="mythicAmulet")return toast("🐉 Tego przedmiotu nie można kupić.");return oldBuyShop06(id)}
+
+function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();toast("🌍 "+worlds[currentWorld].name)}
 function logout(){savePlayer();currentUser=null;$("gameContainer").style.display="none";$("authScreen").style.display="flex";$("passwordInput").value=""}
 function savePlayer(){if(!currentUser)return;currentUser.x=Math.round(player.x);currentUser.y=Math.round(player.y);currentUser.world=currentWorld;localStorage.setItem("dbp_account_"+currentUser.username.toLowerCase(),JSON.stringify(currentUser))}
 function maxHp(){return 100+(currentUser.level-1)*20}function needExp(){return currentUser.level*100}
@@ -203,19 +310,19 @@ function updateDaily(){let left=86400000-(Date.now()-currentUser.lastDaily);if(l
 function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)return;currentUser.dailyStreak=currentUser.lastDaily&&n-currentUser.lastDaily<190080000?currentUser.dailyStreak+1:1;let r=[100,200,300,500,700,1000,2000][Math.min(currentUser.dailyStreak,7)-1];currentUser.zeni+=r;currentUser.lastDaily=n;toast("🎁 +"+r+" Zeni");updateHUD();savePlayer()}
 function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
-function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=50+e.level*25,x=25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
+function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=50+e.level*25,x=25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
 function usePotion(){if(!currentUser.potions){toast("Brak leczenia");return}if(currentUser.hp>=maxHp()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
 function openShop(){renderShop05();$("shopPanel").style.display="block"}function closeShop(){$("shopPanel").style.display="none"}function buyPotion(){if(currentUser.zeni<100){toast("Za mało Zeni");return}currentUser.zeni-=100;currentUser.potions++;updateHUD();savePlayer();toast("🧪 Kupiono leczenie")}
 function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textContent=arenaWave?`Aktualna fala: ${arenaWave} | Pokonani: ${arenaKills}/3`:"Każda fala ma 3 przeciwników. Za ukończenie fali dostajesz bonus."}function closeArena(){$("arenaPanel").style.display="none"}
-function startArena(){if(currentWorld!=="arena")return;arenaWave++;arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
+function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
 function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
-function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
+function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener("resize",resize);
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys[k]=true;if(k==="e")interact()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);$("passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});document.querySelectorAll(".move").forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
 function blocked(x,y){return x<0||y<0||x+player.width>2400||y+player.height>1700}
 function updateHint(){let msg="";let p=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(p)msg=`E — ${p.label}${p.min>1?" (LVL "+p.min+")":""}`;let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(n)msg="E — "+(n.name==="Handlarz"?"SKLEP":n.name==="Trener"?"ARENA":"ROZMOWA");let e=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(e)msg="E — WALKA: "+e.name;$("hint").textContent=msg;$("hint").style.display=msg?"block":"none"}
-let last=performance.now(),saveTimer=0;function update(t){let dt=Math.min((t-last)/1000,.05);last=t;if(currentUser){let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){let l=Math.hypot(dx,dy);dx/=l;dy/=l}let nx=player.x+dx*player.speed*(1+speedBonus05())*dt,ny=player.y+dy*player.speed*(1+speedBonus05())*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;for(let e of enemies)if(!e.alive&&!e.arena&&Date.now()>=e.respawn){e.alive=true;e.hp=e.maxHp}updateHint();updateDaily();saveTimer+=dt;if(saveTimer>=3){savePlayer();saveTimer=0}draw()}requestAnimationFrame(update)}
+let last=performance.now(),saveTimer=0;function update(t){let dt=Math.min((t-last)/1000,.05);last=t;if(currentUser){let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){let l=Math.hypot(dx,dy);dx/=l;dy/=l}let nx=player.x+dx*player.speed*(1+speedBonus05()+cloudSpeed06())*dt,ny=player.y+dy*player.speed*(1+speedBonus05()+cloudSpeed06())*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;for(let e of enemies)if(!e.alive&&!e.arena&&Date.now()>=e.respawn){e.alive=true;e.hp=e.maxHp}updateHint();updateDaily();saveTimer+=dt;if(saveTimer>=3){savePlayer();saveTimer=0}draw()}requestAnimationFrame(update)}
 function camera(){return{x:Math.max(0,Math.min(player.x-canvas.width/2,2400-canvas.width)),y:Math.max(0,Math.min(player.y-canvas.height/2,1700-canvas.height))}}
 
 function drawWorldDecor(cx,cy){
@@ -258,7 +365,7 @@ window.addEventListener("keydown",e=>{
    let id=currentUser.equippedPowers[n-1];if(!id)return;
    let p=powers05.find(x=>x.id===id);if(!p)return;
    activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus()+p.dmg;
-   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=50+en.level*25,x=25+en.level*10;currentUser.zeni+=z;currentUser.questKills++;registerKill(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
+   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=50+en.level*25,x=25+en.level*10;currentUser.zeni+=z;currentUser.questKills++;registerKill(en);registerKill06(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
    currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer();
  }
 });
