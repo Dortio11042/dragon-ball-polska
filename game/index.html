@@ -395,6 +395,14 @@ canvas {
         transform: none;
     }
 }
+
+#questPanel,#dailyPanel{position:fixed;z-index:120;right:15px;width:270px;padding:12px;color:white;background:rgba(7,10,18,.9);border:3px solid #ff9700;border-radius:7px;font-size:13px}
+#questPanel{top:70px}#dailyPanel{top:190px}.panelTitle{font-weight:bold;color:#ffad21;margin-bottom:6px}
+.actionBtn{margin-top:8px;padding:8px;border:0;border-radius:4px;background:#ff9700;font-weight:bold;cursor:pointer}.actionBtn:disabled{opacity:.5}
+#combatPanel,#shopPanel{display:none;position:fixed;z-index:500;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,92%);padding:22px;color:white;background:#0b101d;border:4px solid #ff9700;text-align:center}
+#toast{display:none;position:fixed;z-index:900;left:50%;top:18px;transform:translateX(-50%);padding:10px 16px;background:#111827;border:2px solid #ff9700;color:white;font-weight:bold}
+.enemyBar{height:18px;background:#351313;border:2px solid white;margin:10px}.enemyFill{height:100%;background:#d84a3c}
+@media(max-width:800px){#questPanel,#dailyPanel{display:none}}
 </style>
 </head>
 
@@ -417,7 +425,7 @@ canvas {
         </h1>
 
         <div class="version">
-            ALPHA 0.2
+            ALPHA 0.3
         </div>
 
 
@@ -502,10 +510,9 @@ canvas {
 
             <br>
 
-            ⭐ Poziom:
-            <span id="levelText">1</span>
-
-            <br>
+            ⭐ Poziom: <span id="levelText">1</span><br>
+            ✨ EXP: <span id="expText">0/100</span><br>
+            🧪 Leczenie: <span id="potionText">0</span><br>
 
             💰 Zeni:
             <span id="zeniText">0</span>
@@ -584,6 +591,12 @@ canvas {
     </div>
 
 
+
+    <div id="questPanel"><div class="panelTitle">📜 QUEST</div><div>Pokonaj 5 Bandytów</div><div id="questProgress">0/5</div><div>500 Zeni + 100 EXP</div><button id="questClaim" class="actionBtn" onclick="claimQuest()" disabled>ODBIERZ</button></div>
+    <div id="dailyPanel"><div class="panelTitle">🎁 DZIENNA NAGRODA</div><div id="dailyText">Gotowa?</div><button id="dailyButton" class="actionBtn" onclick="claimDaily()">ODBIERZ</button></div>
+    <div id="combatPanel"><h2 id="enemyName">Bandyta</h2><div class="enemyBar"><div id="enemyHpFill" class="enemyFill"></div></div><div id="enemyHpText"></div><p>Walka!</p><button class="actionBtn" onclick="attackEnemy()">⚔️ ATAK</button> <button class="actionBtn" onclick="usePotion()">🧪 LECZENIE</button> <button class="actionBtn" onclick="closeCombat()">UCIEKAJ</button></div>
+    <div id="shopPanel"><h2>🛒 Handlarz</h2><p>Leczenie przywraca 50 HP.</p><button class="actionBtn" onclick="buyPotion()">Kup leczenie — 100 Zeni</button> <button class="actionBtn" onclick="closeShop()">Zamknij</button></div>
+    <div id="toast"></div>
     <canvas id="game"></canvas>
 
 </div>
@@ -705,8 +718,13 @@ function submitAuth() {
             password: password,
 
             level: 1,
-
+            exp: 0,
             zeni: 0,
+            potions: 0,
+            questKills: 0,
+            questClaimed: false,
+            lastDaily: 0,
+            dailyStreak: 0,
 
             dragonBalls: 0,
 
@@ -776,11 +794,38 @@ function submitAuth() {
 
 
 
+
+function normalizeAccount(){
+ currentUser.exp??=0;currentUser.potions??=0;currentUser.questKills??=0;currentUser.questClaimed??=false;currentUser.lastDaily??=0;currentUser.dailyStreak??=0;currentUser.hp??=100;currentUser.level??=1;currentUser.zeni??=0;
+}
+function needExp(){return currentUser.level*100}
+function maxHp(){return 100+(currentUser.level-1)*20}
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",2200)}
+function addExp(n){currentUser.exp+=n;while(currentUser.exp>=needExp()){currentUser.exp-=needExp();currentUser.level++;currentUser.hp=maxHp();toast("⭐ Nowy poziom: "+currentUser.level)}updateHUD();savePlayer()}
+function claimQuest(){if(currentUser.questKills<5||currentUser.questClaimed)return;currentUser.questClaimed=true;currentUser.zeni+=500;addExp(100);toast("📜 Quest: +500 Zeni +100 EXP")}
+function updateDailyUI(){if(!currentUser)return;let left=86400000-(Date.now()-(currentUser.lastDaily||0)),b=document.getElementById("dailyButton"),t=document.getElementById("dailyText");if(left<=0){b.disabled=false;t.textContent="Nagroda gotowa! Seria: "+currentUser.dailyStreak}else{b.disabled=true;t.textContent=`Następna za ${Math.floor(left/3600000)}h ${Math.floor(left%3600000/60000)}m`}}
+function claimDaily(){let now=Date.now();if(now-(currentUser.lastDaily||0)<86400000)return;currentUser.dailyStreak=currentUser.lastDaily&&now-currentUser.lastDaily<190080000?(currentUser.dailyStreak||0)+1:1;let r=[100,200,300,500,700,1000,2000][Math.min(currentUser.dailyStreak,7)-1];currentUser.zeni+=r;currentUser.lastDaily=now;toast("🎁 +"+r+" Zeni");updateHUD();savePlayer()}
+let activeEnemy=null;
+const enemies=[
+{x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},
+{x:1360,y:900,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},
+{x:1550,y:1030,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
+{x:1870,y:900,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
+{x:2050,y:700,name:"Elitarny Bandyta",level:3,maxHp:120,hp:120,alive:true,respawn:0}];
+function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;document.getElementById("combatPanel").style.display="block";refreshCombat()}
+function closeCombat(){activeEnemy=null;document.getElementById("combatPanel").style.display="none"}
+function refreshCombat(){if(!activeEnemy)return;document.getElementById("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;document.getElementById("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";document.getElementById("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
+function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5;if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=50+e.level*25,x=25+e.level*10;currentUser.zeni+=z;currentUser.questKills++;closeCombat();addExp(x);toast(`⚔️ +${z} Zeni +${x} EXP`);updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){currentUser.hp=maxHp();player.x=1050;player.y=800;closeCombat();toast("💥 Przegrana — powrót do centrum")}refreshCombat();updateHUD();savePlayer()}
+function usePotion(){if(!currentUser.potions){toast("Brak leczenia");return}if(currentUser.hp>=maxHp()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
+function openShop(){document.getElementById("shopPanel").style.display="block"}function closeShop(){document.getElementById("shopPanel").style.display="none"}
+function buyPotion(){if(currentUser.zeni<100){toast("Za mało Zeni");return}currentUser.zeni-=100;currentUser.potions++;updateHUD();savePlayer();toast("🧪 Kupiono leczenie")}
+
 /* =========================================
    START GRY
 ========================================= */
 
 function startGame() {
+    normalizeAccount();
 
     document.getElementById(
         "authScreen"
@@ -891,13 +936,19 @@ function updateHUD() {
     document.getElementById(
         "hpText"
     ).textContent =
-        currentUser.hp + "/100";
+        currentUser.hp + "/" + maxHp();
 
 
     document.getElementById(
         "levelText"
     ).textContent =
         currentUser.level;
+
+    document.getElementById("expText").textContent=(currentUser.exp??0)+"/"+needExp();
+    document.getElementById("potionText").textContent=currentUser.potions??0;
+    document.getElementById("questProgress").textContent=Math.min(currentUser.questKills??0,5)+"/5";
+    document.getElementById("questClaim").disabled=(currentUser.questKills??0)<5||!!currentUser.questClaimed;
+    updateDailyUI();
 
 
     document.getElementById(
@@ -963,6 +1014,9 @@ const TILE = 32;
 
 
 
+
+function drawEnemy(e,cx,cy){if(!e.alive)return;let x=e.x-cx,y=e.y-cy;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.level>=3?"#7d1d1d":"#34343f";ctx.fillRect(x+4,y+13,22,23);ctx.fillStyle="#171717";ctx.fillRect(x+6,y+36,7,10);ctx.fillRect(x+18,y+36,7,10);ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
+
 /* =========================================
    GRACZ
 ========================================= */
@@ -996,7 +1050,12 @@ window.addEventListener(
     "keydown",
     e => {
 
-        keys[e.key.toLowerCase()] = true;
+        const k=e.key.toLowerCase(); keys[k]=true;
+        if(k==="e"&&currentUser){
+          const tr=npcs.find(n=>n.name==="Handlarz");
+          if(tr&&Math.hypot(player.x-tr.x,player.y-tr.y)<100)openShop();
+          if(!activeEnemy){const en=enemies.find(v=>v.alive&&Math.hypot(player.x-v.x,player.y-v.y)<85);if(en)openCombat(en)}
+        }
 
     }
 );
@@ -1184,7 +1243,7 @@ const npcs = [
         name: "Handlarz",
 
         text:
-        "Niedługo będziesz mógł kupować tutaj przedmioty za Zeni."
+        "Sprzedaję leczenie za Zeni. Podejdź i naciśnij E."
 
     },
 
@@ -1490,6 +1549,8 @@ function update(time) {
 
 
         checkNPC();
+        for(const en of enemies){if(!en.alive&&Date.now()>=en.respawn){en.alive=true;en.hp=en.maxHp}}
+        updateDailyUI();
 
 
         saveTimer += dt;
@@ -2210,6 +2271,7 @@ function draw() {
     }
 
 
+    for(const enemy of enemies) drawEnemy(enemy,cameraX,cameraY);
     drawPlayer(
         cameraX,
         cameraY
