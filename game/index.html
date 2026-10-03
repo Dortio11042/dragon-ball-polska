@@ -99,12 +99,18 @@ const portals=[
  {world:"desert",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
  {world:"mountains",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}
 ,
-{x:2050,y:560,w:70,h:100,to:"forest",label:"Mroczny Las"},
-{x:2050,y:700,w:70,h:100,to:"ice",label:"Lodowa Kraina"},
-{x:2050,y:840,w:70,h:100,to:"volcano",label:"Wulkaniczna Wyspa"},
-{x:2050,y:980,w:70,h:100,to:"sky",label:"Podniebna Kraina"},
-{x:2050,y:1120,w:70,h:100,to:"alien",label:"Obca Planeta"},
-{x:2050,y:1260,w:70,h:100,to:"masters",label:"Kraina Mistrzów"}];
+{world:"valley",x:1750,y:300,w:70,h:100,to:"forest",label:"LAS",min:15},
+{world:"valley",x:1850,y:300,w:70,h:100,to:"ice",label:"LÓD",min:20},
+{world:"valley",x:1950,y:300,w:70,h:100,to:"volcano",label:"WULKAN",min:25},
+{world:"valley",x:1750,y:450,w:70,h:100,to:"sky",label:"NIEBO",min:30},
+{world:"valley",x:1850,y:450,w:70,h:100,to:"alien",label:"PLANETA",min:40},
+{world:"valley",x:1950,y:450,w:70,h:100,to:"masters",label:"MISTRZOWIE",min:50},
+{world:"forest",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
+{world:"ice",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
+{world:"volcano",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
+{world:"sky",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
+{world:"alien",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
+{world:"masters",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}];
 const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."}];
 const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
@@ -209,12 +215,12 @@ function respawnPlayer(){currentWorld="valley";player.x=worlds.valley.spawn.x;pl
 
 
 const extraWorlds06={
- forest:{name:"🌲 Mroczny Las",min:15,spawn:{x:260,y:800}},
- ice:{name:"❄️ Lodowa Kraina",min:20,spawn:{x:260,y:800}},
- volcano:{name:"🌋 Wulkaniczna Wyspa",min:25,spawn:{x:260,y:800}},
- sky:{name:"☁️ Podniebna Kraina",min:30,spawn:{x:260,y:800}},
- alien:{name:"🌌 Obca Planeta",min:40,spawn:{x:260,y:800}},
- masters:{name:"🔥 Kraina Mistrzów",min:50,spawn:{x:260,y:800}}
+ forest:{name:"🌲 Mroczny Las",bg:"#174d2b",road:"#6e5436",min:15,spawn:{x:260,y:800}},
+ ice:{name:"❄️ Lodowa Kraina",bg:"#b9e8f5",road:"#eafaff",min:20,spawn:{x:260,y:800}},
+ volcano:{name:"🌋 Wulkaniczna Wyspa",bg:"#54231d",road:"#9b3825",min:25,spawn:{x:260,y:800}},
+ sky:{name:"☁️ Podniebna Kraina",bg:"#76c9ef",road:"#e5f8ff",min:30,spawn:{x:260,y:800}},
+ alien:{name:"🌌 Obca Planeta",bg:"#2d2055",road:"#684b91",min:40,spawn:{x:260,y:800}},
+ masters:{name:"🔥 Kraina Mistrzów",bg:"#5b1919",road:"#d88b31",min:50,spawn:{x:260,y:800}}
 };
 Object.assign(worlds,extraWorlds06);
 
