@@ -76,6 +76,9 @@
 <div id="powersPanel"><div class="bigPanel"><h2>⚡ MOCE</h2><p>Odblokowane moce możesz założyć do 3 slotów.</p><div id="powersGrid" class="grid"></div><button class="actionBtn" onclick="closeOverlay('powersPanel')">ZAMKNIJ</button></div></div>
 <div id="leaderboardPanel"><div class="bigPanel"><h2>🏆 GLOBALNA TOPKA</h2><p>Ranking wszystkich wojowników Dragon Ball Polska Online — LVL, a przy remisie EXP.</p><div id="leaderboardList"></div><button class="actionBtn" onclick="closeOverlay('leaderboardPanel')">ZAMKNIJ</button></div></div>
 <div id="questNpcPanel"><div class="bigPanel"><h2>📜 Mistrz — Zadania</h2><div id="questNpcContent"></div><button class="actionBtn" onclick="closeOverlay('questNpcPanel')">ZAMKNIJ</button></div></div>
+<div id="mountainQuestPanel" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.72);align-items:center;justify-content:center">
+ <div class="bigPanel"><h2>⛰️ Górski Mistrz — Próby Gór</h2><div id="mountainQuestContent"></div><button class="actionBtn" onclick="closeOverlay('mountainQuestPanel')">ZAMKNIJ</button></div>
+</div>
 
 
 <div id="dragonPanel"><div class="bigPanel"><h2>🐉 SMOCZE KULE</h2><div id="dragonGrid" class="grid"></div><div id="wishArea"></div><button class="actionBtn" onclick="closeOverlay('dragonPanel')">ZAMKNIJ</button></div></div>
@@ -118,7 +121,7 @@ const portals=[
 {world:"sky",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"alien",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"masters",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}];
-const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."},{world:"valley",x:720,y:1050,name:"Dzienny Opiekun",text:"Mam dla ciebie codzienną nagrodę."},{world:"valley",x:1320,y:1050,name:"Łowca Dnia",text:"Mam dla ciebie codzienne zadanie."}];
+const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."},{world:"valley",x:720,y:1050,name:"Dzienny Opiekun",text:"Mam dla ciebie codzienną nagrodę."},{world:"valley",x:1320,y:1050,name:"Łowca Dnia",text:"Mam dla ciebie codzienne zadanie."},{world:"mountains",x:1050,y:1180,name:"Górski Mistrz",text:"Przejdź moje próby, a zdobędziesz Smoczą Kulę."}];
 const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
  {world:"desert",x:700,y:650,name:"Pustynny Wojownik",level:5,maxHp:170,hp:170,alive:true,respawn:0},{world:"desert",x:1250,y:950,name:"Pustynny Wojownik",level:6,maxHp:200,hp:200,alive:true,respawn:0},{world:"desert",x:1750,y:650,name:"Pustynny Elita",level:7,maxHp:250,hp:250,alive:true,respawn:0},
@@ -298,6 +301,61 @@ function openQuestNpc(){
 function acceptQuest05(){currentUser.activeQuest=currentUser.questIndex;currentUser.questProgress=0;closeOverlay("questNpcPanel");updateQuestUI();savePlayer();toast("📜 Przyjęto quest!")}
 function turnInQuest05(){let q=quests05[currentUser.questIndex];if(!q||currentUser.questProgress<q.target)return;currentUser.zeni+=q.rewardZeni;addExp(Math.round(q.rewardExp*(1+xpBonus())));currentUser.questIndex++;currentUser.activeQuest=null;currentUser.questProgress=0;closeOverlay("questNpcPanel");updateQuestUI();savePlayer();toast("🏆 Quest oddany!")}
 function registerKill(enemy){currentUser.totalKills++;if(currentUser.activeQuest===null)return;let q=quests05[currentUser.questIndex];if(q&&enemy.level>=q.minLevel){currentUser.questProgress=Math.min(q.target,currentUser.questProgress+1);updateQuestUI()}}
+
+const mountainQuests07=[
+ {title:"Próba wysokości",text:"Pokonaj 3 Górskich Wojowników.",target:3,match:e=>e.world==="mountains"&&e.name==="Górski Wojownik",rewardZeni:2500,rewardExp:500},
+ {title:"Strażnicy szlaku",text:"Pokonaj 2 przeciwników w Górach o LVL 11 lub wyższym.",target:2,match:e=>e.world==="mountains"&&e.level>=11&&!e.boss,rewardZeni:4000,rewardExp:750},
+ {title:"Elita góry",text:"Pokonaj 3 przeciwników w Górach o LVL 12 lub wyższym.",target:3,match:e=>e.world==="mountains"&&e.level>=12&&!e.boss,rewardZeni:6000,rewardExp:1000},
+ {title:"Ostateczna próba",text:"Pokonaj bossa Strażnik Gór.",target:1,match:e=>e.world==="mountains"&&e.boss&&e.bossKey==="mountains",rewardZeni:10000,rewardExp:1800}
+];
+function normalizeMountain07(){
+ currentUser.mountainQuestIndex??=0;
+ currentUser.mountainQuestActive??=false;
+ currentUser.mountainQuestProgress??=0;
+ currentUser.mountainQuestFinished??=false;
+}
+function openMountainQuest07(){
+ normalizeMountain07();
+ let i=currentUser.mountainQuestIndex,q=mountainQuests07[i],c=$("mountainQuestContent");
+ if(currentUser.mountainQuestFinished||!q){
+  c.innerHTML="<h3>🐉 Próby Gór ukończone!</h3><p>Zdobyłeś 4★ Smoczą Kulę.</p>";
+ }else if(!currentUser.mountainQuestActive){
+  c.innerHTML=`<h3>${q.title}</h3><p>${q.text}</p><p>🎁 ${q.rewardZeni} Zeni + ${q.rewardExp} EXP</p><button class="actionBtn" onclick="acceptMountainQuest07()">PRZYJMIJ PRÓBĘ</button>`;
+ }else if(currentUser.mountainQuestProgress>=q.target){
+  c.innerHTML=`<h3>✅ ${q.title}</h3><p>Próba wykonana.</p><p>🎁 ${q.rewardZeni} Zeni + ${q.rewardExp} EXP</p><button class="actionBtn" onclick="turnInMountainQuest07()">ODBIERZ NAGRODĘ</button>`;
+ }else{
+  c.innerHTML=`<h3>${q.title}</h3><p>${q.text}</p><p>Postęp: <b>${currentUser.mountainQuestProgress}/${q.target}</b></p><p>Wróć po wykonaniu próby.</p>`;
+ }
+ openOverlay("mountainQuestPanel");
+}
+function acceptMountainQuest07(){
+ normalizeMountain07();
+ currentUser.mountainQuestActive=true;currentUser.mountainQuestProgress=0;
+ closeOverlay("mountainQuestPanel");savePlayer();toast("⛰️ Przyjęto próbę Górskiego Mistrza!");
+}
+function turnInMountainQuest07(){
+ normalizeMountain07();
+ let q=mountainQuests07[currentUser.mountainQuestIndex];
+ if(!q||!currentUser.mountainQuestActive||currentUser.mountainQuestProgress<q.target)return;
+ currentUser.zeni+=q.rewardZeni;addExp(Math.round(q.rewardExp*(1+xpBonus())));
+ currentUser.mountainQuestIndex++;currentUser.mountainQuestActive=false;currentUser.mountainQuestProgress=0;
+ if(currentUser.mountainQuestIndex>=mountainQuests07.length){
+  currentUser.mountainQuestFinished=true;
+  grantBall(3);
+  toast("🐉 SERIA GÓRSKA UKOŃCZONA — zdobywasz 4★ Smoczą Kulę!");
+ }else toast("⛰️ Próba ukończona! Wróć po kolejną.");
+ closeOverlay("mountainQuestPanel");updateHUD();savePlayer();
+}
+function registerMountainKill07(enemy){
+ normalizeMountain07();
+ if(!currentUser.mountainQuestActive)return;
+ let q=mountainQuests07[currentUser.mountainQuestIndex];
+ if(q&&q.match(enemy)){
+  currentUser.mountainQuestProgress=Math.min(q.target,currentUser.mountainQuestProgress+1);
+  if(currentUser.mountainQuestProgress>=q.target)toast("⛰️ Próba wykonana — wróć do Górskiego Mistrza!");
+ }
+}
+
 function renderShop05(){
  $("shopPanel").innerHTML=`<h2>🛒 Handlarz</h2><p>Twoje Zeni: <b>${currentUser.zeni}</b></p><div class="grid">${shopItems05.map(i=>`<div class="card"><b>${i.name}</b><br>${i.desc}<br>💰 ${i.price} Zeni<br><button class="actionBtn" onclick="buyShopItem05('${i.id}')">KUP</button></div>`).join("")}</div><button class="actionBtn" onclick="closeShop()">ZAMKNIJ</button>`
 }
@@ -337,6 +395,7 @@ const dragonTasks=[
 "Osiągnij LVL 35 i pokonaj Strażnika Kuli"
 ];
 function normalize06(){
+ normalizeMountain07();
  currentUser.dragonBallsOwned??=[false,false,false,false,false,false,false];
  currentUser.cloudOwned??=false;currentUser.cloudEquipped??=false;
  currentUser.dailyQuestDate??="";currentUser.dailyQuestKills??=0;currentUser.dailyQuestClaimed??=false;
@@ -402,7 +461,6 @@ function registerKill06(enemy){
  if(currentUser.questIndex>=4)grantBall(0);
  if((currentUser.bossKills.desert||0)>=1)grantBall(1);
  if((currentUser.arenaBest||0)>=10)grantBall(2);
- if(currentUser.level>=15&&currentUser.totalKills>=40)grantBall(3);
  if(currentUser.level>=25&&(currentUser.bossKills.volcano||0)>=1)grantBall(5);
  if(currentUser.level>=35&&currentUser.totalKills>=100)grantBall(6);
 }
@@ -466,7 +524,7 @@ function updateDaily(){let left=86400000-(Date.now()-currentUser.lastDaily);if(l
 function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)return;currentUser.dailyStreak=currentUser.lastDaily&&n-currentUser.lastDaily<190080000?currentUser.dailyStreak+1:1;let r=[100,200,300,500,700,1000,2000][Math.min(currentUser.dailyStreak,7)-1];currentUser.zeni+=r;currentUser.lastDaily=n;toast("🎁 +"+r+" Zeni");updateHUD();savePlayer()}
 function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
-function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
+function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerMountainKill07(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
 function usePotion(){if(!currentUser.potions){toast("Brak małego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
 function useBigPotion05(){if(!currentUser.bigPotions){toast("Brak dużego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.bigPotions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+100);updateHUD();savePlayer();toast("🧪 +100 HP")}
 function useMeal05(){if(!currentUser.meals){toast("Brak posiłku");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.meals--;currentUser.hp=maxHp05();updateHUD();savePlayer();toast("🍜 HP uzupełnione do pełna!")}
@@ -475,11 +533,11 @@ function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textCo
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
 function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
-function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
+function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Górski Mistrz")openMountainQuest07();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener("resize",resize);
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys[k]=true;if(k==="e")interact()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);$("passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});document.querySelectorAll(".move").forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
 function blocked(x,y){return x<0||y<0||x+player.width>2400||y+player.height>1700}
-function updateHint(){let msg="";let p=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(p)msg=`E — ${p.label}${p.min>1?" (LVL "+p.min+")":""}`;let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(n)msg="E — "+(n.name==="Handlarz"?"SKLEP":n.name==="Trener"?"ARENA":n.name==="Dzienny Opiekun"?"DZIENNA NAGRODA":n.name==="Łowca Dnia"?"DZIENNE ZADANIE":"ROZMOWA");let e=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(e)msg=e.boss?"👑 E — BOSS: "+e.name:"E — WALKA: "+e.name;$("hint").textContent=msg;$("hint").style.display=msg?"block":"none"}
+function updateHint(){let msg="";let p=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(p)msg=`E — ${p.label}${p.min>1?" (LVL "+p.min+")":""}`;let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(n)msg="E — "+(n.name==="Handlarz"?"SKLEP":n.name==="Trener"?"ARENA":n.name==="Dzienny Opiekun"?"DZIENNA NAGRODA":n.name==="Łowca Dnia"?"DZIENNE ZADANIE":n.name==="Górski Mistrz"?"PRÓBY GÓR":"ROZMOWA");let e=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(e)msg=e.boss?"👑 E — BOSS: "+e.name:"E — WALKA: "+e.name;$("hint").textContent=msg;$("hint").style.display=msg?"block":"none"}
 let last=performance.now(),saveTimer=0;function update(t){let dt=Math.min((t-last)/1000,.05);last=t;if(currentUser){let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){let l=Math.hypot(dx,dy);dx/=l;dy/=l}let nx=player.x+dx*player.speed*(1+speedBonus05()+cloudSpeed06())*dt,ny=player.y+dy*player.speed*(1+speedBonus05()+cloudSpeed06())*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;for(let e of enemies)if(!e.alive&&!e.arena&&Date.now()>=e.respawn){e.alive=true;e.hp=e.maxHp}updateHint();updateDaily();saveTimer+=dt;if(saveTimer>=3){savePlayer();saveTimer=0}draw()}requestAnimationFrame(update)}
 function camera(){return{x:Math.max(0,Math.min(player.x-canvas.width/2,2400-canvas.width)),y:Math.max(0,Math.min(player.y-canvas.height/2,1700-canvas.height))}}
 
@@ -523,7 +581,7 @@ window.addEventListener("keydown",e=>{
    let id=currentUser.equippedPowers[n-1];if(!id)return;
    let p=powers05.find(x=>x.id===id);if(!p)return;
    activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus()+p.dmg;
-   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=en.boss?(en.rewardZeni||50+en.level*25):50+en.level*25,x=en.boss?(en.rewardExp||25+en.level*10):25+en.level*10;if(en.boss){currentUser.bossKills[en.bossKey]=(currentUser.bossKills[en.bossKey]||0)+1;en.respawn=Date.now()+60000;}currentUser.zeni+=z;currentUser.questKills++;registerKill(en);registerKill06(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
+   if(activeEnemy.hp<=0){let en=activeEnemy;en.alive=false;en.respawn=Date.now()+10000;let z=en.boss?(en.rewardZeni||50+en.level*25):50+en.level*25,x=en.boss?(en.rewardExp||25+en.level*10):25+en.level*10;if(en.boss){currentUser.bossKills[en.bossKey]=(currentUser.bossKills[en.bossKey]||0)+1;en.respawn=Date.now()+60000;}currentUser.zeni+=z;currentUser.questKills++;registerKill(en);registerMountainKill07(en);registerKill06(en);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast("⚡ "+id+"! Pokonano przeciwnika.");updateHUD();savePlayer();return}
    currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer();
  }
 });
