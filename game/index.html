@@ -6,374 +6,349 @@
 
 <title>Dragon Ball Polska Online</title>
 
-/* =========================
-   MENU STARTOWE
-========================= */
-
-#startScreen {
-    position: fixed;
-    inset: 0;
-
-    z-index: 1000;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background:
-        radial-gradient(circle at center, #263b75 0%, #11182c 45%, #070a11 100%);
-}
-
-.menuBox {
-    width: min(430px, 90%);
-
-    padding: 35px;
-
-    text-align: center;
-
-    background: rgba(8, 12, 24, 0.94);
-
-    border: 4px solid #ff9d00;
-
-    box-shadow:
-        0 0 0 5px #101010,
-        0 0 40px rgba(255, 157, 0, .35);
-
-    border-radius: 12px;
-
-    color: white;
-}
-
-.menuBox h1 {
-    margin: 15px 0 3px;
-
-    color: #ff9d00;
-
-    font-size: 32px;
-
-    text-shadow:
-        3px 3px #8d2600,
-        5px 5px #000;
-}
-
-.version {
-    color: #8ba8ff;
-
-    font-weight: bold;
-
-    margin-bottom: 25px;
-}
-
-.dragonBall {
-    width: 95px;
-    height: 95px;
-
-    margin: auto;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(circle at 35% 30%, #ffd15a, #ff8a00 60%, #d94a00);
-
-    border: 4px solid #d76500;
-
-    color: #d71919;
-
-    font-size: 21px;
-
-    letter-spacing: -3px;
-
-    box-shadow:
-        inset -10px -10px 20px rgba(0,0,0,.25),
-        0 0 25px rgba(255,145,0,.45);
-}
-
-.mainButton,
-.menuButton {
-    display: block;
-
-    width: 100%;
-
-    padding: 15px;
-
-    margin-top: 12px;
-
-    border: none;
-
-    cursor: pointer;
-
-    font-weight: bold;
-
-    font-size: 16px;
-
-    border-radius: 5px;
-
-    transition: .15s;
-}
-
-.mainButton {
-    color: #111;
-
-    background: #ff9d00;
-
-    border-bottom: 5px solid #b94d00;
-}
-
-.menuButton {
-    color: white;
-
-    background: #263b75;
-
-    border-bottom: 5px solid #15234c;
-}
-
-.mainButton:hover,
-.menuButton:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.15);
-}
-
-.mainButton:active,
-.menuButton:active {
-    transform: translateY(2px);
-}
-
-.info {
-    margin-top: 25px;
-
-    line-height: 1.8;
-
-    color: #bbb;
-
-    font-size: 14px;
-}
-
-
-/* =========================
-   LOGOWANIE
-========================= */
-
-#accountWindow {
-    position: fixed;
-    inset: 0;
-
-    z-index: 1100;
-
-    display: none;
-
-    align-items: center;
-    justify-content: center;
-
-    background: rgba(0,0,0,.78);
-}
-
-.accountBox {
-    position: relative;
-
-    width: min(390px, 90%);
-
-    padding: 35px;
-
-    background: #111827;
-
-    border: 4px solid #ff9d00;
-
-    color: white;
-
-    text-align: center;
-
-    box-shadow: 8px 8px 0 #000;
-}
-
-.accountBox h2 {
-    color: #ff9d00;
-}
-
-.accountBox input {
-    width: 100%;
-
-    padding: 14px;
-
-    margin: 7px 0;
-
-    background: #080c14;
-
-    border: 2px solid #35466d;
-
-    color: white;
-
-    outline: none;
-
-    font-size: 15px;
-}
-
-.accountBox input:focus {
-    border-color: #ff9d00;
-}
-
-.closeButton {
-    position: absolute;
-
-    right: 10px;
-    top: 10px;
-
-    background: transparent;
-
-    border: none;
-
-    color: white;
-
-    cursor: pointer;
-
-    font-size: 20px;
-}
-
-#accountMessage {
-    min-height: 20px;
-
-    color: #ffca56;
-}
+<style>
 * {
     box-sizing: border-box;
 }
 
-<div id="startScreen">
-
-    <div class="menuBox">
-        <div class="dragonBall">★★★★</div>
-
-        <h1>DRAGON BALL<br>POLSKA ONLINE</h1>
-
-        <p class="version">ALPHA 0.2</p>
-
-        <button class="mainButton" onclick="playGame()">
-            ▶ ZAGRAJ
-        </button>
-
-        <button class="menuButton" onclick="showLogin()">
-            🔑 ZALOGUJ SIĘ
-        </button>
-
-        <button class="menuButton" onclick="showRegister()">
-            👤 ZAREJESTRUJ SIĘ
-        </button>
-
-        <p class="info">
-            🟠 Zdobądź 7 Smoczych Kul<br>
-            ⚔️ Walcz z przeciwnikami<br>
-            💰 Zdobywaj Zeni<br>
-            🌍 Odkrywaj nowe światy
-        </p>
-
-    </div>
-
-</div>
-
-
-<div id="accountWindow">
-
-    <div class="accountBox">
-
-        <button class="closeButton" onclick="closeAccount()">✕</button>
-
-        <h2 id="accountTitle">LOGOWANIE</h2>
-
-        <input
-            id="username"
-            type="text"
-            maxlength="16"
-            placeholder="Nazwa wojownika"
-        >
-
-        <input
-            id="password"
-            type="password"
-            placeholder="Hasło"
-        >
-
-        <button
-            id="accountButton"
-            class="mainButton"
-            onclick="fakeLogin()"
-        >
-            ZALOGUJ
-        </button>
-
-        <p id="accountMessage"></p>
-
-    </div>
-
-</div>
+html, body {
     margin: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #10151d;
     font-family: Arial, sans-serif;
+    background: #070b12;
+}
+
+/* =========================================
+   EKRAN LOGOWANIA
+========================================= */
+
+#authScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(circle at 50% 35%, #253d79 0%, #10182c 40%, #05070d 100%);
+}
+
+.authBox {
+    width: min(430px, 92%);
+    padding: 35px;
+
+    background: rgba(8, 13, 25, 0.97);
+
+    border: 4px solid #ff9700;
+    border-radius: 14px;
+
+    box-shadow:
+        0 0 0 5px #050505,
+        0 0 45px rgba(255, 145, 0, .3);
+
+    color: white;
+    text-align: center;
+}
+
+.ball {
+    width: 90px;
+    height: 90px;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #c81010;
+    font-size: 24px;
+    letter-spacing: -4px;
+
+    background:
+        radial-gradient(circle at 35% 30%, #ffd86c, #ff9800 55%, #d55200);
+
+    border: 4px solid #c95b00;
+
+    box-shadow:
+        inset -10px -10px 18px rgba(0,0,0,.25),
+        0 0 25px rgba(255,150,0,.35);
+}
+
+.authBox h1 {
+    margin: 10px 0 4px;
+
+    color: #ff9d00;
+
+    font-size: 29px;
+
+    text-shadow:
+        3px 3px #8e2d00,
+        5px 5px #000;
+}
+
+.version {
+    margin-top: 5px;
+    margin-bottom: 25px;
+
+    color: #839dff;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+
+    margin-bottom: 18px;
+}
+
+.tab {
+    width: 50%;
+    padding: 12px;
+
+    border: 2px solid #314574;
+    border-radius: 5px;
+
+    background: #151f39;
+    color: #bbb;
+
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.tab.active {
+    background: #ff9700;
+    border-color: #ff9700;
+    color: #111;
+}
+
+.authBox input {
+    width: 100%;
+
+    margin: 6px 0;
+    padding: 14px;
+
+    background: #070b13;
+
+    border: 2px solid #2f4168;
+    border-radius: 5px;
+
+    color: white;
+    font-size: 15px;
+
+    outline: none;
+}
+
+.authBox input:focus {
+    border-color: #ff9700;
+}
+
+.authButton {
+    width: 100%;
+
+    margin-top: 13px;
+    padding: 15px;
+
+    border: none;
+    border-bottom: 5px solid #a94700;
+    border-radius: 5px;
+
+    background: #ff9700;
+
+    color: #111;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.authButton:hover {
+    filter: brightness(1.12);
+}
+
+#authMessage {
+    min-height: 22px;
+
+    margin-top: 13px;
+    margin-bottom: 0;
+
+    color: #ffcf63;
+
+    font-size: 13px;
+}
+
+.smallInfo {
+    color: #65728d;
+
+    font-size: 11px;
+
+    margin-top: 18px;
+}
+
+
+/* =========================================
+   GRA
+========================================= */
+
+#gameContainer {
+    display: none;
+
+    width: 100%;
+    height: 100%;
 }
 
 canvas {
     display: block;
+
+    width: 100%;
+    height: 100%;
+
     image-rendering: pixelated;
 }
 
-#ui {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 10;
 
-    background: rgba(0,0,0,.72);
-    border: 3px solid #ff9d00;
-    padding: 12px 16px;
+/* =========================================
+   HUD
+========================================= */
+
+#hud {
+    position: fixed;
+
+    left: 15px;
+    top: 15px;
+
+    z-index: 100;
+
+    min-width: 210px;
+
+    padding: 12px;
+
     color: white;
 
-    box-shadow: 4px 4px 0 #000;
+    background: rgba(7, 10, 18, .88);
+
+    border: 3px solid #ff9700;
+    border-radius: 7px;
+
+    box-shadow: 4px 4px 0 rgba(0,0,0,.6);
 }
 
-#ui strong {
-    color: #ffb000;
+#playerName {
+    color: #ffad21;
+
+    font-size: 16px;
+    font-weight: bold;
 }
 
-#controls {
-    color: #bbb;
-    font-size: 12px;
-    margin-top: 5px;
+.stats {
+    margin-top: 7px;
+
+    font-size: 13px;
+    line-height: 1.6;
 }
+
+.logout {
+    margin-top: 7px;
+
+    padding: 5px 8px;
+
+    background: #202b48;
+
+    border: 1px solid #50628c;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   DIALOG NPC
+========================================= */
 
 #dialog {
     display: none;
 
     position: fixed;
+
     left: 50%;
     bottom: 30px;
+
     transform: translateX(-50%);
 
+    z-index: 200;
+
     width: min(600px, 90%);
+
     padding: 18px;
 
-    background: #10131c;
-    border: 4px solid white;
     color: white;
 
-    z-index: 20;
+    background: #0b101d;
+
+    border: 4px solid white;
+
     box-shadow: 7px 7px 0 #000;
 }
 
-#dialog b {
+#dialogName {
     color: #ff9d00;
+
+    font-weight: bold;
+
+    margin-bottom: 7px;
 }
 
-#mobile {
-    display: none;
+
+/* =========================================
+   INFO STREFY
+========================================= */
+
+#zoneName {
     position: fixed;
-    bottom: 25px;
-    left: 25px;
-    z-index: 30;
+
+    top: 20px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 100;
+
+    padding: 8px 18px;
+
+    color: white;
+
+    background: rgba(0,0,0,.65);
+
+    border: 2px solid rgba(255,255,255,.4);
+
+    font-weight: bold;
+
+    pointer-events: none;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+#mobileControls {
+    display: none;
+
+    position: fixed;
+
+    left: 22px;
+    bottom: 22px;
+
+    z-index: 300;
 }
 
 .mobileRow {
@@ -381,30 +356,43 @@ canvas {
     justify-content: center;
 }
 
-.moveButton {
+.move {
     width: 58px;
     height: 58px;
 
+    margin: 2px;
+
+    background: rgba(0,0,0,.7);
+
     border: 2px solid white;
-    background: rgba(0,0,0,.65);
+    border-radius: 9px;
+
     color: white;
 
-    font-size: 25px;
-    font-weight: bold;
-
-    margin: 2px;
-    border-radius: 10px;
+    font-size: 24px;
 
     touch-action: none;
 }
 
-@media (max-width: 800px) {
-    #mobile {
+@media(max-width: 800px) {
+
+    #mobileControls {
         display: block;
     }
 
-    #ui {
-        font-size: 12px;
+    #hud {
+        font-size: 11px;
+
+        min-width: 170px;
+    }
+
+    #zoneName {
+        top: auto;
+        bottom: 20px;
+        right: 15px;
+        left: auto;
+
+        transform: none;
     }
 }
 </style>
@@ -413,201 +401,837 @@ canvas {
 <body>
 
 
-</h1>
+<!-- ======================================
+     LOGOWANIE / REJESTRACJA
+======================================= -->
 
-<div id="ui">
+<div id="authScreen">
 
-<div id="ui">
-    🐉 <strong>DRAGON BALL POLSKA ONLINE</strong>
-    <div id="controls">WASD / strzałki • podejdź do NPC</div>
-</div>
+    <div class="authBox">
 
-<div id="dialog">
-    <b id="npcName">NPC</b>
-    <div id="npcText"></div>
-</div>
+        <div class="ball">★★★★</div>
 
-<div id="mobile">
+        <h1>
+            DRAGON BALL<br>
+            POLSKA ONLINE
+        </h1>
 
-    <div class="mobileRow">
-        <button class="moveButton" data-key="ArrowUp">▲</button>
+        <div class="version">
+            ALPHA 0.2
+        </div>
+
+
+        <div class="tabs">
+
+            <button
+                id="loginTab"
+                class="tab active"
+                onclick="setAuthMode('login')"
+            >
+                LOGOWANIE
+            </button>
+
+            <button
+                id="registerTab"
+                class="tab"
+                onclick="setAuthMode('register')"
+            >
+                REJESTRACJA
+            </button>
+
+        </div>
+
+
+        <input
+            id="usernameInput"
+            type="text"
+            maxlength="16"
+            autocomplete="username"
+            placeholder="Nazwa wojownika"
+        >
+
+
+        <input
+            id="passwordInput"
+            type="password"
+            maxlength="40"
+            autocomplete="current-password"
+            placeholder="Hasło"
+        >
+
+
+        <button
+            id="authButton"
+            class="authButton"
+            onclick="submitAuth()"
+        >
+            ZALOGUJ SIĘ
+        </button>
+
+
+        <p id="authMessage"></p>
+
+
+        <p class="smallInfo">
+            Wersja testowa gry
+        </p>
+
     </div>
 
-    <div class="mobileRow">
-        <button class="moveButton" data-key="ArrowLeft">◀</button>
-        <button class="moveButton" data-key="ArrowDown">▼</button>
-        <button class="moveButton" data-key="ArrowRight">▶</button>
+</div>
+
+
+
+<!-- ======================================
+     GRA
+======================================= -->
+
+<div id="gameContainer">
+
+
+    <div id="hud">
+
+        <div id="playerName">
+            Wojownik
+        </div>
+
+        <div class="stats">
+
+            ❤️ HP:
+            <span id="hpText">100/100</span>
+
+            <br>
+
+            ⭐ Poziom:
+            <span id="levelText">1</span>
+
+            <br>
+
+            💰 Zeni:
+            <span id="zeniText">0</span>
+
+            <br>
+
+            🟠 Smocze Kule:
+            <span id="ballsText">0/7</span>
+
+        </div>
+
+        <button
+            class="logout"
+            onclick="logout()"
+        >
+            Wyloguj
+        </button>
+
     </div>
+
+
+    <div id="zoneName">
+        🌿 Zielona Dolina
+    </div>
+
+
+    <div id="dialog">
+
+        <div id="dialogName">
+            NPC
+        </div>
+
+        <div id="dialogText"></div>
+
+    </div>
+
+
+    <div id="mobileControls">
+
+        <div class="mobileRow">
+
+            <button
+                class="move"
+                data-key="arrowup"
+            >
+                ▲
+            </button>
+
+        </div>
+
+        <div class="mobileRow">
+
+            <button
+                class="move"
+                data-key="arrowleft"
+            >
+                ◀
+            </button>
+
+            <button
+                class="move"
+                data-key="arrowdown"
+            >
+                ▼
+            </button>
+
+            <button
+                class="move"
+                data-key="arrowright"
+            >
+                ▶
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <canvas id="game"></canvas>
 
 </div>
 
-<canvas id="game"></canvas>
+
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+/* =========================================
+   KONTA TESTOWE
+========================================= */
+
+let authMode = "login";
+
+let currentUser = null;
+
+
+function setAuthMode(mode) {
+
+    authMode = mode;
+
+    const loginTab =
+        document.getElementById("loginTab");
+
+    const registerTab =
+        document.getElementById("registerTab");
+
+    const button =
+        document.getElementById("authButton");
+
+    const message =
+        document.getElementById("authMessage");
+
+
+    message.textContent = "";
+
+
+    if(mode === "login") {
+
+        loginTab.classList.add("active");
+
+        registerTab.classList.remove("active");
+
+        button.textContent =
+            "ZALOGUJ SIĘ";
+
+    } else {
+
+        registerTab.classList.add("active");
+
+        loginTab.classList.remove("active");
+
+        button.textContent =
+            "STWÓRZ KONTO";
+
+    }
+
+}
+
+
+function submitAuth() {
+
+    const username =
+        document
+        .getElementById("usernameInput")
+        .value
+        .trim();
+
+    const password =
+        document
+        .getElementById("passwordInput")
+        .value;
+
+    const message =
+        document.getElementById("authMessage");
+
+
+    if(username.length < 3) {
+
+        message.textContent =
+            "❌ Nick musi mieć minimum 3 znaki.";
+
+        return;
+
+    }
+
+
+    if(password.length < 6) {
+
+        message.textContent =
+            "❌ Hasło musi mieć minimum 6 znaków.";
+
+        return;
+
+    }
+
+
+    const accountKey =
+        "dbp_account_" +
+        username.toLowerCase();
+
+
+    if(authMode === "register") {
+
+        if(localStorage.getItem(accountKey)) {
+
+            message.textContent =
+                "❌ Takie konto już istnieje.";
+
+            return;
+
+        }
+
+
+        const account = {
+
+            username: username,
+
+            password: password,
+
+            level: 1,
+
+            zeni: 0,
+
+            dragonBalls: 0,
+
+            hp: 100,
+
+            x: 1050,
+
+            y: 800
+
+        };
+
+
+        localStorage.setItem(
+            accountKey,
+            JSON.stringify(account)
+        );
+
+
+        message.style.color = "#76e58b";
+
+        message.textContent =
+            "✓ Konto utworzone! Możesz się zalogować.";
+
+
+        setAuthMode("login");
+
+        return;
+
+    }
+
+
+    const saved =
+        localStorage.getItem(accountKey);
+
+
+    if(!saved) {
+
+        message.style.color = "#ffcf63";
+
+        message.textContent =
+            "❌ Nie znaleziono takiego konta.";
+
+        return;
+
+    }
+
+
+    const account =
+        JSON.parse(saved);
+
+
+    if(account.password !== password) {
+
+        message.textContent =
+            "❌ Nieprawidłowe hasło.";
+
+        return;
+
+    }
+
+
+    currentUser = account;
+
+    startGame();
+
+}
+
+
+
+/* =========================================
+   START GRY
+========================================= */
+
+function startGame() {
+
+    document.getElementById(
+        "authScreen"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "gameContainer"
+    ).style.display = "block";
+
+
+    player.name =
+        currentUser.username;
+
+
+    player.x =
+        currentUser.x ?? 1050;
+
+
+    player.y =
+        currentUser.y ?? 800;
+
+
+    document.getElementById(
+        "playerName"
+    ).textContent =
+        player.name;
+
+
+    updateHUD();
+
+
+    resize();
+
+}
+
+
+
+/* =========================================
+   WYLOGOWANIE
+========================================= */
+
+function logout() {
+
+    savePlayer();
+
+    currentUser = null;
+
+
+    document.getElementById(
+        "gameContainer"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "authScreen"
+    ).style.display = "flex";
+
+
+    document.getElementById(
+        "passwordInput"
+    ).value = "";
+
+}
+
+
+
+/* =========================================
+   ZAPIS
+========================================= */
+
+function savePlayer() {
+
+    if(!currentUser) return;
+
+
+    currentUser.x =
+        Math.round(player.x);
+
+
+    currentUser.y =
+        Math.round(player.y);
+
+
+    const key =
+        "dbp_account_" +
+        currentUser.username.toLowerCase();
+
+
+    localStorage.setItem(
+        key,
+        JSON.stringify(currentUser)
+    );
+
+}
+
+
+
+/* =========================================
+   HUD
+========================================= */
+
+function updateHUD() {
+
+    if(!currentUser) return;
+
+
+    document.getElementById(
+        "hpText"
+    ).textContent =
+        currentUser.hp + "/100";
+
+
+    document.getElementById(
+        "levelText"
+    ).textContent =
+        currentUser.level;
+
+
+    document.getElementById(
+        "zeniText"
+    ).textContent =
+        currentUser.zeni;
+
+
+    document.getElementById(
+        "ballsText"
+    ).textContent =
+        currentUser.dragonBalls + "/7";
+
+}
+
+
+
+/* =========================================
+   CANVAS
+========================================= */
+
+const canvas =
+    document.getElementById("game");
+
+
+const ctx =
+    canvas.getContext("2d");
+
 
 ctx.imageSmoothingEnabled = false;
 
+
 function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    canvas.width =
+        window.innerWidth;
+
+    canvas.height =
+        window.innerHeight;
+
 }
 
-window.addEventListener("resize", resize);
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
 resize();
 
 
-// =============================
-// ŚWIAT
-// =============================
 
-const WORLD_WIDTH = 2200;
-const WORLD_HEIGHT = 1600;
+/* =========================================
+   ŚWIAT
+========================================= */
+
+const WORLD_WIDTH = 2400;
+
+const WORLD_HEIGHT = 1700;
 
 const TILE = 32;
 
 
-// =============================
-// GRACZ
-// =============================
+
+/* =========================================
+   GRACZ
+========================================= */
 
 const player = {
+
     x: 1050,
+
     y: 800,
+
     width: 28,
-    height: 36,
+
+    height: 38,
+
     speed: 220,
+
     name: "Wojownik"
+
 };
 
 
-// =============================
-// KLAWISZE
-// =============================
+
+/* =========================================
+   STEROWANIE
+========================================= */
 
 const keys = {};
 
-window.addEventListener("keydown", e => {
-    keys[e.key.toLowerCase()] = true;
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        keys[e.key.toLowerCase()] = true;
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        keys[e.key.toLowerCase()] = false;
+
+    }
+);
+
+
+
+document
+.querySelectorAll(".move")
+.forEach(button => {
+
+    const key =
+        button.dataset.key;
+
+
+    button.addEventListener(
+        "pointerdown",
+        e => {
+
+            e.preventDefault();
+
+            keys[key] = true;
+
+        }
+    );
+
+
+    button.addEventListener(
+        "pointerup",
+        e => {
+
+            e.preventDefault();
+
+            keys[key] = false;
+
+        }
+    );
+
+
+    button.addEventListener(
+        "pointercancel",
+        () => {
+
+            keys[key] = false;
+
+        }
+    );
+
 });
 
-window.addEventListener("keyup", e => {
-    keys[e.key.toLowerCase()] = false;
-});
 
 
-// =============================
-// TELEFON
-// =============================
-
-document.querySelectorAll(".moveButton").forEach(button => {
-
-    const key = button.dataset.key.toLowerCase();
-
-    button.addEventListener("pointerdown", e => {
-        e.preventDefault();
-        keys[key] = true;
-    });
-
-    button.addEventListener("pointerup", e => {
-        e.preventDefault();
-        keys[key] = false;
-    });
-
-    button.addEventListener("pointercancel", () => {
-        keys[key] = false;
-    });
-
-});
-
-
-// =============================
-// OBIEKTY
-// =============================
+/* =========================================
+   OBIEKTY
+========================================= */
 
 const obstacles = [
 
-    // dom
-    {x: 250, y: 220, w: 250, h: 180, type:"house"},
+    {
+        x: 250,
+        y: 250,
+        w: 260,
+        h: 180,
+        type: "house"
+    },
 
-    // drugi dom
-    {x: 1650, y: 350, w: 260, h: 190, type:"house"},
+    {
+        x: 1720,
+        y: 330,
+        w: 260,
+        h: 180,
+        type: "house"
+    },
 
-    // jezioro
-    {x: 680, y: 1080, w: 450, h: 260, type:"water"},
+    {
+        x: 650,
+        y: 1130,
+        w: 470,
+        h: 270,
+        type: "water"
+    },
 
-    // skały
-    {x: 1250, y: 260, w: 100, h: 90, type:"rock"},
-    {x: 1380, y: 300, w: 80, h: 70, type:"rock"}
+    {
+        x: 1300,
+        y: 260,
+        w: 110,
+        h: 90,
+        type: "rock"
+    },
+
+    {
+        x: 1450,
+        y: 310,
+        w: 90,
+        h: 75,
+        type: "rock"
+    }
 
 ];
 
 
-// =============================
-// DRZEWA
-// =============================
+
+/* =========================================
+   DRZEWA
+========================================= */
 
 const trees = [];
 
-for(let i = 0; i < 50; i++) {
 
-    let x = 80 + Math.random() * (WORLD_WIDTH - 160);
-    let y = 80 + Math.random() * (WORLD_HEIGHT - 160);
+for(let i = 0; i < 55; i++) {
 
-    // nie stawiamy przy spawnie
-    if(Math.abs(x-player.x) < 220 && Math.abs(y-player.y) < 220) {
+    const x =
+        70 +
+        Math.random() *
+        (WORLD_WIDTH - 140);
+
+
+    const y =
+        70 +
+        Math.random() *
+        (WORLD_HEIGHT - 140);
+
+
+    if(
+        Math.abs(x - 1050) < 240 &&
+        Math.abs(y - 800) < 240
+    ) {
+
         continue;
+
     }
 
+
     trees.push({
-        x,
-        y,
+
+        x: x,
+
+        y: y,
+
         w: 46,
-        h: 55
+
+        h: 58
+
     });
 
 }
 
 
-// =============================
-// NPC
-// =============================
+
+/* =========================================
+   NPC
+========================================= */
 
 const npcs = [
 
     {
-        x: 930,
+
+        x: 900,
+
         y: 650,
-        name: "Mistrz Kai",
-        text: "Witaj, Wojowniku! To dopiero początek świata Dragon Ball Polska."
+
+        name: "Mistrz",
+
+        text:
+        "Witaj! Rozwijaj swoją postać, zdobywaj Zeni i szukaj siedmiu Smoczych Kul."
+
     },
 
+
     {
-        x: 430,
-        y: 620,
-        name: "Podróżnik",
-        text: "Słyszałem, że gdzieś na świecie ukryto siedem Smoczych Kul..."
+
+        x: 480,
+
+        y: 680,
+
+        name: "Handlarz",
+
+        text:
+        "Niedługo będziesz mógł kupować tutaj przedmioty za Zeni."
+
+    },
+
+
+    {
+
+        x: 1600,
+
+        y: 760,
+
+        name: "Wróżka",
+
+        text:
+        "Czuję niezwykłą energię... Smocze Kule są gdzieś w tym świecie."
+
     }
 
 ];
 
 
-// =============================
-// KOLIZJE
-// =============================
 
-function collision(x, y, w, h, obj) {
+/* =========================================
+   KOLIZJA
+========================================= */
+
+function collision(
+    x,
+    y,
+    w,
+    h,
+    obj
+) {
 
     return (
+
         x < obj.x + obj.w &&
+
         x + w > obj.x &&
+
         y < obj.y + obj.h &&
+
         y + h > obj.y
+
     );
 
 }
+
 
 
 function blocked(x, y) {
@@ -618,148 +1242,292 @@ function blocked(x, y) {
         x + player.width > WORLD_WIDTH ||
         y + player.height > WORLD_HEIGHT
     ) {
+
         return true;
+
     }
+
 
     for(const obj of obstacles) {
 
-        if(collision(
-            x,
-            y,
-            player.width,
-            player.height,
-            obj
-        )) {
+        if(
+            collision(
+                x,
+                y,
+                player.width,
+                player.height,
+                obj
+            )
+        ) {
+
             return true;
+
         }
 
     }
+
 
     for(const tree of trees) {
 
         const trunk = {
+
             x: tree.x + 13,
+
             y: tree.y + 34,
+
             w: 20,
-            h: 21
+
+            h: 24
+
         };
 
-        if(collision(
-            x,
-            y,
-            player.width,
-            player.height,
-            trunk
-        )) {
+
+        if(
+            collision(
+                x,
+                y,
+                player.width,
+                player.height,
+                trunk
+            )
+        ) {
+
             return true;
+
         }
 
     }
 
+
     return false;
+
 }
 
 
-// =============================
-// UPDATE
-// =============================
 
-let lastTime = performance.now();
+/* =========================================
+   NPC DIALOG
+========================================= */
 
-function update(time) {
+const dialog =
+    document.getElementById("dialog");
 
-    const dt = Math.min(
-        (time - lastTime) / 1000,
-        0.05
-    );
-
-    lastTime = time;
-
-    let dx = 0;
-    let dy = 0;
-
-    if(keys["w"] || keys["arrowup"]) dy -= 1;
-    if(keys["s"] || keys["arrowdown"]) dy += 1;
-    if(keys["a"] || keys["arrowleft"]) dx -= 1;
-    if(keys["d"] || keys["arrowright"]) dx += 1;
-
-    if(dx !== 0 || dy !== 0) {
-
-        const length = Math.sqrt(dx*dx + dy*dy);
-
-        dx /= length;
-        dy /= length;
-
-    }
-
-    const newX = player.x + dx * player.speed * dt;
-    const newY = player.y + dy * player.speed * dt;
-
-    if(!blocked(newX, player.y)) {
-        player.x = newX;
-    }
-
-    if(!blocked(player.x, newY)) {
-        player.y = newY;
-    }
-
-    checkNPC();
-
-    draw();
-
-    requestAnimationFrame(update);
-}
-
-
-// =============================
-// NPC DIALOG
-// =============================
-
-const dialog = document.getElementById("dialog");
-const npcName = document.getElementById("npcName");
-const npcText = document.getElementById("npcText");
 
 function checkNPC() {
 
     let found = null;
 
+
     for(const npc of npcs) {
 
-        const distance = Math.hypot(
-            player.x - npc.x,
-            player.y - npc.y
-        );
+        const distance =
+            Math.hypot(
+                player.x - npc.x,
+                player.y - npc.y
+            );
 
-        if(distance < 85) {
+
+        if(distance < 90) {
+
             found = npc;
+
             break;
+
         }
 
     }
 
+
     if(found) {
 
-        dialog.style.display = "block";
+        dialog.style.display =
+            "block";
 
-        npcName.textContent = found.name;
-        npcText.textContent = found.text;
+
+        document.getElementById(
+            "dialogName"
+        ).textContent =
+            found.name;
+
+
+        document.getElementById(
+            "dialogText"
+        ).textContent =
+            found.text;
 
     } else {
 
-        dialog.style.display = "none";
+        dialog.style.display =
+            "none";
 
     }
 
 }
 
 
-// =============================
-// RYSOWANIE MAPY
-// =============================
 
-function drawGround(cameraX, cameraY) {
+/* =========================================
+   UPDATE
+========================================= */
 
-    ctx.fillStyle = "#55a94f";
+let lastTime =
+    performance.now();
+
+
+let saveTimer = 0;
+
+
+function update(time) {
+
+    const dt =
+        Math.min(
+            (time - lastTime) / 1000,
+            0.05
+        );
+
+
+    lastTime = time;
+
+
+    if(currentUser) {
+
+        let dx = 0;
+
+        let dy = 0;
+
+
+        if(
+            keys["w"] ||
+            keys["arrowup"]
+        ) {
+
+            dy--;
+
+        }
+
+
+        if(
+            keys["s"] ||
+            keys["arrowdown"]
+        ) {
+
+            dy++;
+
+        }
+
+
+        if(
+            keys["a"] ||
+            keys["arrowleft"]
+        ) {
+
+            dx--;
+
+        }
+
+
+        if(
+            keys["d"] ||
+            keys["arrowright"]
+        ) {
+
+            dx++;
+
+        }
+
+
+        if(dx || dy) {
+
+            const length =
+                Math.hypot(dx, dy);
+
+
+            dx /= length;
+
+            dy /= length;
+
+        }
+
+
+        const newX =
+            player.x +
+            dx *
+            player.speed *
+            dt;
+
+
+        const newY =
+            player.y +
+            dy *
+            player.speed *
+            dt;
+
+
+        if(
+            !blocked(
+                newX,
+                player.y
+            )
+        ) {
+
+            player.x =
+                newX;
+
+        }
+
+
+        if(
+            !blocked(
+                player.x,
+                newY
+            )
+        ) {
+
+            player.y =
+                newY;
+
+        }
+
+
+        checkNPC();
+
+
+        saveTimer += dt;
+
+
+        if(saveTimer >= 3) {
+
+            savePlayer();
+
+            saveTimer = 0;
+
+        }
+
+
+        draw();
+
+    }
+
+
+    requestAnimationFrame(update);
+
+}
+
+
+
+/* =========================================
+   TŁO
+========================================= */
+
+function drawGround(
+    cameraX,
+    cameraY
+) {
+
+    ctx.fillStyle =
+        "#55a94f";
+
+
     ctx.fillRect(
         -cameraX,
         -cameraY,
@@ -767,19 +1535,33 @@ function drawGround(cameraX, cameraY) {
         WORLD_HEIGHT
     );
 
-    // pixelowe kratki trawy
 
-    ctx.fillStyle = "rgba(0,0,0,.045)";
+    for(
+        let x = 0;
+        x < WORLD_WIDTH;
+        x += TILE
+    ) {
 
-    for(let x=0; x<WORLD_WIDTH; x+=TILE) {
+        for(
+            let y = 0;
+            y < WORLD_HEIGHT;
+            y += TILE
+        ) {
 
-        for(let y=0; y<WORLD_HEIGHT; y+=TILE) {
+            if(
+                (
+                    x / TILE +
+                    y / TILE
+                ) % 2 === 0
+            ) {
 
-            if((x/TILE + y/TILE) % 2 === 0) {
+                ctx.fillStyle =
+                    "rgba(0,0,0,.035)";
+
 
                 ctx.fillRect(
-                    x-cameraX,
-                    y-cameraY,
+                    x - cameraX,
+                    y - cameraY,
                     TILE,
                     TILE
                 );
@@ -793,96 +1575,158 @@ function drawGround(cameraX, cameraY) {
 }
 
 
-// =============================
-// DROGI
-// =============================
 
-function drawRoads(cameraX, cameraY) {
+/* =========================================
+   DROGI
+========================================= */
 
-    ctx.fillStyle = "#d5b46b";
+function drawRoads(
+    cameraX,
+    cameraY
+) {
+
+    ctx.fillStyle =
+        "#d9ba73";
+
 
     ctx.fillRect(
-        0-cameraX,
-        760-cameraY,
+        -cameraX,
+        760 - cameraY,
         WORLD_WIDTH,
-        120
+        125
     );
 
+
     ctx.fillRect(
-        1000-cameraX,
-        0-cameraY,
-        130,
+        1000 - cameraX,
+        -cameraY,
+        135,
         WORLD_HEIGHT
     );
 
 }
 
 
-// =============================
-// DOM
-// =============================
 
-function drawHouse(obj, cameraX, cameraY) {
+/* =========================================
+   DOM
+========================================= */
 
-    const x = obj.x-cameraX;
-    const y = obj.y-cameraY;
+function drawHouse(
+    obj,
+    cameraX,
+    cameraY
+) {
 
-    ctx.fillStyle = "#e9d3a2";
-    ctx.fillRect(x, y+55, obj.w, obj.h-55);
+    const x =
+        obj.x - cameraX;
 
-    ctx.fillStyle = "#e65a42";
 
-    ctx.beginPath();
-    ctx.moveTo(x-20, y+65);
-    ctx.lineTo(x+obj.w/2, y);
-    ctx.lineTo(x+obj.w+20, y+65);
-    ctx.closePath();
-    ctx.fill();
+    const y =
+        obj.y - cameraY;
 
-    ctx.fillStyle = "#754329";
+
+    ctx.fillStyle =
+        "#ead4a5";
+
 
     ctx.fillRect(
-        x + obj.w/2 - 25,
+        x,
+        y + 55,
+        obj.w,
+        obj.h - 55
+    );
+
+
+    ctx.fillStyle =
+        "#e6593e";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x - 20,
+        y + 65
+    );
+
+    ctx.lineTo(
+        x + obj.w / 2,
+        y
+    );
+
+    ctx.lineTo(
+        x + obj.w + 20,
+        y + 65
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#6d4027";
+
+
+    ctx.fillRect(
+        x + obj.w / 2 - 24,
         y + obj.h - 70,
-        50,
+        48,
         70
     );
 
-    ctx.fillStyle = "#75c8e8";
+
+    ctx.fillStyle =
+        "#75c8e8";
+
 
     ctx.fillRect(
-        x+35,
-        y+90,
+        x + 35,
+        y + 90,
         45,
-        42
+        40
     );
 
 }
 
 
-// =============================
-// JEZIORO
-// =============================
 
-function drawWater(obj, cameraX, cameraY) {
+/* =========================================
+   WODA
+========================================= */
 
-    ctx.fillStyle = "#3198d3";
+function drawWater(
+    obj,
+    cameraX,
+    cameraY
+) {
+
+    ctx.fillStyle =
+        "#3198d3";
+
 
     ctx.fillRect(
-        obj.x-cameraX,
-        obj.y-cameraY,
+        obj.x - cameraX,
+        obj.y - cameraY,
         obj.w,
         obj.h
     );
 
-    ctx.fillStyle = "#62c6ed";
 
-    for(let y=20; y<obj.h; y+=45) {
+    ctx.fillStyle =
+        "#65c8ed";
+
+
+    for(
+        let y = 25;
+        y < obj.h;
+        y += 45
+    ) {
 
         ctx.fillRect(
-            obj.x-cameraX+20,
-            obj.y-cameraY+y,
-            obj.w-40,
+            obj.x - cameraX + 20,
+            obj.y - cameraY + y,
+            obj.w - 40,
             5
         );
 
@@ -891,64 +1735,92 @@ function drawWater(obj, cameraX, cameraY) {
 }
 
 
-// =============================
-// SKAŁA
-// =============================
 
-function drawRock(obj, cameraX, cameraY) {
+/* =========================================
+   SKAŁY
+========================================= */
 
-    ctx.fillStyle = "#777b7f";
+function drawRock(
+    obj,
+    cameraX,
+    cameraY
+) {
+
+    ctx.fillStyle =
+        "#73797e";
+
 
     ctx.fillRect(
-        obj.x-cameraX,
-        obj.y-cameraY+20,
+        obj.x - cameraX,
+        obj.y - cameraY + 20,
         obj.w,
-        obj.h-20
+        obj.h - 20
     );
 
-    ctx.fillStyle = "#a5aaae";
+
+    ctx.fillStyle =
+        "#a5aaae";
+
 
     ctx.fillRect(
-        obj.x-cameraX+15,
-        obj.y-cameraY,
-        obj.w-30,
+        obj.x - cameraX + 15,
+        obj.y - cameraY,
+        obj.w - 30,
         30
     );
 
 }
 
 
-// =============================
-// DRZEWO
-// =============================
 
-function drawTree(tree, cameraX, cameraY) {
+/* =========================================
+   DRZEWO
+========================================= */
 
-    const x = tree.x-cameraX;
-    const y = tree.y-cameraY;
+function drawTree(
+    tree,
+    cameraX,
+    cameraY
+) {
 
-    ctx.fillStyle = "#774126";
+    const x =
+        tree.x - cameraX;
+
+
+    const y =
+        tree.y - cameraY;
+
+
+    ctx.fillStyle =
+        "#754126";
+
 
     ctx.fillRect(
-        x+17,
-        y+30,
+        x + 17,
+        y + 31,
         13,
-        25
+        27
     );
 
-    ctx.fillStyle = "#176b38";
+
+    ctx.fillStyle =
+        "#176b38";
+
 
     ctx.fillRect(
-        x+4,
-        y+7,
+        x + 4,
+        y + 8,
         38,
         35
     );
 
-    ctx.fillStyle = "#23874b";
+
+    ctx.fillStyle =
+        "#23874b";
+
 
     ctx.fillRect(
-        x+10,
+        x + 10,
         y,
         26,
         25
@@ -957,157 +1829,265 @@ function drawTree(tree, cameraX, cameraY) {
 }
 
 
-// =============================
-// NPC
-// =============================
 
-function drawNPC(npc, cameraX, cameraY) {
+/* =========================================
+   NPC
+========================================= */
 
-    const x = npc.x-cameraX;
-    const y = npc.y-cameraY;
+function drawNPC(
+    npc,
+    cameraX,
+    cameraY
+) {
 
-    ctx.fillStyle = "#111";
+    const x =
+        npc.x - cameraX;
+
+
+    const y =
+        npc.y - cameraY;
+
+
+    ctx.fillStyle =
+        "#e3ad7a";
+
 
     ctx.fillRect(
-        x+5,
-        y+8,
-        24,
-        28
-    );
-
-    ctx.fillStyle = "#e3ad7a";
-
-    ctx.fillRect(
-        x+10,
+        x + 10,
         y,
         14,
         13
     );
 
-    ctx.fillStyle = "#8c4dd6";
+
+    ctx.fillStyle =
+        "#754ac5";
+
 
     ctx.fillRect(
-        x+6,
-        y+15,
+        x + 6,
+        y + 14,
         22,
-        20
+        22
     );
 
-    ctx.font = "bold 12px Arial";
-    ctx.textAlign = "center";
 
-    ctx.fillStyle = "#000";
-    ctx.fillText(
-        npc.name,
-        x+18+2,
-        y-8+2
+    ctx.fillStyle =
+        "#151515";
+
+
+    ctx.fillRect(
+        x + 8,
+        y + 36,
+        7,
+        10
     );
 
-    ctx.fillStyle = "#fff";
+
+    ctx.fillRect(
+        x + 20,
+        y + 36,
+        7,
+        10
+    );
+
+
+    ctx.font =
+        "bold 12px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#000";
+
+
     ctx.fillText(
         npc.name,
-        x+18,
-        y-8
+        x + 19 + 2,
+        y - 9 + 2
+    );
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.fillText(
+        npc.name,
+        x + 19,
+        y - 9
     );
 
 }
 
 
-// =============================
-// GRACZ
-// =============================
 
-function drawPlayer(cameraX, cameraY) {
+/* =========================================
+   GRACZ
+========================================= */
 
-    const x = player.x-cameraX;
-    const y = player.y-cameraY;
+function drawPlayer(
+    cameraX,
+    cameraY
+) {
+
+    const x =
+        player.x - cameraX;
+
+
+    const y =
+        player.y - cameraY;
+
 
     // cień
 
-    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
 
     ctx.fillRect(
-        x+4,
-        y+31,
+        x + 4,
+        y + 33,
         21,
         7
     );
 
+
     // nogi
 
-    ctx.fillStyle = "#173d8f";
+    ctx.fillStyle =
+        "#173d8f";
 
-    ctx.fillRect(x+5, y+26, 7, 10);
-    ctx.fillRect(x+17, y+26, 7, 10);
-
-    // ciało
-
-    ctx.fillStyle = "#ef7c16";
 
     ctx.fillRect(
-        x+4,
-        y+13,
-        21,
-        16
+        x + 5,
+        y + 27,
+        7,
+        11
     );
+
+
+    ctx.fillRect(
+        x + 17,
+        y + 27,
+        7,
+        11
+    );
+
+
+    // ubranie
+
+    ctx.fillStyle =
+        "#ef7c16";
+
+
+    ctx.fillRect(
+        x + 4,
+        y + 13,
+        21,
+        17
+    );
+
 
     // pas
 
-    ctx.fillStyle = "#183e91";
+    ctx.fillStyle =
+        "#183e91";
+
 
     ctx.fillRect(
-        x+4,
-        y+23,
+        x + 4,
+        y + 24,
         21,
         4
     );
 
-    // głowa
 
-    ctx.fillStyle = "#e8ad78";
+    // twarz
+
+    ctx.fillStyle =
+        "#e8ad78";
+
 
     ctx.fillRect(
-        x+8,
-        y+4,
+        x + 8,
+        y + 4,
         13,
         12
     );
 
+
     // włosy
 
-    ctx.fillStyle = "#111";
+    ctx.fillStyle =
+        "#111";
 
-    ctx.fillRect(x+7, y+1, 15, 6);
-    ctx.fillRect(x+5, y+4, 5, 5);
-    ctx.fillRect(x+18, y, 5, 8);
+
+    ctx.fillRect(
+        x + 7,
+        y + 1,
+        15,
+        6
+    );
+
+
+    ctx.fillRect(
+        x + 5,
+        y + 4,
+        5,
+        5
+    );
+
+
+    ctx.fillRect(
+        x + 18,
+        y,
+        5,
+        8
+    );
+
 
     // nick
 
-    ctx.font = "bold 13px Arial";
-    ctx.textAlign = "center";
+    ctx.font =
+        "bold 13px Arial";
 
-    ctx.fillStyle = "#000";
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#000";
+
 
     ctx.fillText(
         player.name,
-        x + player.width/2 + 2,
+        x + player.width / 2 + 2,
         y - 10 + 2
     );
 
-    ctx.fillStyle = "#fff";
+
+    ctx.fillStyle =
+        "#fff";
+
 
     ctx.fillText(
         player.name,
-        x + player.width/2,
+        x + player.width / 2,
         y - 10
     );
 
 }
 
 
-// =============================
-// DRAW
-// =============================
+
+/* =========================================
+   RYSOWANIE
+========================================= */
 
 function draw() {
 
@@ -1118,10 +2098,12 @@ function draw() {
         canvas.height
     );
 
+
     let cameraX =
         player.x -
         canvas.width / 2 +
         player.width / 2;
+
 
     let cameraY =
         player.y -
@@ -1129,178 +2111,149 @@ function draw() {
         player.height / 2;
 
 
-    cameraX = Math.max(
-        0,
-        Math.min(
-            cameraX,
-            WORLD_WIDTH - canvas.width
-        )
+    cameraX =
+        Math.max(
+            0,
+            Math.min(
+                cameraX,
+                Math.max(
+                    0,
+                    WORLD_WIDTH -
+                    canvas.width
+                )
+            )
+        );
+
+
+    cameraY =
+        Math.max(
+            0,
+            Math.min(
+                cameraY,
+                Math.max(
+                    0,
+                    WORLD_HEIGHT -
+                    canvas.height
+                )
+            )
+        );
+
+
+    drawGround(
+        cameraX,
+        cameraY
     );
 
-    cameraY = Math.max(
-        0,
-        Math.min(
-            cameraY,
-            WORLD_HEIGHT - canvas.height
-        )
+
+    drawRoads(
+        cameraX,
+        cameraY
     );
 
-
-    drawGround(cameraX, cameraY);
-
-    drawRoads(cameraX, cameraY);
-
-
-    // obiekty
 
     for(const obj of obstacles) {
 
         if(obj.type === "house") {
-            drawHouse(obj, cameraX, cameraY);
+
+            drawHouse(
+                obj,
+                cameraX,
+                cameraY
+            );
+
         }
+
 
         if(obj.type === "water") {
-            drawWater(obj, cameraX, cameraY);
+
+            drawWater(
+                obj,
+                cameraX,
+                cameraY
+            );
+
         }
+
 
         if(obj.type === "rock") {
-            drawRock(obj, cameraX, cameraY);
+
+            drawRock(
+                obj,
+                cameraX,
+                cameraY
+            );
+
         }
 
     }
 
 
-    // drzewa
-
     for(const tree of trees) {
-        drawTree(tree, cameraX, cameraY);
+
+        drawTree(
+            tree,
+            cameraX,
+            cameraY
+        );
+
     }
 
-
-    // NPC
 
     for(const npc of npcs) {
-        drawNPC(npc, cameraX, cameraY);
+
+        drawNPC(
+            npc,
+            cameraX,
+            cameraY
+        );
+
     }
 
 
-    // gracz
-
-    drawPlayer(cameraX, cameraY);
-
-
-    // granica świata
-
-    ctx.strokeStyle = "#263e25";
-    ctx.lineWidth = 10;
-
-    ctx.strokeRect(
-        -cameraX,
-        -cameraY,
-        WORLD_WIDTH,
-        WORLD_HEIGHT
+    drawPlayer(
+        cameraX,
+        cameraY
     );
 
 }
 
-// =============================
-// MENU GRY
-// =============================
-
-let accountMode = "login";
-
-function playGame() {
-
-    document.getElementById("startScreen").style.display = "none";
-
-}
 
 
-function showLogin() {
+/* =========================================
+   ZAPIS PRZY WYJŚCIU
+========================================= */
 
-    accountMode = "login";
-
-    document.getElementById("accountWindow").style.display = "flex";
-
-    document.getElementById("accountTitle").textContent =
-        "ZALOGUJ SIĘ";
-
-    document.getElementById("accountButton").textContent =
-        "ZALOGUJ";
-
-    document.getElementById("accountMessage").textContent = "";
-
-}
+window.addEventListener(
+    "beforeunload",
+    savePlayer
+);
 
 
-function showRegister() {
 
-    accountMode = "register";
+/* =========================================
+   ENTER = LOGOWANIE
+========================================= */
 
-    document.getElementById("accountWindow").style.display = "flex";
+document
+.getElementById("passwordInput")
+.addEventListener(
+    "keydown",
+    event => {
 
-    document.getElementById("accountTitle").textContent =
-        "STWÓRZ KONTO";
+        if(event.key === "Enter") {
 
-    document.getElementById("accountButton").textContent =
-        "ZAREJESTRUJ";
+            submitAuth();
 
-    document.getElementById("accountMessage").textContent = "";
-
-}
-
-
-function closeAccount() {
-
-    document.getElementById("accountWindow").style.display = "none";
-
-}
-
-
-function fakeLogin() {
-
-    const username =
-        document.getElementById("username").value.trim();
-
-    const password =
-        document.getElementById("password").value;
-
-    const message =
-        document.getElementById("accountMessage");
-
-
-    if(username.length < 3) {
-
-        message.textContent =
-            "Nazwa wojownika musi mieć minimum 3 znaki.";
-
-        return;
-    }
-
-
-    if(password.length < 6) {
-
-        message.textContent =
-            "Hasło musi mieć minimum 6 znaków.";
-
-        return;
-    }
-
-
-    if(accountMode === "register") {
-
-        message.textContent =
-            "✓ Formularz działa! System kont podłączymy w kolejnym etapie.";
-
-    } else {
-
-        message.textContent =
-            "✓ Logowanie jest przygotowane do podłączenia.";
+        }
 
     }
+);
 
-}
-// START
+
+
+/* =========================================
+   START SILNIKA
+========================================= */
 
 requestAnimationFrame(update);
 
