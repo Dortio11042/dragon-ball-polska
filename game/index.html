@@ -6,12 +6,308 @@
 
 <title>Dragon Ball Polska Online</title>
 
-<style>
+/* =========================
+   MENU STARTOWE
+========================= */
+
+#startScreen {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background:
+        radial-gradient(circle at center, #263b75 0%, #11182c 45%, #070a11 100%);
+}
+
+.menuBox {
+    width: min(430px, 90%);
+
+    padding: 35px;
+
+    text-align: center;
+
+    background: rgba(8, 12, 24, 0.94);
+
+    border: 4px solid #ff9d00;
+
+    box-shadow:
+        0 0 0 5px #101010,
+        0 0 40px rgba(255, 157, 0, .35);
+
+    border-radius: 12px;
+
+    color: white;
+}
+
+.menuBox h1 {
+    margin: 15px 0 3px;
+
+    color: #ff9d00;
+
+    font-size: 32px;
+
+    text-shadow:
+        3px 3px #8d2600,
+        5px 5px #000;
+}
+
+.version {
+    color: #8ba8ff;
+
+    font-weight: bold;
+
+    margin-bottom: 25px;
+}
+
+.dragonBall {
+    width: 95px;
+    height: 95px;
+
+    margin: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle at 35% 30%, #ffd15a, #ff8a00 60%, #d94a00);
+
+    border: 4px solid #d76500;
+
+    color: #d71919;
+
+    font-size: 21px;
+
+    letter-spacing: -3px;
+
+    box-shadow:
+        inset -10px -10px 20px rgba(0,0,0,.25),
+        0 0 25px rgba(255,145,0,.45);
+}
+
+.mainButton,
+.menuButton {
+    display: block;
+
+    width: 100%;
+
+    padding: 15px;
+
+    margin-top: 12px;
+
+    border: none;
+
+    cursor: pointer;
+
+    font-weight: bold;
+
+    font-size: 16px;
+
+    border-radius: 5px;
+
+    transition: .15s;
+}
+
+.mainButton {
+    color: #111;
+
+    background: #ff9d00;
+
+    border-bottom: 5px solid #b94d00;
+}
+
+.menuButton {
+    color: white;
+
+    background: #263b75;
+
+    border-bottom: 5px solid #15234c;
+}
+
+.mainButton:hover,
+.menuButton:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.15);
+}
+
+.mainButton:active,
+.menuButton:active {
+    transform: translateY(2px);
+}
+
+.info {
+    margin-top: 25px;
+
+    line-height: 1.8;
+
+    color: #bbb;
+
+    font-size: 14px;
+}
+
+
+/* =========================
+   LOGOWANIE
+========================= */
+
+#accountWindow {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1100;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,.78);
+}
+
+.accountBox {
+    position: relative;
+
+    width: min(390px, 90%);
+
+    padding: 35px;
+
+    background: #111827;
+
+    border: 4px solid #ff9d00;
+
+    color: white;
+
+    text-align: center;
+
+    box-shadow: 8px 8px 0 #000;
+}
+
+.accountBox h2 {
+    color: #ff9d00;
+}
+
+.accountBox input {
+    width: 100%;
+
+    padding: 14px;
+
+    margin: 7px 0;
+
+    background: #080c14;
+
+    border: 2px solid #35466d;
+
+    color: white;
+
+    outline: none;
+
+    font-size: 15px;
+}
+
+.accountBox input:focus {
+    border-color: #ff9d00;
+}
+
+.closeButton {
+    position: absolute;
+
+    right: 10px;
+    top: 10px;
+
+    background: transparent;
+
+    border: none;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 20px;
+}
+
+#accountMessage {
+    min-height: 20px;
+
+    color: #ffca56;
+}
 * {
     box-sizing: border-box;
 }
 
-html, body {
+<div id="startScreen">
+
+    <div class="menuBox">
+        <div class="dragonBall">★★★★</div>
+
+        <h1>DRAGON BALL<br>POLSKA ONLINE</h1>
+
+        <p class="version">ALPHA 0.2</p>
+
+        <button class="mainButton" onclick="playGame()">
+            ▶ ZAGRAJ
+        </button>
+
+        <button class="menuButton" onclick="showLogin()">
+            🔑 ZALOGUJ SIĘ
+        </button>
+
+        <button class="menuButton" onclick="showRegister()">
+            👤 ZAREJESTRUJ SIĘ
+        </button>
+
+        <p class="info">
+            🟠 Zdobądź 7 Smoczych Kul<br>
+            ⚔️ Walcz z przeciwnikami<br>
+            💰 Zdobywaj Zeni<br>
+            🌍 Odkrywaj nowe światy
+        </p>
+
+    </div>
+
+</div>
+
+
+<div id="accountWindow">
+
+    <div class="accountBox">
+
+        <button class="closeButton" onclick="closeAccount()">✕</button>
+
+        <h2 id="accountTitle">LOGOWANIE</h2>
+
+        <input
+            id="username"
+            type="text"
+            maxlength="16"
+            placeholder="Nazwa wojownika"
+        >
+
+        <input
+            id="password"
+            type="password"
+            placeholder="Hasło"
+        >
+
+        <button
+            id="accountButton"
+            class="mainButton"
+            onclick="fakeLogin()"
+        >
+            ZALOGUJ
+        </button>
+
+        <p id="accountMessage"></p>
+
+    </div>
+
+</div>
     margin: 0;
     width: 100%;
     height: 100%;
@@ -908,7 +1204,103 @@ function draw() {
 
 }
 
+// =============================
+// MENU GRY
+// =============================
 
+let accountMode = "login";
+
+function playGame() {
+
+    document.getElementById("startScreen").style.display = "none";
+
+}
+
+
+function showLogin() {
+
+    accountMode = "login";
+
+    document.getElementById("accountWindow").style.display = "flex";
+
+    document.getElementById("accountTitle").textContent =
+        "ZALOGUJ SIĘ";
+
+    document.getElementById("accountButton").textContent =
+        "ZALOGUJ";
+
+    document.getElementById("accountMessage").textContent = "";
+
+}
+
+
+function showRegister() {
+
+    accountMode = "register";
+
+    document.getElementById("accountWindow").style.display = "flex";
+
+    document.getElementById("accountTitle").textContent =
+        "STWÓRZ KONTO";
+
+    document.getElementById("accountButton").textContent =
+        "ZAREJESTRUJ";
+
+    document.getElementById("accountMessage").textContent = "";
+
+}
+
+
+function closeAccount() {
+
+    document.getElementById("accountWindow").style.display = "none";
+
+}
+
+
+function fakeLogin() {
+
+    const username =
+        document.getElementById("username").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const message =
+        document.getElementById("accountMessage");
+
+
+    if(username.length < 3) {
+
+        message.textContent =
+            "Nazwa wojownika musi mieć minimum 3 znaki.";
+
+        return;
+    }
+
+
+    if(password.length < 6) {
+
+        message.textContent =
+            "Hasło musi mieć minimum 6 znaków.";
+
+        return;
+    }
+
+
+    if(accountMode === "register") {
+
+        message.textContent =
+            "✓ Formularz działa! System kont podłączymy w kolejnym etapie.";
+
+    } else {
+
+        message.textContent =
+            "✓ Logowanie jest przygotowane do podłączenia.";
+
+    }
+
+}
 // START
 
 requestAnimationFrame(update);
