@@ -126,6 +126,12 @@ const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
  {world:"desert",x:700,y:650,name:"Pustynny Wojownik",level:5,maxHp:170,hp:170,alive:true,respawn:0},{world:"desert",x:1250,y:950,name:"Pustynny Wojownik",level:6,maxHp:200,hp:200,alive:true,respawn:0},{world:"desert",x:1750,y:650,name:"Pustynny Elita",level:7,maxHp:250,hp:250,alive:true,respawn:0},
  {world:"mountains",x:700,y:650,name:"Górski Wojownik",level:10,maxHp:330,hp:330,alive:true,respawn:0},{world:"mountains",x:1300,y:900,name:"Górski Wojownik",level:11,maxHp:380,hp:380,alive:true,respawn:0},{world:"mountains",x:1800,y:650,name:"Strażnik Góry",level:12,maxHp:450,hp:450,alive:true,respawn:0}
+ ,{world:"forest",x:650,y:620,name:"Leśny Wojownik",level:15,maxHp:520,hp:520,alive:true,respawn:0},{world:"forest",x:1180,y:1030,name:"Leśny Wojownik",level:16,maxHp:590,hp:590,alive:true,respawn:0},{world:"forest",x:1680,y:650,name:"Mroczny Strażnik",level:17,maxHp:680,hp:680,alive:true,respawn:0}
+ ,{world:"ice",x:650,y:620,name:"Lodowy Wojownik",level:20,maxHp:760,hp:760,alive:true,respawn:0},{world:"ice",x:1180,y:1030,name:"Lodowy Wojownik",level:21,maxHp:850,hp:850,alive:true,respawn:0},{world:"ice",x:1680,y:650,name:"Mroźny Strażnik",level:22,maxHp:960,hp:960,alive:true,respawn:0}
+ ,{world:"volcano",x:650,y:620,name:"Wulkaniczny Wojownik",level:25,maxHp:1100,hp:1100,alive:true,respawn:0},{world:"volcano",x:1180,y:1030,name:"Wulkaniczny Wojownik",level:26,maxHp:1220,hp:1220,alive:true,respawn:0},{world:"volcano",x:1680,y:650,name:"Strażnik Lawy",level:27,maxHp:1360,hp:1360,alive:true,respawn:0}
+ ,{world:"sky",x:650,y:620,name:"Podniebny Wojownik",level:30,maxHp:1500,hp:1500,alive:true,respawn:0},{world:"sky",x:1180,y:1030,name:"Podniebny Wojownik",level:31,maxHp:1640,hp:1640,alive:true,respawn:0},{world:"sky",x:1680,y:650,name:"Strażnik Chmur",level:32,maxHp:1800,hp:1800,alive:true,respawn:0}
+ ,{world:"alien",x:650,y:620,name:"Obcy Wojownik",level:40,maxHp:2300,hp:2300,alive:true,respawn:0},{world:"alien",x:1180,y:1030,name:"Obcy Elita",level:41,maxHp:2500,hp:2500,alive:true,respawn:0},{world:"alien",x:1680,y:650,name:"Planetarny Strażnik",level:42,maxHp:2750,hp:2750,alive:true,respawn:0}
+ ,{world:"masters",x:650,y:620,name:"Uczeń Mistrzów",level:50,maxHp:3400,hp:3400,alive:true,respawn:0},{world:"masters",x:1180,y:1030,name:"Elitarny Uczeń",level:51,maxHp:3700,hp:3700,alive:true,respawn:0},{world:"masters",x:1680,y:650,name:"Mistrz Wojownik",level:52,maxHp:4100,hp:4100,alive:true,respawn:0}
 
 ,{world:"valley",x:2180,y:1350,name:"Boss Bandyta",level:4,maxHp:650,hp:650,alive:true,respawn:0,boss:true,bossKey:"valley",rewardZeni:1800,rewardExp:450}
 ,{world:"desert",x:2050,y:420,name:"Władca Pustyni",level:8,maxHp:1200,hp:1200,alive:true,respawn:0,boss:true,bossKey:"desert",rewardZeni:4500,rewardExp:900}
@@ -482,7 +488,9 @@ function addExtraShop06(){
 const oldBuyShop06=buyShopItem05;
 buyShopItem05=function(id){if(id==="cloud")return buyCloud06();if(id==="mythicAmulet")return toast("🐉 Tego przedmiotu nie można kupić.");return oldBuyShop06(id)}
 
-function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();startPresence072();toast("🌍 "+worlds[currentWorld].name)}
+function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();startPresence072();toast("🌍 "+worlds[currentWorld].name);
+ setTimeout(()=>{if(currentUser)toast("💬 Gra Ci się podoba? Dołącz do społeczności Dragon Ball Polska na Discordzie!");},8000)
+}
 async function logout(){
  stopPresence072();
  if(onlineUserId)await dbpSupabase.from("player_presence").delete().eq("user_id",onlineUserId);
