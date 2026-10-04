@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.3.0 — POSTACIE + PRESTIŻ + ŁOWIENIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.3.1 — POSTACIE + SKLEP + RYNEK FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2333,6 +2333,103 @@ updateHint=function(){
 };
 
 let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appendChild(fp);
+})();
+
+
+
+/* ==================== 1.3.1 — POSTACIE / SKLEP / RYNEK FIX ==================== */
+(function(){
+ /* 1) Handlarz sprzedaje TYLKO rzeczy z prawdziwą, określoną ceną.
+       Materiały bossów i craft NIE są sklepem NPC. */
+ window.renderShop05=function(){
+   const sell=shopItems05.filter(i=>Number.isFinite(Number(i.price)) && Number(i.price)>0 && !String(i.id).startsWith("bossMat") && !String(i.id).startsWith("relic") && i.id!=="voidSet120" && i.id!=="mythicAmulet");
+   $("shopPanel").innerHTML=`<h2>🛒 Handlarz</h2><p>Twoje Zeni: <b>${Number(currentUser.zeni||0).toLocaleString("pl-PL")}</b></p><div class="grid">${sell.map(i=>`<div class="card"><b>${i.name}</b><br>${i.desc||""}<br>💰 <b>${Number(i.price).toLocaleString("pl-PL")} Zeni</b><br><button class="actionBtn" onclick="buyShopItem05('${i.id}')">KUP</button></div>`).join("")}</div><button class="actionBtn" onclick="closeShop()">ZAMKNIJ</button>`;
+ };
+ const buyBase131=buyShopItem05;
+ window.buyShopItem05=function(id){
+   let it=item05(id);
+   if(!it || !Number.isFinite(Number(it.price)) || Number(it.price)<=0){toast("❌ Tego przedmiotu nie kupuje się u Handlarza.");return}
+   buyBase131(id);
+ };
+
+ /* 2) Jeden normalny formularz sprzedaży na Rynku:
+       wyposażenie + boss dropy + crafting + 3 leczenia. */
+ const marketNames131={
+   smallPotion:"🧪 Małe leczenie +50 HP",bigPotion:"🧪 Duże leczenie +100 HP",meal:"🍖 Pełne leczenie"
+ };
+ function marketQty131(id){
+   if(id==="smallPotion")return Number(currentUser.potions||0);
+   if(id==="bigPotion")return Number(currentUser.bigPotions||0);
+   if(id==="meal")return Number(currentUser.meals||0);
+   return (currentUser.inventory||[]).filter(x=>x===id).length;
+ }
+ window.renderMarketSell=function(){
+   const box=$("marketSell");if(!box||!currentUser)return;
+   const equipped=new Set(Object.values(currentUser.equipment||{}).filter(Boolean));
+   let choices=[];
+   for(const id of ["smallPotion","bigPotion","meal"])if(marketQty131(id)>0)choices.push({id,name:marketNames131[id],qty:marketQty131(id)});
+   const seen=new Set();
+   for(const id of (currentUser.inventory||[])){
+     if(seen.has(id)||equipped.has(id)||id==="cloud")continue;seen.add(id);
+     let it=item05(id);if(!it)continue;
+     choices.push({id,name:it.name||id,qty:marketQty131(id)});
+   }
+   box.innerHTML=`<div class="card"><b>📦 Wystaw na Giełdzie</b><br>${choices.length?`<select id="marketItemSelect" style="width:100%;padding:9px;margin:8px 0">${choices.map(it=>`<option value="${marketEsc(it.id)}">${marketEsc(it.name)} — masz ${it.qty}</option>`).join("")}</select><input id="marketPriceInput" type="number" min="1" max="1000000000" placeholder="Cena w Zeni" style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"><button class="action orange" onclick="createMarketOffer()">WYSTAW OFERTĘ</button>`:"Nie masz teraz niczego, co możesz wystawić."}</div>`;
+ };
+ // Stary dodatkowy panel 1.2.1 nie jest już potrzebny — wszystko jest w głównym Rynku.
+ const oldAdd=document.querySelectorAll(".extraSell121");oldAdd.forEach(x=>x.remove());
+ const style=document.createElement("style");style.textContent=`.extraSell121{display:none!important}`;
+ document.head.appendChild(style);
+
+ /* 3) Ładniejsza oryginalna pixelowa postać — więcej detali, oczy, ręce,
+       buty, pas, włosy i wyraźniejsze warianty prestiżu. */
+ function palette131(p){
+   const a=[
+    {title:"Wojownik Doliny",skin:"#efb17f",hair:"#151515",gi:"#ef7d22",under:"#183f83",pants:"#e97b21",boots:"#203d72",aura:null,ear:"#efb17f"},
+    {title:"Książę Wojowników",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
+    {title:"Namekijski Strażnik",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
+    {title:"Złoty Mistrz",skin:"#efb17d",hair:"#f3d642",gi:"#ee7c22",under:"#19468c",pants:"#e97820",boots:"#22467e",aura:"#ffe96a",ear:"#efb17d"},
+    {title:"Boski Wojownik",skin:"#efb27e",hair:"#5bd5ff",gi:"#24489b",under:"#161d34",pants:"#243f84",boots:"#f2f4ff",aura:"#5de8ff",ear:"#efb27e"},
+    {title:"Legendarny Wojownik",skin:"#efb17c",hair:"#9bec69",gi:"#313842",under:"#6d2c34",pants:"#24282f",boots:"#7b5a37",aura:"#9dff78",ear:"#efb17c"}
+   ];return a[Math.min(Math.max(0,p),a.length-1)];
+ }
+ function drawFighter131(c,px,py,name,prestige=0,scale=1){
+   const L=palette131(Number(prestige||0)),x=px-c.x,y=py-c.y,S=scale;
+   ctx.save();
+   if(L.aura){ctx.globalAlpha=.18;ctx.fillStyle=L.aura;ctx.beginPath();ctx.ellipse(x+14*S,y+20*S,25*S,37*S,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
+   // cień
+   ctx.fillStyle="rgba(0,0,0,.25)";ctx.beginPath();ctx.ellipse(x+14*S,y+39*S,14*S,4*S,0,0,Math.PI*2);ctx.fill();
+   // nogi + buty
+   ctx.fillStyle=L.pants;ctx.fillRect(x+5*S,y+25*S,9*S,11*S);ctx.fillRect(x+15*S,y+25*S,9*S,11*S);
+   ctx.fillStyle=L.boots;ctx.fillRect(x+4*S,y+34*S,10*S,5*S);ctx.fillRect(x+15*S,y+34*S,11*S,5*S);
+   // ręce
+   ctx.fillStyle=L.skin;ctx.fillRect(x+1*S,y+15*S,5*S,13*S);ctx.fillRect(x+23*S,y+15*S,5*S,13*S);
+   // tors + podkoszulek + pas
+   ctx.fillStyle=L.gi;ctx.fillRect(x+5*S,y+13*S,19*S,15*S);
+   ctx.fillStyle=L.under;ctx.fillRect(x+11*S,y+13*S,7*S,6*S);ctx.fillRect(x+5*S,y+25*S,19*S,3*S);
+   // głowa + uszy
+   ctx.fillStyle=L.ear;ctx.fillRect(x+4*S,y+6*S,3*S,6*S);ctx.fillRect(x+22*S,y+6*S,3*S,6*S);
+   ctx.fillStyle=L.skin;ctx.fillRect(x+7*S,y+3*S,15*S,12*S);
+   // oczy/brwi
+   ctx.fillStyle="#fff";ctx.fillRect(x+9*S,y+8*S,4*S,2*S);ctx.fillRect(x+17*S,y+8*S,4*S,2*S);
+   ctx.fillStyle="#161616";ctx.fillRect(x+11*S,y+8*S,2*S,2*S);ctx.fillRect(x+17*S,y+8*S,2*S,2*S);
+   ctx.fillRect(x+9*S,y+6*S,4*S,1*S);ctx.fillRect(x+17*S,y+6*S,4*S,1*S);
+   // włosy albo czułki/uszka namekijskie
+   if(L.hair){ctx.fillStyle=L.hair;ctx.fillRect(x+6*S,y*S,17*S,5*S);for(const q of [[5,-4,4,7],[9,-8,4,10],[14,-6,4,8],[19,-9,4,11],[22,-4,4,7]])ctx.fillRect(x+q[0]*S,y+q[1]*S,q[2]*S,q[3]*S)}
+   else{ctx.fillStyle="#367f39";ctx.fillRect(x+8*S,y*S,2*S,5*S);ctx.fillRect(x+20*S,y*S,2*S,5*S)}
+   ctx.textAlign="center";ctx.font=`bold ${11*S}px monospace`;ctx.fillStyle="#fff";ctx.fillText(name||"Wojownik",x+14*S,y-15*S);
+   ctx.font=`bold ${8*S}px monospace`;ctx.fillStyle=L.aura||"#d7e3ff";ctx.fillText(L.title,x+14*S,y-5*S);
+   ctx.restore();
+ }
+ window.drawPlayer=function(c){drawFighter131(c,player.x,player.y,player.name,Number(currentUser?.prestige||0),1)};
+ // Remote players: ten sam styl zamiast prostego prostokąta.
+ window.drawRemotePlayers072=function(c){
+   if(typeof settings08!=="undefined" && settings08.players===false)return;
+   for(const r of remotePlayers072||[]){
+     const m=r._motion088||{};let x=Number(m.x??r.x),y=Number(m.y??r.y);
+     drawFighter131(c,x,y,r.username||"Gracz",Number(r.prestige||0),.92);
+   }
+ };
 })();
 
 </script></body></html>
