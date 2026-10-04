@@ -595,77 +595,7 @@ function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
 function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
 function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.boss?"#9b1c1c":e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,e.boss?30:22,e.boss?31:23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
-function drawPlayer(c){
- let x=player.x-c.x,y=player.y-c.y;
- let moving=(keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowleft||keys.arrowdown||keys.arrowright);
- let step=moving&&Math.floor(performance.now()/150)%2?2:0;
-
- // cień
- ctx.fillStyle="rgba(0,0,0,.25)";
- ctx.fillRect(x+3,y+34,24,6);
-
- // buty / nogi - ta sama prosta animacja co wcześniej
- ctx.fillStyle="#12336f";
- ctx.fillRect(x+5,y+28-step,7,11+step);
- ctx.fillRect(x+18,y+28+step,7,11-step);
-
- // pomarańczowe spodnie
- ctx.fillStyle="#f07a13";
- ctx.fillRect(x+5,y+23,8,8);
- ctx.fillRect(x+17,y+23,8,8);
-
- // tułów - pomarańczowe gi
- ctx.fillStyle="#f47b12";
- ctx.fillRect(x+4,y+13,22,14);
-
- // granatowa koszulka pod gi
- ctx.fillStyle="#173d8f";
- ctx.fillRect(x+8,y+13,14,4);
-
- // pasek
- ctx.fillStyle="#173d8f";
- ctx.fillRect(x+4,y+24,22,4);
-
- // ręce
- ctx.fillStyle="#e8ad78";
- ctx.fillRect(x+1,y+15+step,4,11);
- ctx.fillRect(x+26,y+15-step,4,11);
-
- // opaski
- ctx.fillStyle="#173d8f";
- ctx.fillRect(x+1,y+22+step,4,4);
- ctx.fillRect(x+26,y+22-step,4,4);
-
- // głowa
- ctx.fillStyle="#e8ad78";
- ctx.fillRect(x+8,y+4,14,11);
-
- // włosy bardziej w stylu Goku - nadal rysowane prostymi pixelami
- ctx.fillStyle="#10131a";
- ctx.fillRect(x+7,y+2,16,5);
- ctx.fillRect(x+8,y-2,4,6);
- ctx.fillRect(x+12,y,4,5);
- ctx.fillRect(x+16,y-4,4,8);
- ctx.fillRect(x+20,y,4,5);
- ctx.fillRect(x+23,y+2,3,4);
- ctx.fillRect(x+5,y+3,4,4);
-
- // oczy
- ctx.fillStyle="#111";
- ctx.fillRect(x+10,y+8,2,2);
- ctx.fillRect(x+18,y+8,2,2);
-
- // mały znak na stroju
- ctx.fillStyle="#fff";
- ctx.fillRect(x+19,y+16,4,4);
- ctx.fillStyle="#111";
- ctx.fillRect(x+20,y+17,2,2);
-
- ctx.fillStyle="#fff";
- ctx.font="bold 13px Arial";
- ctx.textAlign="center";
- ctx.fillText(player.name,x+15,y-12);
-}
+function drawPlayer(c){let x=player.x-c.x,y=player.y-c.y;ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(x+4,y+33,21,7);ctx.fillStyle="#173d8f";ctx.fillRect(x+5,y+27,7,11);ctx.fillRect(x+17,y+27,7,11);ctx.fillStyle="#ef7c16";ctx.fillRect(x+4,y+13,21,17);ctx.fillStyle="#183e91";ctx.fillRect(x+4,y+24,21,4);ctx.fillStyle="#e8ad78";ctx.fillRect(x+8,y+4,13,12);ctx.fillStyle="#111";ctx.fillRect(x+7,y+1,15,6);ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(player.name,x+14,y-10)}
 addEventListener("beforeunload",savePlayer);resize();
 window.addEventListener("keydown",e=>{
  if(!currentUser||!activeEnemy)return;
