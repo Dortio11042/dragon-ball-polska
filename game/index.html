@@ -132,10 +132,30 @@
  #megaMenu button,#megaMenu .menuBtn{min-width:52px!important;height:32px!important;font-size:8px!important;padding:3px 4px!important}
 }
 
+
+/* ===== 0.8.7 LEFT UTILITY MENU ===== */
+#megaMenu{
+ position:fixed!important;left:12px!important;right:auto!important;top:50%!important;bottom:auto!important;
+ transform:translateY(-50%)!important;
+ display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;
+ gap:6px!important;width:132px!important;max-width:132px!important;
+ padding:7px!important;margin:0!important;z-index:80!important;
+ background:rgba(8,12,22,.94)!important;border:2px solid #31446e!important;border-radius:12px!important;
+}
+#megaMenu button,#megaMenu .menuBtn{
+ position:static!important;inset:auto!important;transform:none!important;
+ width:118px!important;min-width:118px!important;height:35px!important;
+ margin:0!important;padding:5px 7px!important;font-size:10px!important;white-space:nowrap!important;
+}
+@media(max-width:760px){
+ #megaMenu{left:5px!important;width:105px!important;max-width:105px!important;padding:4px!important;gap:3px!important}
+ #megaMenu button,#megaMenu .menuBtn{width:95px!important;min-width:95px!important;height:31px!important;font-size:8px!important}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.6 — HUD + MUZYKA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.7 — LEWY PANEL + BEZ TABELI</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1064,9 +1084,35 @@ function layoutHud086(){
    b.style.right="auto";b.style.transform="translateX(-50%)";b.style.margin="0";
  });
 }
-setTimeout(layoutHud086,300);
-setTimeout(layoutHud086,1000);
-window.addEventListener("resize",layoutHud086);
+/* 0.8.7: old bottom HUD arranger disabled */
+
+
+
+
+function uiCleanup087(){
+ // Utility buttons live in the left panel; stop old scripts from pushing them into bottom rows.
+ const mega=document.getElementById("megaMenu");
+ if(mega){
+   mega.style.left="12px";mega.style.top="50%";mega.style.bottom="auto";
+   mega.style.transform="translateY(-50%)";
+ }
+ // Remove the informational "worlds + required level" box only.
+ const candidates=[...document.querySelectorAll("div,section,aside")];
+ for(const el of candidates){
+   if(el===mega || (mega&&mega.contains(el)))continue;
+   const t=(el.innerText||"").replace(/\s+/g," ").trim();
+   if(t.length>40 && t.length<1200 &&
+      /świat|swiat/i.test(t) && /lvl|level|poziom/i.test(t) &&
+      /(pustyn|gór|gor|las|wulkan|niebo|planeta|mistrz)/i.test(t)){
+      // Don't hide a parent containing the canvas/game.
+      if(!el.querySelector("canvas") && el.querySelectorAll("button").length<3){
+        el.style.display="none";
+      }
+   }
+ }
+}
+setTimeout(uiCleanup087,250);
+setTimeout(uiCleanup087,1000);
 
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
 let audio08=null,musicTimer08=null,musicStep086=0;
