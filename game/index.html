@@ -97,11 +97,18 @@
 <button class="action orange" onclick="window.open('https://discord.gg/MGF9crQ9fY','_blank')">💬 DOŁĄCZ DO DISCORDA</button>
 <button class="action" onclick="verifyDiscordReward()">✅ ZWERYFIKUJ I ODBIERZ 10 000 ZENI</button>
 </div>
-<div id="marketPanel" class="modal" style="max-width:620px;width:min(92vw,620px)">
+<div id="marketPanel" class="modal" style="max-width:760px;width:min(94vw,760px);max-height:86vh;overflow:auto;padding-top:42px">
+<button onclick="closeOverlay('marketPanel')" aria-label="Zamknij" style="position:absolute;top:8px;right:8px;width:32px;height:32px;padding:0;border:2px solid #fff;border-radius:6px;background:#b3261e;color:#fff;font-size:20px;font-weight:900;line-height:26px;cursor:pointer">×</button>
 <h2>🏪 Rynek Graczy</h2>
-<p>Globalny rynek Dragon Ball Polska Online.</p>
-<div id="marketStatus" style="margin:10px 0;color:#ffb13b">Budynek rynku działa. Oferty podłączymy w następnym kroku.</div>
-<button class="action" onclick="closeOverlay('marketPanel')">ZAMKNIJ</button>
+<p>Kupuj przedmioty od innych graczy albo wystaw swoje za Zeni.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+<button class="action" onclick="loadMarketOffers()">🔄 ODŚWIEŻ OFERTY</button>
+<button class="action orange" onclick="renderMarketSell()">📦 WYSTAW PRZEDMIOT</button>
+<button class="action" onclick="claimMarketEarnings()">💰 ODBIERZ ZAROBEK</button>
+</div>
+<div id="marketStatus" style="margin:10px 0;color:#ffb13b"></div>
+<div id="marketSell"></div>
+<div id="marketOffers" class="grid"></div>
 </div>
 <canvas id="game"></canvas></div>
 <script>
@@ -601,7 +608,67 @@ function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textCo
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
 function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
-function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Górski Mistrz")openMountainQuest07();else if(npc.name==="Rekruter Discord")$("discordNpcPanel").style.display="flex";else if(npc.name==="Handlarz Rynku")$("marketPanel").style.display="flex";else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
+
+// ===== GLOBALNY RYNEK GRACZY 0.7.25 =====
+function marketEsc(v){return escapeHtml05(v)}
+async function syncPlayerAfterMarket(){
+ if(!onlineUserId)return;
+ const {data:p,error}=await dbpSupabase.from("players").select("zeni,game_data").eq("id",onlineUserId).single();
+ if(error||!p)return;
+ if(p.game_data&&typeof p.game_data==="object") currentUser={...currentUser,...p.game_data};
+ currentUser.zeni=Number(p.zeni||0);
+ normalize05();updateHUD();
+}
+function renderMarketSell(){
+ const box=$("marketSell");if(!box||!currentUser)return;
+ const equipped=new Set(Object.values(currentUser.equipment||{}).filter(Boolean));
+ const items=(currentUser.inventory||[]).map(item05).filter(it=>it&&it.type!=="consumable"&&it.id!=="cloud"&&!equipped.has(it.id));
+ if(!items.length){box.innerHTML='<div class="card"><b>📦 Wystawianie</b><br>Nie masz wolnego wyposażenia do sprzedaży. Zdejmij przedmiot, jeśli jest założony.</div>';return}
+ box.innerHTML=`<div class="card"><b>📦 Wystaw przedmiot</b><br><select id="marketItemSelect" style="width:100%;padding:9px;margin:8px 0">${items.map(it=>`<option value="${marketEsc(it.id)}">${marketEsc(it.name)}</option>`).join("")}</select><input id="marketPriceInput" type="number" min="1" max="1000000000" placeholder="Cena w Zeni" style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"><button class="action orange" onclick="createMarketOffer()">WYSTAW OFERTĘ</button></div>`;
+}
+async function claimMarketEarnings(){
+ $("marketStatus").textContent="⏳ Odbieranie zarobku...";
+ const {data,error}=await dbpSupabase.rpc("claim_market_earnings");
+ if(error){$("marketStatus").textContent="❌ "+error.message;return}
+ await syncPlayerAfterMarket();await loadMarketOffers();toast(`💰 Odebrano ${Number(data||0).toLocaleString("pl-PL")} Zeni z rynku!`);
+}
+async function createMarketOffer(){
+ const itemId=$("marketItemSelect")?.value,price=Math.floor(Number($("marketPriceInput")?.value));
+ if(!itemId||!Number.isFinite(price)||price<1)return toast("Podaj prawidłową cenę.");
+ $("marketStatus").textContent="⏳ Wystawianie oferty...";
+ const {error}=await dbpSupabase.rpc("create_market_listing",{p_item_id:itemId,p_price:price});
+ if(error){$("marketStatus").textContent="❌ "+error.message;return}
+ await syncPlayerAfterMarket();renderMarketSell();await loadMarketOffers();toast("🏪 Oferta wystawiona!");
+}
+async function loadMarketOffers(){
+ const out=$("marketOffers"),st=$("marketStatus");if(!out)return;
+ st.textContent="⏳ Pobieranie ofert...";out.innerHTML="";
+ const {data,error}=await dbpSupabase.from("market_listings").select("id,seller_id,seller_username,item_id,item_name,price,created_at").order("created_at",{ascending:false}).limit(50);
+ if(error){st.textContent="❌ Nie udało się pobrać ofert: "+error.message;return}
+ const {data:me}=await dbpSupabase.from("players").select("market_earnings").eq("id",onlineUserId).single();
+ const earnings=Number(me?.market_earnings||0);
+ st.textContent=`💰 Twoje Zeni: ${Math.floor(currentUser.zeni||0).toLocaleString("pl-PL")} • Do odebrania: ${earnings.toLocaleString("pl-PL")} • Ofert: ${data.length}`;
+ if(!data.length){out.innerHTML='<div class="card">Na rynku nie ma jeszcze żadnych ofert.</div>';return}
+ for(const o of data){
+  const mine=o.seller_id===onlineUserId;
+  out.innerHTML+=`<div class="card"><b>${marketEsc(o.item_name)}</b><br>👤 ${marketEsc(o.seller_username)}<br>💰 <b>${Number(o.price).toLocaleString("pl-PL")} Zeni</b><br>${mine?`<button class="actionBtn" onclick="cancelMarketOffer(${Number(o.id)})">ANULUJ</button>`:`<button class="actionBtn" onclick="buyMarketOffer(${Number(o.id)})">KUP</button>`}</div>`;
+ }
+}
+async function buyMarketOffer(id){
+ if(!confirm("Kupić ten przedmiot?"))return;
+ $("marketStatus").textContent="⏳ Kupowanie...";
+ const {error}=await dbpSupabase.rpc("buy_market_listing",{p_listing_id:id});
+ if(error){$("marketStatus").textContent="❌ "+error.message;return}
+ await syncPlayerAfterMarket();renderMarketSell();await loadMarketOffers();toast("✅ Kupiono przedmiot!");
+}
+async function cancelMarketOffer(id){
+ $("marketStatus").textContent="⏳ Anulowanie...";
+ const {error}=await dbpSupabase.rpc("cancel_market_listing",{p_listing_id:id});
+ if(error){$("marketStatus").textContent="❌ "+error.message;return}
+ await syncPlayerAfterMarket();renderMarketSell();await loadMarketOffers();toast("↩️ Oferta anulowana — przedmiot wrócił do ekwipunku.");
+}
+
+function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Górski Mistrz")openMountainQuest07();else if(npc.name==="Rekruter Discord")$("discordNpcPanel").style.display="flex";else if(npc.name==="Handlarz Rynku"){openOverlay("marketPanel");renderMarketSell();loadMarketOffers();}else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener("resize",resize);
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys[k]=true;if(k==="e")interact()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);$("passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});document.querySelectorAll(".move").forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
 function blocked(x,y){return x<0||y<0||x+player.width>2400||y+player.height>1700}
