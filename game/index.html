@@ -72,10 +72,39 @@
 #settingsMega,#chatMega,#upgradeMega,#achMega,#storyMega,#profileMega{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(680px,calc(100vw - 28px))!important;max-width:calc(100vw - 28px)!important;max-height:82vh!important;overflow:auto!important;box-sizing:border-box!important;margin:0!important}
 #settingsMega label{display:block;margin:9px 0;white-space:normal}#settingsMega input[type=range]{width:min(330px,70vw)}#megaMenu{max-width:calc(100vw - 20px)!important}
 @media(max-width:700px){#miniMap{top:190px!important;width:145px!important;height:102px!important}#miniMapCanvas{width:145px!important;height:102px!important}}
+
+/* ===== 0.8.5 — CLEAN BOTTOM MENU ===== */
+#megaMenu{
+  left:50%!important; right:auto!important; bottom:12px!important;
+  transform:translateX(-50%)!important;
+  display:flex!important; gap:6px!important; align-items:center!important; justify-content:center!important;
+  padding:7px 9px!important; margin:0!important;
+  width:auto!important; max-width:calc(100vw - 24px)!important;
+  background:rgba(8,12,22,.92)!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  border-radius:12px!important; box-shadow:0 6px 20px rgba(0,0,0,.45)!important;
+  z-index:60!important; flex-wrap:nowrap!important;
+}
+#megaMenu button,.megaBtn{
+  position:static!important; transform:none!important;
+  min-width:78px!important; height:38px!important;
+  margin:0!important; padding:5px 8px!important;
+  border-radius:8px!important; font-size:11px!important; font-weight:800!important;
+  white-space:nowrap!important;
+}
+/* Ekwipunek and older HUD buttons get their own row above the new toolbar */
+#inventoryBtn,#invBtn,#equipmentBtn{
+  bottom:66px!important; z-index:61!important;
+}
+@media(max-width:720px){
+  #megaMenu{gap:4px!important;padding:5px!important;max-width:calc(100vw - 10px)!important}
+  #megaMenu button,.megaBtn{min-width:56px!important;height:35px!important;font-size:9px!important;padding:4px!important}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.3 — BOSSY + PORTALE FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.5 — PRZYCISKI + MUZYKA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -963,11 +992,52 @@ function arrangePortals083(){
 }
 arrangePortals083();
 
+
+function fixBottomButtons085(){
+ const mega=document.getElementById("megaMenu");
+ if(!mega)return;
+ [...document.querySelectorAll("button")].forEach(b=>{
+   if(mega.contains(b))return;
+   const t=(b.textContent||"").toLowerCase();
+   if(t.includes("ekwipun")){
+     const st=getComputedStyle(b);
+     if(st.position==="fixed"||st.position==="absolute"){
+       b.style.bottom="66px"; b.style.zIndex="61";
+     }
+   }
+ });
+}
+setTimeout(fixBottomButtons085,400);
+window.addEventListener("resize",fixBottomButtons085);
+
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
-let audio08=null,musicTimer08=null;
-function ensureAudio08(){if(audio08)return audio08;try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}return audio08}
-function tone08(freq,dur=.12,vol=.025){let a=ensureAudio08();if(!a||a.state!=="running"||settings08.music<=0)return;let o=a.createOscillator(),g=a.createGain();o.type="square";o.frequency.value=freq;g.gain.value=vol*(settings08.music/100);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur)}
-function startMusic08(){let a=ensureAudio08();if(!a)return;a.resume();if(musicTimer08)return;let notes=[196,247,294,247,330,294,247,220],i=0;musicTimer08=setInterval(()=>{if(settings08.music>0)tone08(notes[i++%notes.length],.11,.018)},330);toast("🎵 Muzyka włączona")}
+let audio08=null,musicTimer08=null,musicStep085=0;
+function ensureAudio08(){
+ if(audio08)return audio08;
+ try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}
+ return audio08;
+}
+function tone085(freq,dur=.75,vol=.012){
+ const a=ensureAudio08(); if(!a||a.state!=="running"||settings08.music<=0)return;
+ const o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();
+ o.type="sine"; o.frequency.value=freq; f.type="lowpass"; f.frequency.value=900;
+ const v=vol*(settings08.music/100);
+ g.gain.setValueAtTime(0.0001,a.currentTime);
+ g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),a.currentTime+.08);
+ g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);
+ o.connect(f);f.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur+.03);
+}
+function musicTick085(){
+ const chords=[[196,247,294],[174.6,220,261.6],[146.8,196,247],[164.8,220,261.6]];
+ const chord=chords[musicStep085++%chords.length];
+ chord.forEach((n,i)=>setTimeout(()=>tone085(n,.95,.008),i*115));
+}
+function startMusic08(){
+ const a=ensureAudio08();if(!a)return;
+ a.resume(); if(musicTimer08)return;
+ musicTick085(); musicTimer08=setInterval(musicTick085,2600);
+ toast("🎵 Spokojna muzyka włączona");
+}
 window.addEventListener("pointerdown",()=>{if(!musicTimer08)startMusic08()},{once:true});
 
 
