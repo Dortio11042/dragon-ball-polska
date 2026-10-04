@@ -155,7 +155,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.8 — PŁYNNY MULTIPLAYER</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.9 — ULTRA PŁYNNY MULTIPLAYER</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -764,12 +764,20 @@ function applyRemoteTargets088(rows){
    if(!Number.isFinite(tx)||!Number.isFinite(ty))continue;
    let m=remoteMotion088.get(r.user_id);
    if(!m){
-     m={x:tx,y:ty,targetX:tx,targetY:ty,world:r.world};
+     m={x:tx,y:ty,targetX:tx,targetY:ty,world:r.world,vx:0,vy:0,lastPacket:performance.now()};
      remoteMotion088.set(r.user_id,m);
    }else{
+     const nowPerf=performance.now();
      const jump=Math.hypot(tx-m.x,ty-m.y);
-     if(r.world!==m.world||jump>700){m.x=tx;m.y=ty}
-     m.targetX=tx;m.targetY=ty;m.world=r.world;
+     const packetDt=Math.max(16,nowPerf-(m.lastPacket||nowPerf))/1000;
+     if(r.world!==m.world||jump>700){
+       m.x=tx;m.y=ty;m.vx=0;m.vy=0;
+     }else{
+       // estimate actual movement from successive network samples
+       m.vx=(tx-m.targetX)/packetDt;
+       m.vy=(ty-m.targetY)/packetDt;
+     }
+     m.targetX=tx;m.targetY=ty;m.world=r.world;m.lastPacket=nowPerf;
    }
  }
  for(const id of [...remoteMotion088.keys()])if(!seen.has(id))remoteMotion088.delete(id);
@@ -801,7 +809,7 @@ async function refreshPresence072(){
 function startPresence072(){
  stopPresence072();refreshPresence072();
  // było 5000 ms — dlatego inni gracze "teleportowali się"
- presenceTimer072=setInterval(refreshPresence072,500);
+ presenceTimer072=setInterval(refreshPresence072,180);
 }
 function stopPresence072(){
  if(presenceTimer072){clearInterval(presenceTimer072);presenceTimer072=null}
@@ -1312,15 +1320,19 @@ function drawRemotePlayers072(c){
  remotePlayers072.forEach(r=>{
   const m=r._motion088;
   if(m){
-    const dx=m.targetX-m.x,dy=m.targetY-m.y;
+    // Predict only a tiny bit ahead between packets, then ease toward it every rendered frame.
+    // This removes the visible "stop -> jump -> stop" effect without letting players drift away.
+    const age=Math.min(.22,Math.max(0,(performance.now()-(m.lastPacket||performance.now()))/1000));
+    const predictX=m.targetX+(m.vx||0)*age;
+    const predictY=m.targetY+(m.vy||0)*age;
+    const dx=predictX-m.x,dy=predictY-m.y;
     const d=Math.hypot(dx,dy);
-    if(d>700){m.x=m.targetX;m.y=m.targetY}
+    if(d>700){m.x=m.targetX;m.y=m.targetY;m.vx=0;m.vy=0}
     else{
-      // interpolation each rendered frame: smooth, but catches up quickly
-      const k=Math.min(.28,Math.max(.10,d/550));
+      const k=0.34;
       m.x+=dx*k;m.y+=dy*k;
-      if(Math.abs(dx)<.15)m.x=m.targetX;
-      if(Math.abs(dy)<.15)m.y=m.targetY;
+      if(Math.abs(dx)<.04)m.x=predictX;
+      if(Math.abs(dy)<.04)m.y=predictY;
     }
   }
   let x=Number(m?m.x:r.x)-c.x,y=Number(m?m.y:r.y)-c.y;
