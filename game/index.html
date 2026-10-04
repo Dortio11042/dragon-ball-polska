@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.2.1 — RYNEK: DROPY + LECZENIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.3.0 — POSTACIE + PRESTIŻ + ŁOWIENIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2204,6 +2204,135 @@ setTimeout(()=>{if(currentUser){normQuests110();updateQuestUI();savePlayer()}},1
    }
  }
  setInterval(addButton121,500);
+})();
+
+
+
+/* ==================== 1.3.0 — POSTACIE + PRESTIŻ + ŁOWIENIE ==================== */
+(function(){
+const css=document.createElement("style");
+css.textContent=`
+#fishingPanel130{display:none;position:fixed;inset:0;z-index:3200;background:rgba(2,7,15,.94);align-items:center;justify-content:center}
+#fishingPanel130 .fishBox{width:min(650px,94vw);padding:22px;background:#081523;border:4px solid #55c9ff;border-radius:14px;text-align:center}
+#fishBar130{height:22px;background:#182638;border:2px solid #fff;border-radius:12px;overflow:hidden;margin:15px}
+#fishFill130{height:100%;width:0%;background:#55c9ff}
+`;
+document.head.appendChild(css);
+
+const prestigeLooks130=[
+ {p:0,name:"Wojownik",hair:"#111",skin:"#f0b07a",top:"#ef7d22",pants:"#2456a6",aura:null},
+ {p:1,name:"Książę Saiyan",hair:"#151515",skin:"#e9aa78",top:"#243b8f",pants:"#202a55",aura:"#ffe04b"},
+ {p:2,name:"Namekijski Wojownik",hair:null,skin:"#62b94f",top:"#6e45a5",pants:"#eee",aura:"#7cff67"},
+ {p:3,name:"Mistrz Energii",hair:"#f2d449",skin:"#edb17c",top:"#e87820",pants:"#2755a0",aura:"#ffe76c"},
+ {p:4,name:"Boski Wojownik",hair:"#5bc7ff",skin:"#efb17e",top:"#264a9c",pants:"#172c67",aura:"#55dfff"},
+ {p:5,name:"Legendarny Wojownik",hair:"#8de45e",skin:"#eeb07d",top:"#323a43",pants:"#222",aura:"#8cff72"}
+];
+function look130(){let p=Math.max(0,Number(currentUser?.prestige||currentUser?.prestige08||0));return prestigeLooks130[Math.min(p,prestigeLooks130.length-1)]}
+const oldDrawPlayer130=drawPlayer;
+drawPlayer=function(c){
+ try{
+  let L=look130(),x=player.x-c.x,y=player.y-c.y;
+  if(L.aura){ctx.save();ctx.globalAlpha=.24;ctx.fillStyle=L.aura;ctx.beginPath();ctx.ellipse(x+14,y+20,25,34,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+  ctx.fillStyle=L.pants;ctx.fillRect(x+5,y+25,8,13);ctx.fillRect(x+16,y+25,8,13);
+  ctx.fillStyle=L.top;ctx.fillRect(x+4,y+13,21,15);
+  ctx.fillStyle=L.skin;ctx.fillRect(x+7,y+3,15,12);
+  if(L.hair){
+   ctx.fillStyle=L.hair;ctx.fillRect(x+6,y,17,5);
+   ctx.fillRect(x+5,y-4,4,7);ctx.fillRect(x+10,y-7,4,9);ctx.fillRect(x+16,y-6,4,8);ctx.fillRect(x+21,y-3,4,7);
+  }else{
+   ctx.fillStyle="#245c2b";ctx.fillRect(x+4,y+6,3,7);ctx.fillRect(x+22,y+6,3,7);
+  }
+  ctx.fillStyle="#fff";ctx.font="bold 11px monospace";ctx.textAlign="center";ctx.fillText(player.name,x+14,y-13);
+  ctx.font="9px monospace";ctx.fillStyle=L.aura||"#ddd";ctx.fillText(L.name,x+14,y-3);
+ }catch(e){oldDrawPlayer130(c)}
+};
+
+// ŁOWISKA — kilka światów, żeby łowienie nie było tylko w jednym miejscu.
+const fishingSpots130=[
+ {world:"valley",x:320,y:1320,name:"🌊 Staw Zielonej Doliny",tier:1},
+ {world:"valley",x:2020,y:1260,name:"🌊 Jezioro Doliny",tier:1},
+ {world:"forest",x:360,y:1260,name:"🌲 Leśne Jezioro",tier:2},
+ {world:"ice",x:1850,y:1250,name:"❄️ Przerębel",tier:3},
+ {world:"sky",x:360,y:1180,name:"☁️ Niebiański Staw",tier:4}
+];
+const rods130=[
+ {id:"rod1",name:"🎣 Prosta Wędka",price:1200,power:1},
+ {id:"rod2",name:"🎣 Wzmocniona Wędka",price:7000,power:2},
+ {id:"rod3",name:"✨ Smocza Wędka",price:30000,power:3}
+];
+const fish130=[
+ {id:"fish1",name:"🐟 Mała Ryba",value:90,xp:25,min:1,w:50},
+ {id:"fish2",name:"🐠 Ryba Wojownika",value:220,xp:55,min:1,w:30},
+ {id:"fish3",name:"🐡 Złota Ryba",value:650,xp:130,min:2,w:13},
+ {id:"fish4",name:"🧊 Lodowa Ryba",value:1300,xp:230,min:3,w:6},
+ {id:"fish5",name:"🐉 Smocza Ryba",value:4500,xp:650,min:4,w:1}
+];
+function normFish130(){currentUser.fish130??={};currentUser.fishingItems130??=[];currentUser.rod130??=null}
+function fishCount130(id){normFish130();return Number(currentUser.fish130[id]||0)}
+function hasRod130(id){normFish130();return currentUser.fishingItems130.includes(id)}
+function rodPower130(){normFish130();return rods130.find(x=>x.id===currentUser.rod130)?.power||0}
+
+if(!npcs.some(n=>n.name==="Sklep Wędkarski"))npcs.push({world:"valley",x:470,y:1260,name:"Sklep Wędkarski",text:"Wędki i sprzęt do łowienia."});
+if(!npcs.some(n=>n.name==="Skup Ryb"))npcs.push({world:"valley",x:650,y:1260,name:"Skup Ryb",text:"Skupuję wszystkie złowione ryby."});
+
+window.openFishingShop130=function(){
+ normFish130();
+ let html=rods130.map(r=>`<div class="card"><b>${r.name}</b><br>Poziom wędki: ${r.power}<br>${hasRod130(r.id)?"✅ POSIADASZ":`${r.price.toLocaleString("pl-PL")} Zeni<br><button class="actionBtn" onclick="buyRod130('${r.id}')">KUP</button>`}${hasRod130(r.id)?`<br><button class="actionBtn" onclick="equipRod130('${r.id}')">${currentUser.rod130===r.id?"ZAŁOŻONA":"ZAŁÓŻ"}</button>`:""}</div>`).join("");
+ let p=document.getElementById("fishingPanel130");p.innerHTML=`<div class="fishBox"><h2>🎣 SKLEP WĘDKARSKI</h2><div class="grid">${html}</div><button class="actionBtn" onclick="this.closest('#fishingPanel130').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex";
+};
+window.buyRod130=function(id){normFish130();let r=rods130.find(x=>x.id===id);if(!r||hasRod130(id))return;if(currentUser.zeni<r.price)return toast("❌ Za mało Zeni.");currentUser.zeni-=r.price;currentUser.fishingItems130.push(id);currentUser.rod130=id;savePlayer();updateHUD();toast("🎣 Kupiono "+r.name);openFishingShop130()};
+window.equipRod130=function(id){if(!hasRod130(id))return;currentUser.rod130=id;savePlayer();toast("🎣 Założono wędkę.");openFishingShop130()};
+
+window.openFishBuyer130=function(){
+ normFish130();let total=fish130.reduce((a,f)=>a+fishCount130(f.id)*f.value,0);
+ let rows=fish130.filter(f=>fishCount130(f.id)).map(f=>`<div class="card"><b>${f.name}</b><br>${fishCount130(f.id)} szt. × ${f.value} Zeni<br><button class="actionBtn" onclick="sellFish130('${f.id}')">SPRZEDAJ WSZYSTKIE</button></div>`).join("");
+ let p=document.getElementById("fishingPanel130");p.innerHTML=`<div class="fishBox"><h2>💰 SKUP RYB</h2><p>Wartość wszystkich ryb: <b>${total.toLocaleString("pl-PL")} Zeni</b></p><div class="grid">${rows||"<p>Nie masz ryb.</p>"}</div>${total?'<button class="actionBtn" onclick="sellAllFish130()">💰 SPRZEDAJ WSZYSTKO</button>':""}<button class="actionBtn" onclick="this.closest('#fishingPanel130').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex";
+};
+window.sellFish130=function(id){let f=fish130.find(x=>x.id===id),n=fishCount130(id);if(!f||!n)return;currentUser.zeni+=n*f.value;currentUser.fish130[id]=0;savePlayer();updateHUD();toast(`💰 Sprzedano ${n}x ${f.name}`);openFishBuyer130()};
+window.sellAllFish130=function(){for(let f of fish130){let n=fishCount130(f.id);currentUser.zeni+=n*f.value;currentUser.fish130[f.id]=0}savePlayer();updateHUD();toast("💰 Sprzedano wszystkie ryby!");openFishBuyer130()};
+
+function weightedFish130(tier,power){
+ let pool=fish130.filter(f=>f.min<=tier+Math.max(0,power-1));
+ let bag=[];for(let f of pool)for(let i=0;i<f.w+power*2;i++)bag.push(f);
+ return bag[Math.floor(Math.random()*bag.length)];
+}
+let fishingBusy130=false;
+window.startFishing130=function(spot){
+ normFish130();if(fishingBusy130)return;if(!rodPower130())return toast("❌ Najpierw kup i załóż wędkę u NPC.");
+ fishingBusy130=true;let p=document.getElementById("fishingPanel130");p.innerHTML=`<div class="fishBox"><h2>🎣 ŁOWIENIE</h2><p>${spot.name}</p><div id="fishBar130"><div id="fishFill130"></div></div><p id="fishText130">Zarzucasz wędkę...</p></div>`;p.style.display="flex";
+ let fill=document.getElementById("fishFill130"),v=0;
+ let timer=setInterval(()=>{v+=4;fill.style.width=v+"%";if(v>=100){clearInterval(timer);let rare=Math.random()<.08*rodPower130();if(rare){let rareItems=["bigPotion","bossMatBandit","bossMatSand"];let id=rareItems[Math.floor(Math.random()*rareItems.length)];if(id==="bigPotion")currentUser.bigPotions=(currentUser.bigPotions||0)+1;else{currentUser.inventory??=[];currentUser.inventory.push(id)};document.getElementById("fishText130").innerHTML="✨ <b>WYŁOWIŁEŚ RZADKI PRZEDMIOT!</b>";toast("✨ Rzadki przedmiot z łowiska!")}else{let f=weightedFish130(spot.tier,rodPower130());currentUser.fish130[f.id]=(currentUser.fish130[f.id]||0)+1;addExp(f.xp);document.getElementById("fishText130").innerHTML=`🎉 Złowiono <b>${f.name}</b><br>+${f.xp} EXP`;toast(`🎣 ${f.name} +${f.xp} EXP`)}savePlayer();setTimeout(()=>{p.style.display="none";fishingBusy130=false},1600)}},45);
+};
+
+const interactBase130=interact;
+interact=function(){
+ let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+ if(n?.name==="Sklep Wędkarski"){openFishingShop130();return}
+ if(n?.name==="Skup Ryb"){openFishBuyer130();return}
+ let spot=fishingSpots130.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<115);
+ if(spot){startFishing130(spot);return}
+ interactBase130();
+};
+
+const drawBase130=draw;
+draw=function(){
+ drawBase130();
+ try{
+  let c=typeof camera==="function"?camera():{x:0,y:0};
+  for(let f of fishingSpots130.filter(x=>x.world===currentWorld)){
+   let x=f.x-c.x,y=f.y-c.y;ctx.save();ctx.fillStyle="rgba(50,160,230,.75)";ctx.beginPath();ctx.ellipse(x,y,70,34,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#a7e9ff";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 11px monospace";ctx.textAlign="center";ctx.fillText("🎣 ŁOWISKO",x,y-43);ctx.restore();
+  }
+ }catch(e){}
+};
+
+const hintBase130=updateHint;
+updateHint=function(){
+ hintBase130();
+ let spot=fishingSpots130.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<115);
+ if(spot){$("hint").textContent="E — 🎣 ŁÓW RYBY";$("hint").style.display="block"}
+};
+
+let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appendChild(fp);
 })();
 
 </script></body></html>
