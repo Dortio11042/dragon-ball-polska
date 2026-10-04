@@ -75,7 +75,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.1 — UI / PORTALE / PVP / LVL 100 FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.3 — BOSSY + PORTALE FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -368,6 +368,7 @@ function equipBonus05(type,key){let it=item05(currentUser.equipment?.[type]);ret
 function maxHp05(){return 100+(currentUser.level-1)*20+equipBonus05("outfit","hp")}
 function damageBonus(){return equipBonus05("gloves","dmg")}
 function speedBonus05(){return equipBonus05("boots","speed")}
+function prestigeXpBonus082(){return (currentUser?.prestige||0)*0.05}
 function xpBonus(){return equipBonus05("amulet","xp")}
 function openOverlay(id){document.getElementById(id).style.display="flex"}
 function closeOverlay(id){document.getElementById(id).style.display="none"}
@@ -530,7 +531,7 @@ portals.push(
  {world:"pvp",x:120,y:1050,w:90,h:120,to:"arena",label:"WYJŚCIE",min:10}
 );
 npcs.push(
- {world:"valley",x:1450,y:560,name:"Mistrz Mocy",text:"Uczę wojowników panowania nad Ki."},{world:"valley",x:1900,y:1180,name:"Strażnik Areny",text:"⚔️ Arena PvP jest tuż obok. Wymagany LVL 10."},
+ {world:"valley",x:1450,y:560,name:"Mistrz Mocy",text:"Uczę wojowników panowania nad Ki."},{world:"valley",x:1810,y:1320,name:"Strażnik Areny",text:"⚔️ Arena i PvP są na dole mapy. Wymagany LVL 10."},
  {world:"valley",x:620,y:520,name:"Kowal",text:"Ulepszam wyposażenie do +10."},
  {world:"forest",x:1650,y:1150,name:"Tajemniczy Trener",text:"Sekretna technika czeka na wytrwałych."},
  {world:"ruins",x:1050,y:900,name:"Strażnik Ruin",text:"W ruinach ukryto pradawne skrzynie."},
@@ -725,6 +726,16 @@ function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)retur
 
 let bossBattle=null,bossCooldowns=[0,0,0],bossDodging=false,bossBusy=false,bossTurn=0;
 
+function bossSpecialAttack083(e){
+ const a={
+  valley:"Furia Bandyty",desert:"Burza Piaskowa",mountains:"Górskie Uderzenie",
+  forest:"Korzenie Lasu",ice:"Lodowa Zamieć",volcano:"Erupcja",
+  sky:"Piorun Nieba",alien:"Kosmiczny Wybuch",masters:"Technika Wielkiego Mistrza"
+ };
+ return a[e?.bossKey]||"Ostateczny Atak";
+}
+
+
 function startBossBattle(e){
  if(bossBattle||!e||!e.alive)return;
  activeEnemy=null;bossBattle=e;bossCooldowns=[0,0,0];bossDodging=false;bossBusy=false;bossTurn=0;
@@ -773,7 +784,7 @@ function bossEnemyTurn(){
  const ratio=bossBattle.hp/bossBattle.maxHp;
  let attack={name:"👊 Potężny cios",dmg:18+bossBattle.level*4,danger:false};
  if(bossTurn%4===0)attack={name:"💥 Eksplozja energii",dmg:36+bossBattle.level*5,danger:true};
- else if(ratio<=.35&&bossTurn%2===0)attack={name:"🔥 Furia Bandyty",dmg:30+bossBattle.level*5,danger:true};
+ else if(ratio<=.35&&bossTurn%2===0)attack={name:"🔥 "+bossSpecialAttack083(bossBattle),dmg:30+bossBattle.level*5,danger:true};
  else if(ratio<=.7&&bossTurn%3===0)attack={name:"⚡ Szarża",dmg:25+bossBattle.level*4,danger:false};
  $("bossBattleMessage").textContent=attack.name+" — boss szykuje atak!";
  if(attack.danger)$("bossDanger").style.display="block";
@@ -820,7 +831,7 @@ function leaveBossBattle(){
  toast("🏳️ Opuściłeś walkę z bossem.");
 }
 
-function openCombat(e){if(!e.alive||activeEnemy)return;if(e.boss&&e.bossKey==="valley"){startBossBattle(e);return}activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
+function openCombat(e){if(!e.alive||activeEnemy)return;if(e.boss){startBossBattle(e);return}activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
 function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerMountainKill07(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
 function usePotion(){if(!currentUser.potions){toast("Brak małego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
@@ -926,6 +937,32 @@ function drawWorldDecor(cx,cy){
 }
 
 
+
+function arrangePortals083(){
+ const topOrder=["desert","mountains","forest","ice","volcano","sky","alien","masters","ruins","voidzone"];
+ const labels={desert:"PUSTYNIA",mountains:"GÓRY",forest:"LAS",ice:"LÓD",volcano:"WULKAN",sky:"NIEBO",alien:"PLANETA",masters:"MISTRZOWIE",ruins:"RUINY",voidzone:"SZCZELINA"};
+ // Progression portals originating in the valley are presented in one clean row at the top.
+ let progression=portals.filter(p=>p.world==="valley"&&topOrder.includes(p.to));
+ progression.forEach((p,i)=>{
+   p.x=160+i*215;p.y=145;p.w=92;p.h=118;p.label=labels[p.to]||p.label;
+ });
+ // If later-world portals are chained rather than valley-originating, add visible valley shortcuts,
+ // still respecting their level requirements.
+ topOrder.forEach((to,i)=>{
+   if(!portals.some(p=>p.world==="valley"&&p.to===to)){
+     let existing=portals.find(p=>p.to===to);
+     let min=existing?.min ?? worlds[to]?.min ?? 1;
+     portals.push({world:"valley",x:160+i*215,y:145,w:92,h:118,to,label:labels[to],min});
+   }
+ });
+ // Arena/PvP stay at the bottom, separated from the progression portals.
+ let pvp=portals.find(p=>p.world==="valley"&&p.to==="pvp");
+ if(pvp){pvp.x=1870;pvp.y=1370;pvp.w=110;pvp.h=135;pvp.label="⚔️ ARENA PVP";}
+ let arena=portals.find(p=>p.world==="valley"&&p.to==="arena");
+ if(arena){arena.x=1650;arena.y=1370;arena.w=105;arena.h=135;arena.label="🏟️ ARENA";}
+}
+arrangePortals083();
+
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
 let audio08=null,musicTimer08=null;
 function ensureAudio08(){if(audio08)return audio08;try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}return audio08}
@@ -1021,7 +1058,7 @@ function renderProfile08(){
  <button class="action" onclick="prestige08()">⭐ PRESTIGE</button>`;
 }
 function transform08(){if(currentUser.level<30)return toast("Transformacja od LVL 30");currentUser.transformation=currentUser.transformation==="Base"?"Wzmocniona Aura":"Base";toast("⚡ Forma: "+currentUser.transformation);savePlayer();renderProfile08()}
-function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.hp=maxHp05();currentUser.zeni+=100000;toast("⭐ PRESTIGE "+currentUser.prestige+"! +100 000 Zeni, +20 MAX HP");savePlayer();updateHUD();renderProfile08()}
+function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.zeni=10000;currentUser.hp=maxHp05();toast("⭐ PRESTIGE "+currentUser.prestige+"! LVL zresetowany, Zeni ustawione na 10 000, trwałe +20 MAX HP");savePlayer();updateHUD();renderProfile08()}
 
 function weeklyQuest08(){
  if(Date.now()-(currentUser.weeklyStamp||0)>604800000){currentUser.weeklyStamp=Date.now();currentUser.weeklyKills=0}
