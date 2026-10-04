@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.2.0 — SHENRON + DROPY + KOWAL</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.2.1 — RYNEK: DROPY + LECZENIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2122,6 +2122,88 @@ setTimeout(()=>{if(currentUser){normQuests110();updateQuestUI();savePlayer()}},1
   if(heal){heal.style.left='18px';heal.style.top='50%';heal.style.transform='translateY(-50%)'}
  }
  setInterval(placeBossHud120,40);
+})();
+
+
+
+/* ==================== 1.2.1 — RYNEK: DROPY + LECZENIE ==================== */
+(function(){
+ const marketExtra121=[
+  {id:"smallPotion",name:"🧪 Małe leczenie +50 HP",kind:"heal"},
+  {id:"bigPotion",name:"🧪 Duże leczenie +100 HP",kind:"heal"},
+  {id:"meal",name:"🍖 Pełne leczenie",kind:"heal"},
+  {id:"bossMatBandit",name:"🩸 Emblemat Bandyty",kind:"inv"},
+  {id:"bossMatSand",name:"🏜️ Rdzeń Pustyni",kind:"inv"},
+  {id:"bossMatMountain",name:"⛰️ Kamień Strażnika",kind:"inv"},
+  {id:"bossMatForest",name:"🌿 Serce Lasu",kind:"inv"},
+  {id:"bossMatIce",name:"❄️ Lodowy Kryształ",kind:"inv"},
+  {id:"bossMatLava",name:"🌋 Rdzeń Lawy",kind:"inv"},
+  {id:"bossMatSky",name:"⚡ Odłamek Nieba",kind:"inv"},
+  {id:"bossMatAlien",name:"👽 Kosmiczny Rdzeń",kind:"inv"},
+  {id:"bossMatMaster",name:"🥋 Znak Wielkiego Mistrza",kind:"inv"},
+  {id:"bossMatRuins",name:"🏛️ Starożytny Relikt",kind:"inv"},
+  {id:"bossMatVoid",name:"🌌 Fragment Pustki",kind:"inv"},
+  {id:"relicGloves120",name:"⚔️ Rękawice Łowcy Bossów",kind:"inv"},
+  {id:"relicBoots120",name:"👢 Buty Żywiołów",kind:"inv"},
+  {id:"relicAmulet120",name:"🧿 Amulet Niebiańskiego Rdzenia",kind:"inv"},
+  {id:"relicGi120",name:"🥋 Pancerz Wielkiego Mistrza",kind:"inv"},
+  {id:"voidSet120",name:"🌌 Zbroja Pustki",kind:"inv"}
+ ];
+ function qty121(it){
+   if(!currentUser)return 0;
+   if(it.id==="smallPotion")return Number(currentUser.potions||0);
+   if(it.id==="bigPotion")return Number(currentUser.bigPotions||0);
+   if(it.id==="meal")return Number(currentUser.meals||0);
+   return (currentUser.inventory||[]).filter(x=>x===it.id).length;
+ }
+ window.openMarketSell121=function(){
+   let p=document.getElementById("marketSell121");
+   if(!p){p=document.createElement("div");p.id="marketSell121";p.className="overlay";document.body.appendChild(p)}
+   let owned=marketExtra121.filter(x=>qty121(x)>0);
+   p.innerHTML=`<div class="modal" style="width:min(760px,94vw);max-height:86vh;overflow:auto">
+    <h2>🏪 WYSTAW PRZEDMIOT</h2>
+    <p>Wybierz leczenie, drop z bossa albo przedmiot od Kowala.</p>
+    <div class="grid">${owned.length?owned.map(it=>`<div class="card"><b>${it.name}</b><br>Posiadasz: <b>${qty121(it)}</b><br><input id="price121_${it.id}" type="number" min="1" max="1000000000" placeholder="Cena w Zeni" style="width:90%;margin:8px;padding:8px"><br><button class="actionBtn" onclick="sellExtra121('${it.id}')">WYSTAW</button></div>`).join(""):"<p>Nie masz obecnie żadnego leczenia ani dropów do wystawienia.</p>"}</div>
+    <button class="actionBtn" onclick="document.getElementById('marketSell121').style.display='none'">ZAMKNIJ</button>
+   </div>`;
+   p.style.display="flex";
+ };
+ window.sellExtra121=async function(id){
+   let price=Math.floor(Number(document.getElementById("price121_"+id)?.value||0));
+   if(price<1)return toast("❌ Wpisz poprawną cenę.");
+   try{
+     const {data,error}=await dbpSupabase.rpc("create_market_listing",{p_item_id:id,p_price:price});
+     if(error)throw error;
+     // Serwer usunął przedmiot ze swojego game_data. Pobierz świeży stan,
+     // żeby lokalny autosave nie przywrócił sprzedanego przedmiotu.
+     const {data:profile,error:pe}=await dbpSupabase.from("players").select("*").eq("id",onlineUserId).single();
+     if(pe)throw pe;
+     currentUser=(profile.game_data&&typeof profile.game_data==="object")?profile.game_data:currentUser;
+     currentUser.username=profile.username;
+     currentUser.level=profile.level??currentUser.level;
+     currentUser.exp=Number(profile.exp??currentUser.exp);
+     currentUser.zeni=Number(profile.zeni??currentUser.zeni);
+     currentUser.hp=profile.hp??currentUser.hp;
+     currentUser.world=profile.world??currentUser.world;
+     currentUser.x=profile.x??currentUser.x; currentUser.y=profile.y??currentUser.y;
+     currentUser.dragonBalls=profile.dragon_balls??currentUser.dragonBalls;
+     updateHUD();toast("🏪 Oferta wystawiona za "+price.toLocaleString("pl-PL")+" Zeni!");
+     openMarketSell121();
+     if(typeof refreshMarketListings==="function")refreshMarketListings();
+     if(typeof loadMarketListings==="function")loadMarketListings();
+   }catch(e){console.error(e);toast("❌ "+String(e?.message||e))}
+ };
+ // Dodaj osobny, wyraźny przycisk w istniejącym panelu rynku.
+ function addButton121(){
+   const candidates=[document.getElementById("marketPanel"),document.getElementById("playerMarketPanel"),document.getElementById("marketMega")].filter(Boolean);
+   for(const p of candidates){
+     if(p.querySelector(".extraSell121"))continue;
+     let b=document.createElement("button");b.className="actionBtn extraSell121";b.textContent="📦 WYSTAW LECZENIE / DROPY";b.onclick=openMarketSell121;
+     const close=[...p.querySelectorAll("button")].find(x=>/zamknij/i.test(x.textContent));
+     close?close.before(b):p.appendChild(b);
+   }
+ }
+ setInterval(addButton121,500);
 })();
 
 </script></body></html>
