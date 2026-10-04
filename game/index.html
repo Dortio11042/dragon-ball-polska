@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.1.2 — BOSS HUD POZYCJA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.2.0 — SHENRON + DROPY + KOWAL</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2007,6 +2007,121 @@ setTimeout(()=>{if(currentUser){normQuests110();updateQuestUI();savePlayer()}},1
    const p=document.getElementById("bossBattlePanel")||document.getElementById("bossBattleMega");
    if(p&&getComputedStyle(p).display!=="none")movePlayerHp112();
  },50);
+})();
+
+
+
+/* ==================== 1.2.0 — SHENRON + BOSS DROPY + KOWAL + BOSS HUD ==================== */
+(function(){
+ const style=document.createElement('style');
+ style.textContent=`
+ #bossDropWin120{display:none;position:fixed;inset:0;z-index:4100;background:rgba(0,0,0,.72);align-items:center;justify-content:center}
+ #bossDropWin120 .dropBox120{width:min(520px,92vw);padding:26px;background:#0b101d;border:4px solid #ffb02e;border-radius:14px;box-shadow:0 0 45px rgba(255,176,46,.45);text-align:center}
+ #bossDropWin120 .dropTitle120{font-size:30px;font-weight:900;color:#ffcf5a;text-shadow:2px 2px #000}
+ #bossDropWin120 .dropItem120{font-size:20px;margin:14px 0;color:#fff}
+ #relicForge120{display:none;position:fixed;inset:0;z-index:3000;background:rgba(3,5,10,.94);align-items:center;justify-content:center}
+ #relicForge120 .forgeBox120{width:min(820px,94vw);max-height:86vh;overflow:auto;padding:22px;background:#0b101d;border:4px solid #8f72ff;border-radius:12px;text-align:center}
+ #bossHeal111{position:fixed!important;left:18px!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:2700!important;width:155px!important;display:flex!important;flex-direction:column!important;gap:7px!important;background:rgba(7,10,18,.95)!important;border:2px solid #65e884!important;border-radius:9px!important;padding:9px!important;pointer-events:auto!important}
+ #bossPlayerHud111{position:fixed!important;z-index:2690!important;width:205px!important;max-width:205px!important;padding:5px 7px!important;margin:0!important;background:rgba(7,10,18,.93)!important;border:2px solid #65e884!important;border-radius:7px!important;text-align:center!important;font-size:11px!important;pointer-events:none!important}
+ #bossPlayerHud111 .hp111{height:14px!important;margin-top:3px!important}
+ @media(max-width:800px){#bossHeal111{left:5px!important;width:120px!important}#bossPlayerHud111{width:165px!important}}
+ `;
+ document.head.appendChild(style);
+
+ const dropDefs120={
+  valley:{id:'bossMatBandit',name:'🩸 Emblemat Bandyty',rarity:'rare'},
+  desert:{id:'bossMatSand',name:'🏜️ Rdzeń Pustyni',rarity:'epic'},
+  mountains:{id:'bossMatMountain',name:'⛰️ Kamień Strażnika',rarity:'epic'},
+  forest:{id:'bossMatForest',name:'🌿 Serce Lasu',rarity:'legendary'},
+  ice:{id:'bossMatIce',name:'❄️ Lodowy Kryształ',rarity:'legendary'},
+  volcano:{id:'bossMatLava',name:'🌋 Rdzeń Lawy',rarity:'legendary'},
+  sky:{id:'bossMatSky',name:'⚡ Odłamek Nieba',rarity:'mythic'},
+  alien:{id:'bossMatAlien',name:'👽 Kosmiczny Rdzeń',rarity:'mythic'},
+  masters:{id:'bossMatMaster',name:'🥋 Znak Wielkiego Mistrza',rarity:'mythic'},
+  ruins:{id:'bossMatRuins',name:'🏛️ Starożytny Relikt',rarity:'mythic'},
+  voidzone:{id:'bossMatVoid',name:'🌌 Fragment Pustki',rarity:'mythic'}
+ };
+ const crafted120=[
+  {id:'relicGloves120',name:'⚔️ Rękawice Łowcy Bossów',type:'gloves',dmg:45,desc:'+45 DMG',recipe:{bossMatBandit:1,bossMatSand:1,bossMatMountain:1}},
+  {id:'relicBoots120',name:'👢 Buty Żywiołów',type:'boots',speed:.25,desc:'+25% szybkości',recipe:{bossMatForest:1,bossMatIce:1,bossMatLava:1}},
+  {id:'relicAmulet120',name:'🧿 Amulet Niebiańskiego Rdzenia',type:'amulet',xp:.35,desc:'+35% EXP',recipe:{bossMatSky:1,bossMatAlien:1}},
+  {id:'relicGi120',name:'🥋 Pancerz Wielkiego Mistrza',type:'outfit',hp:450,desc:'+450 maks. HP',recipe:{bossMatMaster:1,bossMatRuins:1}},
+  {id:'voidSet120',name:'🌌 Zbroja Pustki',type:'outfit',hp:700,desc:'+700 maks. HP',recipe:{bossMatVoid:1,bossMatMaster:1,bossMatAlien:1}}
+ ];
+ const allItems120=[...Object.values(dropDefs120).map(x=>({...x,type:'material',desc:'Materiał z bossa • crafting / handel'})),...crafted120];
+ for(const it of allItems120)if(!shopItems05.some(x=>x.id===it.id))shopItems05.push(it);
+
+ function countItem120(id){return (currentUser.inventory||[]).filter(x=>x===id).length}
+ function takeOne120(id){let i=(currentUser.inventory||[]).indexOf(id);if(i>=0){currentUser.inventory.splice(i,1);return true}return false}
+ function bigDrop120(it){
+  let w=document.getElementById('bossDropWin120');if(!w){w=document.createElement('div');w.id='bossDropWin120';document.body.appendChild(w)}
+  w.innerHTML=`<div class="dropBox120"><div class="dropTitle120">🏆 BRAWO! BOSS POKONANY!</div><div class="dropItem120">WYPADŁ PRZEDMIOT:<br><b class="rarity-${it.rarity}">${escapeHtml05(it.name)}</b></div><p>🎒 Przedmiot został automatycznie dodany do ekwipunku.</p><button class="actionBtn" onclick="document.getElementById('bossDropWin120').style.display='none'">SUPER!</button></div>`;
+  w.style.display='flex';
+ }
+ // Wyłączamy stary podwójny system dropów i używamy jednego, czytelnego systemu.
+ window.rollBossLoot090=function(){};
+ window.awardBossLoot100=function(e){
+  if(!e?.boss||!currentUser)return;norm100();let it=dropDefs120[e.bossKey];if(!it)return;
+  currentUser.bossKills090=(currentUser.bossKills090||0)+1;
+  let chance=.35+Math.min(.15,(currentUser.prestige||0)*.02);
+  if(Math.random()<chance){currentUser.inventory??=[];currentUser.inventory.push(it.id);bigDrop120(it);toast('🎁 BOSS DROP! '+it.name)}
+  else toast('👑 Boss pokonany — tym razem bez unikalnego dropu.');
+  currentUser.seasonScore090=(currentUser.seasonScore090||0)+100;savePlayer();
+ };
+ window.openLoot100=function(){
+  let g=$('lootGrid100');if(!g)return;let rows=Object.values(dropDefs120).filter(it=>countItem120(it.id)>0);
+  g.innerHTML=rows.length?rows.map(it=>`<div class="card"><b class="rarity-${it.rarity}">${it.name}</b><br>${it.rarity.toUpperCase()}<br>Posiadasz: <b>${countItem120(it.id)}</b><br>🎒 Jest już w ekwipunku • możesz użyć u Kowala Reliktów albo wystawić na Rynku Graczy.</div>`).join(''):'<p>Nie masz jeszcze materiałów z bossów.</p>';
+  openOverlay('lootPanel100');
+ };
+
+ // Ekwipunek: materiały bossów są widoczne, ale nie mają bezsensownego przycisku ZAŁÓŻ.
+ const renderInventoryBase120=renderInventory;
+ renderInventory=function(){
+  renderInventoryBase120();let g=$('inventoryGrid');if(!g)return;
+  const mats=Object.values(dropDefs120).filter(it=>countItem120(it.id)>0);
+  if(mats.length){g.innerHTML+=`<h3 style="grid-column:1/-1">👑 Materiały z bossów</h3>`+mats.map(it=>`<div class="card"><b class="rarity-${it.rarity}">${it.name}</b><br>${it.desc}<br>Posiadasz: <b>${countItem120(it.id)}</b></div>`).join('')}
+ };
+
+ // NPC od 7 Smoczych Kul.
+ if(!npcs.some(n=>n.name==='Strażnik Smoczych Kul'))npcs.push({world:'valley',x:1120,y:520,name:'Strażnik Smoczych Kul',text:'Przynieś mi wszystkie 7 Smoczych Kul.'});
+ // NPC craftingowy na Rynku Graczy.
+ if(!npcs.some(n=>n.name==='Kowal Reliktów'))npcs.push({world:'market',x:1320,y:760,name:'Kowal Reliktów',text:'Przynieś mi materiały z bossów, a wykuję z nich potężny ekwipunek.'});
+
+ window.openDragonNpc120=function(){
+  let have=(currentUser.dragonBallsOwned||[]).filter(Boolean).length;
+  if(have<7){toast(`🐉 Strażnik: Masz ${have}/7 Smoczych Kul. Wróć ze wszystkimi.`);return}
+  openDragonBalls();toast('🐉 Wszystkie 7 Kul reaguje! Wybierz życzenie!');
+ };
+ function recipeText120(r){return Object.entries(r).map(([id,n])=>{let it=allItems120.find(x=>x.id===id);return `${it?.name||id} x${n} (${countItem120(id)}/${n})`}).join('<br>')}
+ window.openForge120=function(){
+  let p=document.getElementById('relicForge120');if(!p){p=document.createElement('div');p.id='relicForge120';document.body.appendChild(p)}
+  p.innerHTML=`<div class="forgeBox120"><h2>🔨 KOWAL RELIKTÓW</h2><p>Materiały wypadają z bossów. Możesz je sprzedać albo stworzyć z nich unikalny ekwipunek.</p><div class="grid">${crafted120.map(it=>`<div class="card"><b>${it.name}</b><br>${it.desc}<hr>${recipeText120(it.recipe)}<br><button class="actionBtn" onclick="craft120('${it.id}')">STWÓRZ</button></div>`).join('')}</div><button class="actionBtn" onclick="document.getElementById('relicForge120').style.display='none'">ZAMKNIJ</button></div>`;
+  p.style.display='flex';
+ };
+ window.craft120=function(id){
+  let it=crafted120.find(x=>x.id===id);if(!it)return;
+  for(const [mat,n] of Object.entries(it.recipe))if(countItem120(mat)<n)return toast('❌ Brakuje materiałów z bossów.');
+  for(const [mat,n] of Object.entries(it.recipe))for(let i=0;i<n;i++)takeOne120(mat);
+  currentUser.inventory.push(it.id);savePlayer();toast('🔨 STWORZONO: '+it.name);openForge120();
+ };
+
+ const interactBase120=interact;
+ interact=function(){
+  if(!currentUser)return;
+  let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+  if(n?.name==='Strażnik Smoczych Kul'){openDragonNpc120();return}
+  if(n?.name==='Kowal Reliktów'){openForge120();return}
+  interactBase120();
+ };
+
+ // POPRAWKA HUD BOSSA: HP dokładnie nad postacią z areny bossowej, leczenie stale po lewej.
+ function placeBossHud120(){
+  const hud=document.getElementById('bossPlayerHud111'),bp=document.getElementById('battlePlayer'),heal=document.getElementById('bossHeal111');
+  const panel=document.getElementById('bossBattlePanel');if(!hud||!bp||!panel||getComputedStyle(panel).display==='none')return;
+  const r=bp.getBoundingClientRect();hud.style.left=(r.left+r.width/2)+'px';hud.style.top=(r.top-8)+'px';hud.style.transform='translate(-50%,-100%)';
+  if(heal){heal.style.left='18px';heal.style.top='50%';heal.style.transform='translateY(-50%)'}
+ }
+ setInterval(placeBossHud120,40);
 })();
 
 </script></body></html>
