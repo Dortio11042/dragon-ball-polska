@@ -72,48 +72,45 @@
 #settingsMega,#chatMega,#upgradeMega,#achMega,#storyMega,#profileMega{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(680px,calc(100vw - 28px))!important;max-width:calc(100vw - 28px)!important;max-height:82vh!important;overflow:auto!important;box-sizing:border-box!important;margin:0!important}
 #settingsMega label{display:block;margin:9px 0;white-space:normal}#settingsMega input[type=range]{width:min(330px,70vw)}#megaMenu{max-width:calc(100vw - 20px)!important}
 @media(max-width:700px){#miniMap{top:190px!important;width:145px!important;height:102px!important}#miniMapCanvas{width:145px!important;height:102px!important}}
+
+/* ===== 0.8.4 CLEAN HUD MENU ===== */
+#megaMenu{
+ left:50%!important;bottom:14px!important;transform:translateX(-50%)!important;
+ max-width:min(760px,calc(100vw - 28px))!important;width:max-content!important;
+ display:flex!important;justify-content:center!important;align-items:center!important;
+ gap:8px!important;padding:8px 10px!important;background:rgba(7,10,18,.92)!important;
+ border:2px solid rgba(255,255,255,.22)!important;border-radius:14px!important;
+ box-shadow:0 8px 25px rgba(0,0,0,.45)!important;flex-wrap:wrap!important;
+}
+#megaMenu .menuBtn{
+ min-width:88px!important;height:42px!important;padding:7px 10px!important;margin:0!important;
+ border:1px solid #66789f!important;border-radius:9px!important;background:#17233b!important;
+ color:#fff!important;font-weight:800!important;font-size:12px!important;box-shadow:none!important;
+}
+#megaMenu .menuBtn:hover{background:#26395f!important;transform:translateY(-1px)}
+#megaMenu .menuBtn:nth-child(1)::after{content:" Ustawienia"}
+#megaMenu .menuBtn:nth-child(2){min-width:92px!important}
+#megaMenu .menuBtn:nth-child(3){min-width:98px!important}
+#megaMenu .menuBtn:nth-child(4){min-width:105px!important}
+#megaMenu .menuBtn:nth-child(5){min-width:94px!important}
+#megaMenu .menuBtn:nth-child(6){min-width:90px!important}
+
+/* reserve the lower-left corner for old game buttons such as Ekwipunek */
+#hudButtons,#gameButtons,.hudButtons,.gameButtons{bottom:78px!important}
+button[onclick*="Inventory"],button[onclick*="inventory"],button[onclick*="Ekwipun"],button[onclick*="openInv"]{
+ position:relative;z-index:52;
+}
+@media(max-width:760px){
+ #megaMenu{bottom:8px!important;gap:5px!important;padding:6px!important;width:calc(100vw - 16px)!important}
+ #megaMenu .menuBtn{min-width:72px!important;height:38px!important;font-size:10px!important;padding:5px 6px!important}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.3 — BOSSY + PORTALE FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.4 — UI MENU FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
-<div id="worldName" class="panel">🌿 Zielona Dolina</div>
-<div id="questPanel" class="panel" style="display:none"><div class="title">📜 QUEST</div><div>Pokonaj 5 Bandytów</div><div id="questProgress">0/5</div><div>500 Zeni + 100 EXP</div><button id="questClaim" class="action orange" onclick="claimQuest()">ODBIERZ</button></div>
-<div id="dailyPanel" class="panel" style="display:none"><div class="title">🎁 DZIENNA NAGRODA</div><div id="dailyText"></div><button id="dailyButton" class="action orange" onclick="claimDaily()">ODBIERZ</button></div>
-<div id="combatPanel" class="modal"><h2 id="enemyName"></h2><div class="bar"><div id="enemyHpFill" class="fill"></div></div><div id="enemyHpText"></div><p id="combatInfo">Walka!</p><button class="action orange" onclick="attackEnemy()">⚔️ ATAK</button><button class="action" onclick="usePotion()">🧪 MAŁE +50 HP</button><button class="action" onclick="useBigPotion05()">🧪 DUŻE +100 HP</button><button class="action" onclick="useMeal05()">🍜 POSIŁEK — FULL HP</button><button class="action" onclick="closeCombat()">UCIEKAJ</button></div>
-<div id="bossBattlePanel">
- <div id="bossBattleArena">
-  <div id="bossTop"><div id="bossBattleName">BOSS</div><div id="bossBattleHp"><div id="bossBattleHpFill"></div></div><div id="bossBattleHpText"></div></div>
-  <div id="bossPhase">FAZA 1</div><div id="bossDanger"></div>
-  <div id="battlePlayer"><div class="bhair"></div><div class="bhead"></div><div class="bbody"></div><div class="bleg bleg1"></div><div class="bleg bleg2"></div></div>
-  <div id="bossSprite"><div class="head"></div><div class="body"></div><div class="leg bossLeg1"></div><div class="leg bossLeg2"></div></div>
-  <div id="bossBattleControls">
-   <div id="bossBattleMessage">Przygotuj się!</div>
-   <button id="bossBasicBtn" class="bossAction" onclick="bossPlayerAction('basic')">⚔️ ATAK</button>
-   <button id="bossPower1" class="bossAction" onclick="bossPlayerAction('power',0)">1 — MOC</button>
-   <button id="bossPower2" class="bossAction" onclick="bossPlayerAction('power',1)">2 — MOC</button>
-   <button id="bossPower3" class="bossAction" onclick="bossPlayerAction('power',2)">3 — MOC</button>
-   <button id="bossDodgeBtn" class="bossAction" onclick="bossPlayerAction('dodge')">💨 UNIK</button>
-   <button class="bossAction" onclick="bossBattleHeal()">🧪 LECZENIE</button>
-   <button class="bossAction" onclick="leaveBossBattle()">🏳️ UCIEKAJ</button>
-  </div>
- </div>
-</div>
-<div id="shopPanel" class="modal"><h2>🛒 Handlarz</h2><p>Leczenie przywraca 50 HP.</p><button class="action orange" onclick="buyPotion()">Kup leczenie — 100 Zeni</button><button class="action" onclick="closeShop()">Zamknij</button></div>
-<div id="arenaPanel" class="modal"><h2>🥋 Arena Treningowa</h2><p id="arenaInfo">Pokonuj fale przeciwników i zdobywaj bonusowe EXP oraz Zeni.</p><button class="action orange" onclick="startArena()">START FALI</button><button class="action" onclick="closeArena()">Zamknij</button></div>
-<div id="toast"></div><div id="hint"></div>
-<div id="mobileControls"><div class="row"><button class="move" data-key="arrowup">▲</button></div><div class="row"><button class="move" data-key="arrowleft">◀</button><button class="move" data-key="arrowdown">▼</button><button class="move" data-key="arrowright">▶</button></div></div><button id="mobileE" onclick="interact()">E</button>
 
-<div id="worldGuide">
- <b>🌍 ŚWIATY / WYMAGANY LEVEL</b><br>
- 🌿 Zielona Dolina — LVL 1<br>
- 🥋 Arena Treningowa — LVL 1<br>
- 🏜️ Pustynia — LVL 5<br>
- ⛰️ Góry — LVL 10
-</div>
-
-<div id="activeQuest"><b>📜 AKTUALNE QUESTY</b><div id="activeQuestText">Brak — porozmawiaj z Mistrzem.</div></div>
 <div id="powerBar"></div>
 <div id="bottomMenu">
  <button class="menuBtn" onclick="openInventory()">🎒 Ekwipunek</button>
@@ -962,6 +959,33 @@ function arrangePortals083(){
  if(arena){arena.x=1650;arena.y=1370;arena.w=105;arena.h=135;arena.label="🏟️ ARENA";}
 }
 arrangePortals083();
+
+
+function hideWorldRequirements084(){
+ document.querySelectorAll("div,section").forEach(el=>{
+   const t=(el.textContent||"").trim();
+   if(t.length<900 && /ŚWIATY|SWIATY/i.test(t) && /WYMAG|LVL/i.test(t) && el.querySelectorAll("button").length<3){
+     if(/Pustyn|Gór|Las|Lód|Wulkan|Niebo|Planeta|Mistrz/i.test(t)) el.style.display="none";
+   }
+ });
+}
+setTimeout(hideWorldRequirements084,300);
+
+
+function fixHudCollisions084(){
+ const mega=document.getElementById("megaMenu"); if(!mega)return;
+ document.querySelectorAll("button").forEach(b=>{
+   const t=(b.textContent||"").toLowerCase();
+   if(t.includes("ekwipun") && !mega.contains(b)){
+     const st=getComputedStyle(b);
+     if(st.position==="fixed"||st.position==="absolute"){
+       b.style.bottom="82px";b.style.zIndex="53";
+     }
+   }
+ });
+}
+setTimeout(()=>{hideWorldRequirements084();fixHudCollisions084()},500);
+window.addEventListener("resize",fixHudCollisions084);
 
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
 let audio08=null,musicTimer08=null;
