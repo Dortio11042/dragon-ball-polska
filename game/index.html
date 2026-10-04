@@ -66,10 +66,16 @@
 #bossDanger{display:none;position:absolute;left:50%;bottom:25%;transform:translateX(-50%);width:300px;height:95px;border:5px dashed #ff3737;background:rgba(255,30,30,.18);border-radius:50%;animation:dangerPulse .45s infinite alternate}
 @keyframes dangerPulse{from{opacity:.35}to{opacity:1}}
 @media(max-width:700px){#bossSprite{left:72%;transform:translateX(-50%) scale(.8)}#battlePlayer{left:20%}#bossBattleName{font-size:19px}.bossAction{padding:8px 7px;font-size:11px}}
+
+/* 0.8.1 UI FIX */
+#miniMap{top:155px!important;right:12px!important;z-index:44!important}
+#settingsMega,#chatMega,#upgradeMega,#achMega,#storyMega,#profileMega{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(680px,calc(100vw - 28px))!important;max-width:calc(100vw - 28px)!important;max-height:82vh!important;overflow:auto!important;box-sizing:border-box!important;margin:0!important}
+#settingsMega label{display:block;margin:9px 0;white-space:normal}#settingsMega input[type=range]{width:min(330px,70vw)}#megaMenu{max-width:calc(100vw - 20px)!important}
+@media(max-width:700px){#miniMap{top:190px!important;width:145px!important;height:102px!important}#miniMapCanvas{width:145px!important;height:102px!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.0 — MEGA AKTUALIZACJA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.1 — UI / PORTALE / PVP / LVL 100 FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -166,7 +172,7 @@
 </div>
 
 <div id="settingsMega" class="modal"><h2>⚙️ USTAWIENIA</h2>
-<label>Muzyka <input id="musicVol08" type="range" min="0" max="100" value="50" oninput="saveSettings08()"></label><br><br>
+<label>Muzyka <input id="musicVol08" type="range" min="0" max="100" value="50" oninput="saveSettings08()"></label><button class="action orange" onclick="startMusic08()">🎵 WŁĄCZ MUZYKĘ</button><br>
 <label>Efekty <input id="sfxVol08" type="range" min="0" max="100" value="70" oninput="saveSettings08()"></label><br><br>
 <label><input id="showPlayers08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj innych graczy</label><br>
 <label><input id="showMini08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj minimapę</label><br>
@@ -520,11 +526,11 @@ portals.push(
  {world:"ruins",x:120,y:650,w:90,h:120,to:"masters",label:"MISTRZOWIE",min:55},
  {world:"ruins",x:2050,y:650,w:90,h:120,to:"voidzone",label:"SZCZELINA",min:65},
  {world:"voidzone",x:120,y:650,w:90,h:120,to:"ruins",label:"RUINY",min:65},
- {world:"arena",x:2050,y:1050,w:90,h:120,to:"pvp",label:"PVP",min:10},
+ {world:"arena",x:2050,y:1050,w:90,h:120,to:"pvp",label:"PVP",min:10},{world:"valley",x:2050,y:1180,w:110,h:140,to:"pvp",label:"⚔️ ARENA PVP",min:10},
  {world:"pvp",x:120,y:1050,w:90,h:120,to:"arena",label:"WYJŚCIE",min:10}
 );
 npcs.push(
- {world:"valley",x:1450,y:560,name:"Mistrz Mocy",text:"Uczę wojowników panowania nad Ki."},
+ {world:"valley",x:1450,y:560,name:"Mistrz Mocy",text:"Uczę wojowników panowania nad Ki."},{world:"valley",x:1900,y:1180,name:"Strażnik Areny",text:"⚔️ Arena PvP jest tuż obok. Wymagany LVL 10."},
  {world:"valley",x:620,y:520,name:"Kowal",text:"Ulepszam wyposażenie do +10."},
  {world:"forest",x:1650,y:1150,name:"Tajemniczy Trener",text:"Sekretna technika czeka na wytrwałych."},
  {world:"ruins",x:1050,y:900,name:"Strażnik Ruin",text:"W ruinach ukryto pradawne skrzynie."},
@@ -921,6 +927,12 @@ function drawWorldDecor(cx,cy){
 
 
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
+let audio08=null,musicTimer08=null;
+function ensureAudio08(){if(audio08)return audio08;try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}return audio08}
+function tone08(freq,dur=.12,vol=.025){let a=ensureAudio08();if(!a||a.state!=="running"||settings08.music<=0)return;let o=a.createOscillator(),g=a.createGain();o.type="square";o.frequency.value=freq;g.gain.value=vol*(settings08.music/100);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur)}
+function startMusic08(){let a=ensureAudio08();if(!a)return;a.resume();if(musicTimer08)return;let notes=[196,247,294,247,330,294,247,220],i=0;musicTimer08=setInterval(()=>{if(settings08.music>0)tone08(notes[i++%notes.length],.11,.018)},330);toast("🎵 Muzyka włączona")}
+window.addEventListener("pointerdown",()=>{if(!musicTimer08)startMusic08()},{once:true});
+
 
 const oldOpenDragonBalls08=typeof openDragonBalls==="function"?openDragonBalls:null;
 if(oldOpenDragonBalls08)openDragonBalls=function(){oldOpenDragonBalls08();if(currentUser.dragonBalls>=7){let a=$("wishArea");if(a)a.innerHTML=`<h3>🐉 WYBIERZ ŻYCZENIE</h3><button class="action orange" onclick="wish08('zeni')">💰 150 000 Zeni</button><button class="action" onclick="wish08('exp')">⭐ 10 000 EXP</button><button class="action" onclick="wish08('power')">⚡ Specjalna moc</button>`}}
@@ -985,7 +997,7 @@ const story08=[
  ["Mroczny Las","Osiągnij LVL 20",u=>u.level>=20],
  ["Mistrz Ki","Osiągnij LVL 30",u=>u.level>=30],
  ["Legenda","Osiągnij LVL 50",u=>u.level>=50],
- ["Poza granicami","Osiągnij LVL 65",u=>u.level>=65]
+ ["Poza granicami","Osiągnij LVL 65",u=>u.level>=65],["Mistrz ponad mistrzami","Osiągnij LVL 80",u=>u.level>=80],["Legenda serwera","Osiągnij LVL 100",u=>u.level>=100]
 ];
 function checkStory08(){while(currentUser.storyStep<story08.length&&story08[currentUser.storyStep][2](currentUser)){currentUser.storyStep++;currentUser.zeni+=2500*currentUser.storyStep;toast("📖 Rozdział ukończony! Nagroda Zeni")}}
 function renderStory08(){checkStory08();$("storyList08").innerHTML=story08.map((q,i)=>`<div class="card">${i<currentUser.storyStep?"✅":i===currentUser.storyStep?"➡️":"🔒"} <b>${q[0]}</b><br>${q[1]}</div>`).join("")}
@@ -1009,7 +1021,7 @@ function renderProfile08(){
  <button class="action" onclick="prestige08()">⭐ PRESTIGE</button>`;
 }
 function transform08(){if(currentUser.level<30)return toast("Transformacja od LVL 30");currentUser.transformation=currentUser.transformation==="Base"?"Wzmocniona Aura":"Base";toast("⚡ Forma: "+currentUser.transformation);savePlayer();renderProfile08()}
-function prestige08(){if(currentUser.level<70)return toast("Prestige wymaga LVL 70");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.hp=maxHp05();toast("⭐ PRESTIGE "+currentUser.prestige+"!");savePlayer();updateHUD();renderProfile08()}
+function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.hp=maxHp05();currentUser.zeni+=100000;toast("⭐ PRESTIGE "+currentUser.prestige+"! +100 000 Zeni, +20 MAX HP");savePlayer();updateHUD();renderProfile08()}
 
 function weeklyQuest08(){
  if(Date.now()-(currentUser.weeklyStamp||0)>604800000){currentUser.weeklyStamp=Date.now();currentUser.weeklyKills=0}
@@ -1043,7 +1055,10 @@ drawPlayer=function(c){
 const oldUpdateHUD08=updateHUD;
 updateHUD=function(){oldUpdateHUD08();if(currentUser){normalizeMega08();weeklyQuest08();checkStory08();checkAchievements08()}}
 
-function draw(){hiddenChest08();drawMiniMap08();let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
+
+function drawPortalSigns081(c){portals.filter(p=>p.world===currentWorld).forEach(p=>{let x=p.x-c.x,y=p.y-c.y;ctx.save();ctx.shadowColor="#8ee7ff";ctx.shadowBlur=18;ctx.strokeStyle="#d8fbff";ctx.lineWidth=5;ctx.strokeRect(x-4,y-4,p.w+8,p.h+8);ctx.shadowBlur=0;ctx.fillStyle="rgba(7,12,25,.88)";ctx.fillRect(x-35,y-32,p.w+70,25);ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(p.label||"PORTAL",x+p.w/2,y-14);ctx.restore()})}
+function pvpArenaNotice081(){if(!currentUser||currentWorld!=="pvp")return;if(!currentUser._pvpNotice081){currentUser._pvpNotice081=true;toast("🏟️ ARENA PVP — teren przygotowany. Walki online podłączymy serwerowo.")}}
+function draw(){pvpArenaNotice081();hiddenChest08();drawMiniMap08();let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
 function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=100+(i*317)%2100,y=120+(i*193)%1400;if(Math.abs(x-1050)<180&&Math.abs(y-800)<180)continue;ctx.fillStyle="#754126";ctx.fillRect(x-c.x+14,y-c.y+30,12,25);ctx.fillStyle="#23874b";ctx.fillRect(x-c.x,y-c.y,40,38)}/* Budynek Rynku Graczy */ctx.fillStyle="#6b3f22";ctx.fillRect(250-c.x,930-c.y,250,190);ctx.fillStyle="#d69a3a";ctx.fillRect(230-c.x,900-c.y,290,45);ctx.fillStyle="#2d1c13";ctx.fillRect(330-c.x,1030-c.y,90,90);ctx.fillStyle="#fff";ctx.font="bold 18px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",375-c.x,975-c.y)}else if(currentWorld==="market"){ctx.fillStyle="#3b2618";ctx.fillRect(350-c.x,260-c.y,1400,1150);ctx.fillStyle="#d7b37a";ctx.fillRect(400-c.x,310-c.y,1300,1050);ctx.fillStyle="#70451f";ctx.fillRect(650-c.x,610-c.y,800,85);ctx.fillStyle="#4a2c17";for(let i=0;i<5;i++)ctx.fillRect(500+i*280-c.x,390-c.y,150,120);ctx.fillStyle="#fff";ctx.font="bold 28px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",1050-c.x,350-c.y);ctx.font="16px Arial";ctx.fillText("Podejdź do Handlarza Rynku i naciśnij E",1050-c.x,720-c.y)}else if(currentWorld==="desert"){for(let i=0;i<16;i++){let x=120+(i*401)%2100,y=140+(i*251)%1350;ctx.fillStyle="#a67c38";ctx.fillRect(x-c.x,y-c.y,45,22)}}else if(currentWorld==="mountains"){for(let i=0;i<14;i++){let x=100+(i*433)%2150,y=100+(i*277)%1400;ctx.fillStyle="#555b5e";ctx.beginPath();ctx.moveTo(x-c.x,y-c.y+90);ctx.lineTo(x-c.x+55,y-c.y);ctx.lineTo(x-c.x+110,y-c.y+90);ctx.fill()}}else{ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(600-c.x,400-c.y,1200,850);ctx.beginPath();ctx.arc(1200-c.x,825-c.y,260,0,Math.PI*2);ctx.stroke()}}
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
 function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
