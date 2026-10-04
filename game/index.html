@@ -531,6 +531,7 @@ async function logout(){
  window.location.href="../";
 }
 let presenceTimer072=null;
+let remotePlayers072=[];
 async function refreshPresence072(){
  if(!currentUser||!onlineUserId)return;
  const now=new Date();
@@ -538,11 +539,15 @@ async function refreshPresence072(){
  const cutoff=new Date(Date.now()-15000).toISOString();
  const {count,error}=await dbpSupabase.from("player_presence").select("user_id",{count:"exact",head:true}).gte("last_seen",cutoff);
  if(!error&&$("onlineCount"))$("onlineCount").textContent=count??1;
+ const {data:others,error:othersError}=await dbpSupabase.from("player_presence")
+   .select("user_id,username,world,x,y,level,last_seen")
+   .eq("world",currentWorld).gte("last_seen",cutoff).neq("user_id",onlineUserId);
+ if(!othersError)remotePlayers072=others||[];
 }
 function startPresence072(){
  stopPresence072();refreshPresence072();presenceTimer072=setInterval(refreshPresence072,5000);
 }
-function stopPresence072(){if(presenceTimer072){clearInterval(presenceTimer072);presenceTimer072=null}}
+function stopPresence072(){if(presenceTimer072){clearInterval(presenceTimer072);presenceTimer072=null}remotePlayers072=[]}
 let saveBusy06=false,saveQueued06=false;
 async function savePlayer(force=false){
  if(!currentUser||!onlineUserId)return;
@@ -621,11 +626,26 @@ function drawWorldDecor(cx,cy){
  }
 }
 
-function draw(){let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawPlayer(c)}
+function draw(){let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
 function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=100+(i*317)%2100,y=120+(i*193)%1400;if(Math.abs(x-1050)<180&&Math.abs(y-800)<180)continue;ctx.fillStyle="#754126";ctx.fillRect(x-c.x+14,y-c.y+30,12,25);ctx.fillStyle="#23874b";ctx.fillRect(x-c.x,y-c.y,40,38)}}else if(currentWorld==="desert"){for(let i=0;i<16;i++){let x=120+(i*401)%2100,y=140+(i*251)%1350;ctx.fillStyle="#a67c38";ctx.fillRect(x-c.x,y-c.y,45,22)}}else if(currentWorld==="mountains"){for(let i=0;i<14;i++){let x=100+(i*433)%2150,y=100+(i*277)%1400;ctx.fillStyle="#555b5e";ctx.beginPath();ctx.moveTo(x-c.x,y-c.y+90);ctx.lineTo(x-c.x+55,y-c.y);ctx.lineTo(x-c.x+110,y-c.y+90);ctx.fill()}}else{ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(600-c.x,400-c.y,1200,850);ctx.beginPath();ctx.arc(1200-c.x,825-c.y,260,0,Math.PI*2);ctx.stroke()}}
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
 function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
 function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.boss?"#9b1c1c":e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,e.boss?30:22,e.boss?31:23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
+
+function drawRemotePlayers072(c){
+ remotePlayers072.forEach(r=>{
+  let x=Number(r.x)-c.x,y=Number(r.y)-c.y;
+  if(!Number.isFinite(x)||!Number.isFinite(y)||x<-80||y<-100||x>canvas.width+80||y>canvas.height+80)return;
+  ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(x+4,y+33,21,7);
+  ctx.fillStyle="#173d8f";ctx.fillRect(x+5,y+27,7,11);ctx.fillRect(x+17,y+27,7,11);
+  ctx.fillStyle="#ef7c16";ctx.fillRect(x+4,y+13,21,17);
+  ctx.fillStyle="#183e91";ctx.fillRect(x+4,y+24,21,4);
+  ctx.fillStyle="#e8ad78";ctx.fillRect(x+8,y+4,13,12);
+  ctx.fillStyle="#111";ctx.fillRect(x+7,y+1,15,6);ctx.fillRect(x+9,y-2,4,4);ctx.fillRect(x+13,y-5,4,7);ctx.fillRect(x+17,y-2,4,4);ctx.fillRect(x+5,y+3,4,3);ctx.fillRect(x+21,y+3,4,3);ctx.fillRect(x+10,y+9,2,2);ctx.fillRect(x+17,y+9,2,2);
+  ctx.fillStyle="#183e91";ctx.fillRect(x+10,y+13,9,3);
+  ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText((r.username||"Gracz")+" • LVL "+(r.level||1),x+14,y-10);
+ });
+}
 function drawPlayer(c){
  let x=player.x-c.x,y=player.y-c.y;
 
