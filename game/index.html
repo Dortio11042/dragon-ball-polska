@@ -40,16 +40,60 @@
 #dragonPanel,#dailyQuestPanel,#worldMapPanel{display:none;position:fixed;inset:0;z-index:1600;background:rgba(3,5,10,.95);align-items:center;justify-content:center;color:#fff}
 #dragonHud{position:fixed;left:15px;top:145px;z-index:330;background:rgba(7,10,18,.92);border:3px solid #ff9700;border-radius:7px;padding:9px;color:#fff;font-size:12px}
 .rarity-common{color:#ddd}.rarity-rare{color:#65e884}.rarity-epic{color:#6eb6ff}.rarity-legendary{color:#d18cff}.rarity-mythic{color:#ffad21}
+
+#bossBattlePanel{display:none;position:fixed;inset:0;z-index:2200;background:radial-gradient(circle at 50% 45%,#3a1b16 0,#160b0b 48%,#050508 100%);color:#fff}
+#bossBattleArena{position:absolute;inset:0;overflow:hidden}
+#bossBattleArena:before{content:"";position:absolute;left:0;right:0;bottom:0;height:35%;background:linear-gradient(#4c3828,#21160f);border-top:4px solid #8f6a42}
+#bossTop{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:min(760px,92%);text-align:center}
+#bossBattleName{font-size:25px;font-weight:900;color:#ffb02e;text-shadow:3px 3px #000}
+#bossBattleHp{height:25px;margin-top:8px;background:#2a0a0a;border:3px solid #fff;border-radius:5px;overflow:hidden}
+#bossBattleHpFill{height:100%;width:100%;background:linear-gradient(90deg,#a71919,#f04632);transition:width .25s}
+#bossBattleHpText{font-weight:bold;margin-top:5px}
+#bossSprite{position:absolute;left:67%;bottom:30%;transform:translateX(-50%);width:115px;height:145px}
+#bossSprite .head{position:absolute;left:39px;top:0;width:38px;height:35px;background:#dfa06f}
+#bossSprite .body{position:absolute;left:22px;top:34px;width:72px;height:78px;background:#8f1717;border:4px solid #531010}
+#bossSprite .leg{position:absolute;top:110px;width:25px;height:35px;background:#251d2e}.bossLeg1{left:28px}.bossLeg2{right:28px}
+#battlePlayer{position:absolute;left:30%;bottom:30%;width:48px;height:72px}
+#battlePlayer .bhair{position:absolute;left:9px;top:0;width:30px;height:16px;background:#111;clip-path:polygon(0 100%,10% 30%,25% 55%,40% 0,55% 55%,72% 10%,85% 60%,100% 35%,100% 100%)}
+#battlePlayer .bhead{position:absolute;left:13px;top:12px;width:23px;height:21px;background:#e8ad78}
+#battlePlayer .bbody{position:absolute;left:7px;top:32px;width:35px;height:27px;background:#ef7c16;border-bottom:5px solid #183e91}
+#battlePlayer .bleg{position:absolute;top:58px;width:12px;height:14px;background:#173d8f}.bleg1{left:9px}.bleg2{right:9px}
+#bossBattleControls{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(860px,94%);padding:13px;background:rgba(5,7,12,.94);border:3px solid #ff9700;border-radius:8px;text-align:center}
+#bossBattleMessage{min-height:25px;font-weight:bold;color:#ffd36a;margin-bottom:8px}
+.bossAction{padding:10px 12px;margin:4px;background:#18233d;color:#fff;border:2px solid #6f8fd6;border-radius:6px;font-weight:bold;cursor:pointer}
+.bossAction:hover{background:#26385f}.bossAction:disabled{opacity:.4;cursor:not-allowed}
+#bossPhase{position:absolute;top:100px;left:50%;transform:translateX(-50%);font-weight:900;color:#ff6b52;text-shadow:2px 2px #000}
+#bossDanger{display:none;position:absolute;left:50%;bottom:25%;transform:translateX(-50%);width:300px;height:95px;border:5px dashed #ff3737;background:rgba(255,30,30,.18);border-radius:50%;animation:dangerPulse .45s infinite alternate}
+@keyframes dangerPulse{from{opacity:.35}to{opacity:1}}
+@media(max-width:700px){#bossSprite{left:72%;transform:translateX(-50%) scale(.8)}#battlePlayer{left:20%}#bossBattleName{font-size:19px}.bossAction{padding:8px 7px;font-size:11px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.7.26 — WIĘCEJ QUESTÓW</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.7.28 — WALKA Z BOSSEM</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
 <div id="questPanel" class="panel" style="display:none"><div class="title">📜 QUEST</div><div>Pokonaj 5 Bandytów</div><div id="questProgress">0/5</div><div>500 Zeni + 100 EXP</div><button id="questClaim" class="action orange" onclick="claimQuest()">ODBIERZ</button></div>
 <div id="dailyPanel" class="panel" style="display:none"><div class="title">🎁 DZIENNA NAGRODA</div><div id="dailyText"></div><button id="dailyButton" class="action orange" onclick="claimDaily()">ODBIERZ</button></div>
 <div id="combatPanel" class="modal"><h2 id="enemyName"></h2><div class="bar"><div id="enemyHpFill" class="fill"></div></div><div id="enemyHpText"></div><p id="combatInfo">Walka!</p><button class="action orange" onclick="attackEnemy()">⚔️ ATAK</button><button class="action" onclick="usePotion()">🧪 MAŁE +50 HP</button><button class="action" onclick="useBigPotion05()">🧪 DUŻE +100 HP</button><button class="action" onclick="useMeal05()">🍜 POSIŁEK — FULL HP</button><button class="action" onclick="closeCombat()">UCIEKAJ</button></div>
+<div id="bossBattlePanel">
+ <div id="bossBattleArena">
+  <div id="bossTop"><div id="bossBattleName">BOSS</div><div id="bossBattleHp"><div id="bossBattleHpFill"></div></div><div id="bossBattleHpText"></div></div>
+  <div id="bossPhase">FAZA 1</div><div id="bossDanger"></div>
+  <div id="battlePlayer"><div class="bhair"></div><div class="bhead"></div><div class="bbody"></div><div class="bleg bleg1"></div><div class="bleg bleg2"></div></div>
+  <div id="bossSprite"><div class="head"></div><div class="body"></div><div class="leg bossLeg1"></div><div class="leg bossLeg2"></div></div>
+  <div id="bossBattleControls">
+   <div id="bossBattleMessage">Przygotuj się!</div>
+   <button id="bossBasicBtn" class="bossAction" onclick="bossPlayerAction('basic')">⚔️ ATAK</button>
+   <button id="bossPower1" class="bossAction" onclick="bossPlayerAction('power',0)">1 — MOC</button>
+   <button id="bossPower2" class="bossAction" onclick="bossPlayerAction('power',1)">2 — MOC</button>
+   <button id="bossPower3" class="bossAction" onclick="bossPlayerAction('power',2)">3 — MOC</button>
+   <button id="bossDodgeBtn" class="bossAction" onclick="bossPlayerAction('dodge')">💨 UNIK</button>
+   <button class="bossAction" onclick="bossBattleHeal()">🧪 LECZENIE</button>
+   <button class="bossAction" onclick="leaveBossBattle()">🏳️ UCIEKAJ</button>
+  </div>
+ </div>
+</div>
 <div id="shopPanel" class="modal"><h2>🛒 Handlarz</h2><p>Leczenie przywraca 50 HP.</p><button class="action orange" onclick="buyPotion()">Kup leczenie — 100 Zeni</button><button class="action" onclick="closeShop()">Zamknij</button></div>
 <div id="arenaPanel" class="modal"><h2>🥋 Arena Treningowa</h2><p id="arenaInfo">Pokonuj fale przeciwników i zdobywaj bonusowe EXP oraz Zeni.</p><button class="action orange" onclick="startArena()">START FALI</button><button class="action" onclick="closeArena()">Zamknij</button></div>
 <div id="toast"></div><div id="hint"></div>
@@ -616,7 +660,105 @@ function addExp(n){currentUser.exp+=n;while(currentUser.exp>=needExp()){currentU
 function claimQuest(){if(currentUser.questKills<5||currentUser.questClaimed)return;currentUser.questClaimed=true;currentUser.zeni+=500;addExp(100);toast("📜 +500 Zeni +100 EXP")}
 function updateDaily(){let left=86400000-(Date.now()-currentUser.lastDaily);if(left<=0){$("dailyButton").disabled=false;$("dailyText").textContent="Nagroda gotowa! Seria: "+currentUser.dailyStreak}else{$("dailyButton").disabled=true;$("dailyText").textContent=`Następna za ${Math.floor(left/3600000)}h ${Math.floor(left%3600000/60000)}m`}}
 function claimDaily(){let n=Date.now();if(n-currentUser.lastDaily<86400000)return;currentUser.dailyStreak=currentUser.lastDaily&&n-currentUser.lastDaily<190080000?currentUser.dailyStreak+1:1;let r=[100,200,300,500,700,1000,2000][Math.min(currentUser.dailyStreak,7)-1];currentUser.zeni+=r;currentUser.lastDaily=n;toast("🎁 +"+r+" Zeni");updateHUD();savePlayer()}
-function openCombat(e){if(!e.alive||activeEnemy)return;activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
+
+let bossBattle=null,bossCooldowns=[0,0,0],bossDodging=false,bossBusy=false,bossTurn=0;
+
+function startBossBattle(e){
+ if(bossBattle||!e||!e.alive)return;
+ activeEnemy=null;bossBattle=e;bossCooldowns=[0,0,0];bossDodging=false;bossBusy=false;bossTurn=0;
+ $("bossBattlePanel").style.display="block";
+ $("bossBattleMessage").textContent="👑 "+e.name+" staje do walki! Wybierz atak.";
+ refreshBossBattle();
+}
+function refreshBossBattle(){
+ if(!bossBattle)return;
+ const ratio=Math.max(0,bossBattle.hp/bossBattle.maxHp);
+ $("bossBattleName").textContent="👑 "+bossBattle.name+" — LVL "+bossBattle.level;
+ $("bossBattleHpFill").style.width=(ratio*100)+"%";
+ $("bossBattleHpText").textContent=Math.max(0,Math.ceil(bossBattle.hp))+" / "+bossBattle.maxHp+" HP";
+ $("bossPhase").textContent=ratio<=.35?"🔥 FAZA 3 — FURIA":ratio<=.7?"⚡ FAZA 2":"FAZA 1";
+ for(let i=0;i<3;i++){
+   let id=currentUser.equippedPowers?.[i],p=powers05.find(x=>x.id===id),b=$("bossPower"+(i+1));
+   b.textContent=(i+1)+" — "+(p?p.id:"BRAK MOCY")+(bossCooldowns[i]>0?" ("+bossCooldowns[i]+")":"");
+   b.disabled=!p||bossCooldowns[i]>0||bossBusy;
+ }
+ $("bossBasicBtn").disabled=bossBusy;$("bossDodgeBtn").disabled=bossBusy;
+ updateHUD();
+}
+function setBossButtonsBusy(v){bossBusy=v;refreshBossBattle()}
+function bossPlayerAction(type,slot){
+ if(!bossBattle||bossBusy)return;
+ let dmg=0,label="";
+ if(type==="basic"){dmg=18+(currentUser.level-1)*5+damageBonus();label="⚔️ Zwykły atak";}
+ if(type==="power"){
+   let id=currentUser.equippedPowers?.[slot],p=powers05.find(x=>x.id===id);
+   if(!p||bossCooldowns[slot]>0)return;
+   dmg=18+(currentUser.level-1)*5+damageBonus()+p.dmg;label="⚡ "+p.id;bossCooldowns[slot]=3;
+ }
+ if(type==="dodge"){bossDodging=true;label="💨 Przygotowujesz unik";$("bossBattleMessage").textContent=label+" — następny atak bossa może chybić!";afterBossPlayerTurn();return}
+ bossBattle.hp=Math.max(0,bossBattle.hp-dmg);
+ $("bossBattleMessage").textContent=label+" zadaje "+dmg+" obrażeń!";
+ if(bossBattle.hp<=0){finishBossBattle();return}
+ afterBossPlayerTurn();
+}
+function afterBossPlayerTurn(){
+ for(let i=0;i<bossCooldowns.length;i++)if(bossCooldowns[i]>0)bossCooldowns[i]--;
+ bossTurn++;setBossButtonsBusy(true);
+ setTimeout(()=>bossEnemyTurn(),650);
+}
+function bossEnemyTurn(){
+ if(!bossBattle)return;
+ const ratio=bossBattle.hp/bossBattle.maxHp;
+ let attack={name:"👊 Potężny cios",dmg:18+bossBattle.level*4,danger:false};
+ if(bossTurn%4===0)attack={name:"💥 Eksplozja energii",dmg:36+bossBattle.level*5,danger:true};
+ else if(ratio<=.35&&bossTurn%2===0)attack={name:"🔥 Furia Bandyty",dmg:30+bossBattle.level*5,danger:true};
+ else if(ratio<=.7&&bossTurn%3===0)attack={name:"⚡ Szarża",dmg:25+bossBattle.level*4,danger:false};
+ $("bossBattleMessage").textContent=attack.name+" — boss szykuje atak!";
+ if(attack.danger)$("bossDanger").style.display="block";
+ setTimeout(()=>{
+   if(!bossBattle)return;
+   $("bossDanger").style.display="none";
+   let avoided=bossDodging&&Math.random()<.75;bossDodging=false;
+   if(avoided){$("bossBattleMessage").textContent="💨 UNIK! Atak bossa chybił."}
+   else{
+     currentUser.hp=Math.max(0,currentUser.hp-attack.dmg);
+     $("bossBattleMessage").textContent=attack.name+"! Otrzymujesz "+attack.dmg+" obrażeń.";
+   }
+   if(currentUser.hp<=0){endBossBattleDefeat();return}
+   setBossButtonsBusy(false);savePlayer();
+ },attack.danger?900:600);
+}
+function bossBattleHeal(){
+ if(!bossBattle||bossBusy)return;
+ if(currentUser.hp>=maxHp05()){toast("Masz pełne HP");return}
+ if(currentUser.bigPotions>0){currentUser.bigPotions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+100);$("bossBattleMessage").textContent="🧪 Duże leczenie: +100 HP";}
+ else if(currentUser.potions>0){currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);$("bossBattleMessage").textContent="🧪 Małe leczenie: +50 HP";}
+ else{toast("Brak leczenia");return}
+ afterBossPlayerTurn();savePlayer();
+}
+function finishBossBattle(){
+ const e=bossBattle;if(!e)return;
+ e.alive=false;e.respawn=Date.now()+60000;
+ currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;
+ const z=e.rewardZeni||1800,x=e.rewardExp||450;
+ currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;
+ registerKill(e);registerMountainKill07(e);registerKill06(e);
+ bossBattle=null;$("bossBattlePanel").style.display="none";
+ addExp(Math.round(x*(1+xpBonus())));updateHUD();savePlayer();
+ toast("🏆 BOSS POKONANY! +"+z+" Zeni +"+x+" EXP");
+}
+function endBossBattleDefeat(){
+ if(!bossBattle)return;
+ bossBattle.hp=bossBattle.maxHp;bossBattle=null;$("bossBattlePanel").style.display="none";
+ savePlayer();diePlayer();
+}
+function leaveBossBattle(){
+ if(!bossBattle)return;
+ bossBattle.hp=bossBattle.maxHp;bossBattle=null;$("bossBattlePanel").style.display="none";
+ toast("🏳️ Opuściłeś walkę z bossem.");
+}
+
+function openCombat(e){if(!e.alive||activeEnemy)return;if(e.boss&&e.bossKey==="valley"){startBossBattle(e);return}activeEnemy=e;$("combatPanel").style.display="block";refreshCombat()}function closeCombat(){activeEnemy=null;$("combatPanel").style.display="none"}
 function refreshCombat(){if(!activeEnemy)return;$("enemyName").textContent=activeEnemy.name+" — LVL "+activeEnemy.level;$("enemyHpText").textContent=Math.max(0,activeEnemy.hp)+"/"+activeEnemy.maxHp+" HP";$("enemyHpFill").style.width=Math.max(0,activeEnemy.hp/activeEnemy.maxHp*100)+"%"}
 function attackEnemy(){if(!activeEnemy)return;activeEnemy.hp-=18+(currentUser.level-1)*5+damageBonus();if(activeEnemy.hp<=0){let e=activeEnemy;e.alive=false;e.respawn=Date.now()+10000;let z=e.boss?(e.rewardZeni||50+e.level*25):50+e.level*25,x=e.boss?(e.rewardExp||25+e.level*10):25+e.level*10;if(e.arena){arenaKills++;z+=25;x+=20}if(e.boss){currentUser.bossKills[e.bossKey]=(currentUser.bossKills[e.bossKey]||0)+1;e.respawn=Date.now()+60000;toast("👑 BOSS POKONANY: "+e.name+"!")}currentUser.zeni+=z;if(e.name.includes("Bandyta"))currentUser.questKills++;registerKill(e);registerMountainKill07(e);registerKill06(e);closeCombat();addExp(Math.round(x*(1+xpBonus())));toast(`⚔️ +${z} Zeni +${x} EXP`);if(e.arena)checkArenaWave();updateHUD();savePlayer();return}currentUser.hp=Math.max(0,currentUser.hp-(8+activeEnemy.level*4));if(currentUser.hp<=0){diePlayer();return}refreshCombat();updateHUD();savePlayer()}
 function usePotion(){if(!currentUser.potions){toast("Brak małego leczenia");return}if(currentUser.hp>=maxHp05()){toast("Pełne HP");return}currentUser.potions--;currentUser.hp=Math.min(maxHp05(),currentUser.hp+50);updateHUD();savePlayer();toast("🧪 +50 HP")}
@@ -626,7 +768,7 @@ function openShop(){renderShop05();$("shopPanel").style.display="block"}function
 function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textContent=arenaWave?`Aktualna fala: ${arenaWave} | Pokonani: ${arenaKills}/3`:"Każda fala ma 3 przeciwników. Za ukończenie fali dostajesz bonus."}function closeArena(){$("arenaPanel").style.display="none"}
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
-function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
+function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();if(bossBattle)leaveBossBattle();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
 
 // ===== GLOBALNY RYNEK GRACZY 0.7.25 =====
 function marketEsc(v){return escapeHtml05(v)}
@@ -796,8 +938,10 @@ function drawPlayer(c){
 }
 addEventListener("beforeunload",savePlayer);resize();
 window.addEventListener("keydown",e=>{
- if(!currentUser||!activeEnemy)return;
+ if(!currentUser)return;
  let n=parseInt(e.key);
+ if(bossBattle&&n>=1&&n<=3){bossPlayerAction("power",n-1);return}
+ if(!activeEnemy)return;
  if(n>=1&&n<=3){
    let id=currentUser.equippedPowers[n-1];if(!id)return;
    let p=powers05.find(x=>x.id===id);if(!p)return;
