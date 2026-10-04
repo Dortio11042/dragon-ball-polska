@@ -101,10 +101,41 @@
   #megaMenu button,.megaBtn{min-width:56px!important;height:35px!important;font-size:9px!important;padding:4px!important}
 }
 
+
+/* ===== 0.8.6 DEFINITIVE HUD LAYOUT ===== */
+#megaMenu{
+ position:fixed!important;
+ left:50%!important;right:auto!important;bottom:8px!important;
+ transform:translateX(-50%)!important;
+ display:flex!important;flex-wrap:nowrap!important;gap:7px!important;
+ width:auto!important;max-width:calc(100vw - 20px)!important;
+ padding:6px 8px!important;margin:0!important;
+ background:rgba(8,12,22,.94)!important;border:2px solid #31446e!important;border-radius:12px!important;
+ z-index:80!important;
+}
+#megaMenu button,#megaMenu .menuBtn{
+ position:static!important;inset:auto!important;transform:none!important;
+ min-width:76px!important;width:auto!important;height:36px!important;
+ margin:0!important;padding:5px 8px!important;font-size:10px!important;line-height:1!important;
+ white-space:nowrap!important;
+}
+/* Existing Ekwipunek / Moce / Topka / Kule / Profil row */
+.hud-actions,.hudButtons,#hudButtons,.gameButtons,#gameButtons{
+ bottom:58px!important;
+}
+/* Power hotbar gets its own row above both menus */
+#powerBar,.powerBar,#powersBar,.powersBar{
+ bottom:112px!important;
+}
+@media(max-width:760px){
+ #megaMenu{gap:3px!important;padding:4px!important;max-width:calc(100vw - 8px)!important}
+ #megaMenu button,#megaMenu .menuBtn{min-width:52px!important;height:32px!important;font-size:8px!important;padding:3px 4px!important}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.5 — PRZYCISKI + MUZYKA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.6 — HUD + MUZYKA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -201,7 +232,7 @@
 </div>
 
 <div id="settingsMega" class="modal"><h2>⚙️ USTAWIENIA</h2>
-<label>Muzyka <input id="musicVol08" type="range" min="0" max="100" value="50" oninput="saveSettings08()"></label><button class="action orange" onclick="startMusic08()">🎵 WŁĄCZ MUZYKĘ</button><br>
+<label>Muzyka <input id="musicVol08" type="range" min="0" max="100" value="50" oninput="saveSettings08()"></label><button class="action orange" onclick="startMusic08()">🎵 WŁĄCZ MUZYKĘ</button> <button class="action" onclick="stopMusic086()">🔇 WYŁĄCZ</button><br>
 <label>Efekty <input id="sfxVol08" type="range" min="0" max="100" value="70" oninput="saveSettings08()"></label><br><br>
 <label><input id="showPlayers08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj innych graczy</label><br>
 <label><input id="showMini08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj minimapę</label><br>
@@ -1010,35 +1041,58 @@ function fixBottomButtons085(){
 setTimeout(fixBottomButtons085,400);
 window.addEventListener("resize",fixBottomButtons085);
 
+
+function layoutHud086(){
+ const mega=document.getElementById("megaMenu");
+ const buttons=[...document.querySelectorAll("button")].filter(b=>{
+   const r=b.getBoundingClientRect(); return r.width>0&&r.height>0;
+ });
+ // Original five large HUD buttons from screenshot: make one centered row above mega menu.
+ const names=["ekwipunek","moce","topka","kule","profil"];
+ const row=buttons.filter(b=>names.some(n=>(b.textContent||"").toLowerCase().includes(n)) && (!mega||!mega.contains(b)));
+ row.forEach((b,i)=>{
+   b.style.position="fixed"; b.style.bottom="58px"; b.style.zIndex="81";
+   b.style.left=`calc(50% + ${(i-(row.length-1)/2)*128}px)`;
+   b.style.right="auto"; b.style.transform="translateX(-50%)";
+   b.style.margin="0";
+ });
+ // Three equipped-power buttons: separate centered row.
+ const powers=buttons.filter(b=>/^\s*[123]\.\s*/.test((b.textContent||"")));
+ powers.forEach((b,i)=>{
+   b.style.position="fixed";b.style.bottom="108px";b.style.zIndex="81";
+   b.style.left=`calc(50% + ${(i-(powers.length-1)/2)*132}px)`;
+   b.style.right="auto";b.style.transform="translateX(-50%)";b.style.margin="0";
+ });
+}
+setTimeout(layoutHud086,300);
+setTimeout(layoutHud086,1000);
+window.addEventListener("resize",layoutHud086);
+
 /* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
-let audio08=null,musicTimer08=null,musicStep085=0;
-function ensureAudio08(){
- if(audio08)return audio08;
- try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}
- return audio08;
-}
-function tone085(freq,dur=.75,vol=.012){
- const a=ensureAudio08(); if(!a||a.state!=="running"||settings08.music<=0)return;
- const o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();
- o.type="sine"; o.frequency.value=freq; f.type="lowpass"; f.frequency.value=900;
- const v=vol*(settings08.music/100);
- g.gain.setValueAtTime(0.0001,a.currentTime);
- g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),a.currentTime+.08);
+let audio08=null,musicTimer08=null,musicStep086=0;
+function ensureAudio08(){if(audio08)return audio08;try{audio08=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}return audio08}
+function musicNote086(freq,dur=.55){
+ const a=ensureAudio08();if(!a||a.state!=="running")return;
+ const o=a.createOscillator(),g=a.createGain();
+ o.type="triangle";o.frequency.value=freq;
+ let v=.018*Math.max(.15,(Number(settings08?.music)||50)/100);
+ g.gain.setValueAtTime(.0001,a.currentTime);g.gain.linearRampToValueAtTime(v,a.currentTime+.06);
  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);
- o.connect(f);f.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur+.03);
+ o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur+.02);
 }
-function musicTick085(){
- const chords=[[196,247,294],[174.6,220,261.6],[146.8,196,247],[164.8,220,261.6]];
- const chord=chords[musicStep085++%chords.length];
- chord.forEach((n,i)=>setTimeout(()=>tone085(n,.95,.008),i*115));
+function musicLoop086(){
+ const melody=[196,220,247,294,247,220,174.6,196,220,261.6,247,220];
+ musicNote086(melody[musicStep086++%melody.length],.7);
 }
-function startMusic08(){
- const a=ensureAudio08();if(!a)return;
- a.resume(); if(musicTimer08)return;
- musicTick085(); musicTimer08=setInterval(musicTick085,2600);
- toast("🎵 Spokojna muzyka włączona");
+async function startMusic08(){
+ const a=ensureAudio08();if(!a){toast("Ta przeglądarka nie obsługuje audio");return}
+ await a.resume();
+ if(musicTimer08)clearInterval(musicTimer08);
+ musicLoop086();musicTimer08=setInterval(musicLoop086,850);
+ toast("🎵 Muzyka włączona");
 }
-window.addEventListener("pointerdown",()=>{if(!musicTimer08)startMusic08()},{once:true});
+function stopMusic086(){if(musicTimer08){clearInterval(musicTimer08);musicTimer08=null}toast("🔇 Muzyka wyłączona")}
+window.addEventListener("pointerdown",()=>{const a=ensureAudio08();if(a&&a.state==="suspended")a.resume()},{once:true});
 
 
 const oldOpenDragonBalls08=typeof openDragonBalls==="function"?openDragonBalls:null;
