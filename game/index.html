@@ -155,7 +155,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.7 — LEWY PANEL + BEZ TABELI</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.8 — PŁYNNY MULTIPLAYER</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -754,22 +754,59 @@ async function logout(){
 }
 let presenceTimer072=null;
 let remotePlayers072=[];
+const remoteMotion088=new Map();
+
+function applyRemoteTargets088(rows){
+ const seen=new Set();
+ for(const r of (rows||[])){
+   seen.add(r.user_id);
+   const tx=Number(r.x),ty=Number(r.y);
+   if(!Number.isFinite(tx)||!Number.isFinite(ty))continue;
+   let m=remoteMotion088.get(r.user_id);
+   if(!m){
+     m={x:tx,y:ty,targetX:tx,targetY:ty,world:r.world};
+     remoteMotion088.set(r.user_id,m);
+   }else{
+     const jump=Math.hypot(tx-m.x,ty-m.y);
+     if(r.world!==m.world||jump>700){m.x=tx;m.y=ty}
+     m.targetX=tx;m.targetY=ty;m.world=r.world;
+   }
+ }
+ for(const id of [...remoteMotion088.keys()])if(!seen.has(id))remoteMotion088.delete(id);
+ remotePlayers072=(rows||[]).map(r=>{
+   const m=remoteMotion088.get(r.user_id);
+   return m?{...r,_motion088:m}:r;
+ });
+}
+
 async function refreshPresence072(){
  if(!currentUser||!onlineUserId)return;
  const now=new Date();
- await dbpSupabase.from("player_presence").upsert({user_id:onlineUserId,username:currentUser.username,world:currentWorld,x:Math.round(player.x),y:Math.round(player.y),level:currentUser.level||1,last_seen:now.toISOString()},{onConflict:"user_id"});
  const cutoff=new Date(Date.now()-15000).toISOString();
- const {count,error}=await dbpSupabase.from("player_presence").select("user_id",{count:"exact",head:true}).gte("last_seen",cutoff);
+
+ // wysyłamy pozycję często, ale odczyty/licznik robimy w tym samym lekkim cyklu
+ await dbpSupabase.from("player_presence").upsert({
+   user_id:onlineUserId,username:currentUser.username,world:currentWorld,
+   x:Math.round(player.x),y:Math.round(player.y),level:currentUser.level||1,last_seen:now.toISOString()
+ },{onConflict:"user_id"});
+
+ const [{count,error},{data:others,error:othersError}]=await Promise.all([
+   dbpSupabase.from("player_presence").select("user_id",{count:"exact",head:true}).gte("last_seen",cutoff),
+   dbpSupabase.from("player_presence").select("user_id,username,world,x,y,level,last_seen")
+     .eq("world",currentWorld).gte("last_seen",cutoff).neq("user_id",onlineUserId)
+ ]);
  if(!error&&$("onlineCount"))$("onlineCount").textContent=count??1;
- const {data:others,error:othersError}=await dbpSupabase.from("player_presence")
-   .select("user_id,username,world,x,y,level,last_seen")
-   .eq("world",currentWorld).gte("last_seen",cutoff).neq("user_id",onlineUserId);
- if(!othersError)remotePlayers072=others||[];
+ if(!othersError)applyRemoteTargets088(others||[]);
 }
 function startPresence072(){
- stopPresence072();refreshPresence072();presenceTimer072=setInterval(refreshPresence072,5000);
+ stopPresence072();refreshPresence072();
+ // było 5000 ms — dlatego inni gracze "teleportowali się"
+ presenceTimer072=setInterval(refreshPresence072,500);
 }
-function stopPresence072(){if(presenceTimer072){clearInterval(presenceTimer072);presenceTimer072=null}remotePlayers072=[]}
+function stopPresence072(){
+ if(presenceTimer072){clearInterval(presenceTimer072);presenceTimer072=null}
+ remotePlayers072=[];remoteMotion088.clear();
+}
 let saveBusy06=false,saveQueued06=false;
 async function savePlayer(force=false){
  if(!currentUser||!onlineUserId)return;
@@ -1273,7 +1310,20 @@ function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fill
 
 function drawRemotePlayers072(c){
  remotePlayers072.forEach(r=>{
-  let x=Number(r.x)-c.x,y=Number(r.y)-c.y;
+  const m=r._motion088;
+  if(m){
+    const dx=m.targetX-m.x,dy=m.targetY-m.y;
+    const d=Math.hypot(dx,dy);
+    if(d>700){m.x=m.targetX;m.y=m.targetY}
+    else{
+      // interpolation each rendered frame: smooth, but catches up quickly
+      const k=Math.min(.28,Math.max(.10,d/550));
+      m.x+=dx*k;m.y+=dy*k;
+      if(Math.abs(dx)<.15)m.x=m.targetX;
+      if(Math.abs(dy)<.15)m.y=m.targetY;
+    }
+  }
+  let x=Number(m?m.x:r.x)-c.x,y=Number(m?m.y:r.y)-c.y;
   if(!Number.isFinite(x)||!Number.isFinite(y)||x<-80||y<-100||x>canvas.width+80||y>canvas.height+80)return;
   ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(x+4,y+33,21,7);
   ctx.fillStyle="#173d8f";ctx.fillRect(x+5,y+27,7,11);ctx.fillRect(x+17,y+27,7,11);
