@@ -90,6 +90,13 @@
 <button class="action" onclick="closeOverlay('dailyRewardNpcPanel')">ZAMKNIJ</button>
 </div>
 <div id="dailyQuestPanel"><div class="bigPanel"><h2>📅 DAILY QUEST</h2><div id="dailyQuestContent"></div><button class="actionBtn" onclick="closeOverlay('dailyQuestPanel')">ZAMKNIJ</button></div></div>
+<div id="discordNpcPanel" class="modal">
+<h2>💬 Rekruter Discord</h2>
+<p>Dołącz do serwera Dragon Ball Polska, a dostaniesz jednorazowo <b>10 000 Zeni</b>.</p>
+<button class="action orange" onclick="window.open('https://discord.gg/MGF9crQ9fY','_blank')">💬 DOŁĄCZ DO DISCORDA</button>
+<button class="action" onclick="verifyDiscordReward()">✅ ZWERYFIKUJ I ODBIERZ 10 000 ZENI</button>
+<button class="action" onclick="closeOverlay('discordNpcPanel')">ZAMKNIJ</button>
+</div>
 <canvas id="game"></canvas></div>
 <script>
 let authMode="login",currentUser=null,currentWorld="valley",activeEnemy=null,arenaWave=0,arenaKills=0;
@@ -121,7 +128,7 @@ const portals=[
 {world:"sky",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"alien",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1},
 {world:"masters",x:120,y:760,w:90,h:120,to:"valley",label:"DOLINA",min:1}];
-const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."},{world:"valley",x:720,y:1050,name:"Dzienny Opiekun",text:"Mam dla ciebie codzienną nagrodę."},{world:"valley",x:1320,y:1050,name:"Łowca Dnia",text:"Mam dla ciebie codzienne zadanie."},{world:"mountains",x:1050,y:1180,name:"Górski Mistrz",text:"Przejdź moje próby, a zdobędziesz Smoczą Kulę."}];
+const npcs=[{world:"valley",x:900,y:650,name:"Mistrz",text:"Trenuj, zdobywaj poziomy i odblokowuj kolejne światy."},{world:"valley",x:480,y:680,name:"Handlarz",text:"Sprzedaję leczenie za Zeni."},{world:"valley",x:1600,y:760,name:"Wróżka",text:"Czuję niezwykłą energię... Smocze Kule pojawią się w kolejnej aktualizacji."},{world:"arena",x:1050,y:650,name:"Trener",text:"Podejdź i naciśnij E, aby rozpocząć falę treningową."},{world:"valley",x:720,y:1050,name:"Dzienny Opiekun",text:"Mam dla ciebie codzienną nagrodę."},{world:"valley",x:1320,y:1050,name:"Łowca Dnia",text:"Mam dla ciebie codzienne zadanie."},{world:"mountains",x:1050,y:1180,name:"Górski Mistrz",text:"Przejdź moje próby, a zdobędziesz Smoczą Kulę."},{world:"valley",x:1120,y:1120,name:"Rekruter Discord",text:"Dołącz do Dragon Ball Polska i odbierz 10 000 Zeni."}];
 const enemies=[
  {world:"valley",x:1220,y:720,name:"Bandyta",level:1,maxHp:60,hp:60,alive:true,respawn:0},{world:"valley",x:1450,y:950,name:"Bandyta",level:2,maxHp:85,hp:85,alive:true,respawn:0},
  {world:"desert",x:700,y:650,name:"Pustynny Wojownik",level:5,maxHp:170,hp:170,alive:true,respawn:0},{world:"desert",x:1250,y:950,name:"Pustynny Wojownik",level:6,maxHp:200,hp:200,alive:true,respawn:0},{world:"desert",x:1750,y:650,name:"Pustynny Elita",level:7,maxHp:250,hp:250,alive:true,respawn:0},
@@ -488,7 +495,31 @@ function addExtraShop06(){
 const oldBuyShop06=buyShopItem05;
 buyShopItem05=function(id){if(id==="cloud")return buyCloud06();if(id==="mythicAmulet")return toast("🐉 Tego przedmiotu nie można kupić.");return oldBuyShop06(id)}
 
-function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();startPresence072();toast("🌍 "+worlds[currentWorld].name);
+async function verifyDiscordReward(){
+ try{
+  const {data:{session}}=await dbpSupabase.auth.getSession();
+  if(!session?.access_token){toast("❌ Zaloguj się ponownie do gry.");return}
+  toast("💬 Otwieram weryfikację Discord...");
+  const r=await fetch(SUPABASE_URL+"/functions/v1/discord-reward",{method:"POST",headers:{"Authorization":"Bearer "+session.access_token,"apikey":SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:"{}"});
+  const data=await r.json();
+  if(data.auth_url){window.location.href=data.auth_url;return}
+  toast("❌ "+(data.error||"Nie udało się rozpocząć weryfikacji."));
+ }catch(e){console.error(e);toast("❌ Błąd połączenia z weryfikacją Discord.")}
+}
+async function handleDiscordRewardReturn(){
+ const q=new URLSearchParams(location.search),status=q.get("discord");
+ if(!status)return;
+ history.replaceState({},"",location.pathname+location.hash);
+ if(status==="success"){
+  if(onlineUserId){const {data}=await dbpSupabase.from("players").select("zeni,discord_verified,discord_reward_claimed,discord_user_id").eq("id",onlineUserId).single();if(data){currentUser.zeni=data.zeni;currentUser.discord_verified=data.discord_verified;currentUser.discord_reward_claimed=data.discord_reward_claimed;currentUser.discord_user_id=data.discord_user_id;updateHUD()}}
+  toast("🎉 Discord zweryfikowany! Otrzymujesz 10 000 Zeni!");
+ }else if(status==="not_member")toast("❌ Nie wykryto Cię na serwerze Dragon Ball Polska. Dołącz i spróbuj ponownie.");
+ else if(status==="already_used")toast("❌ To konto Discord odebrało już nagrodę na innym koncie gry.");
+ else if(status==="already_claimed")toast("ℹ️ Nagroda Discord została już odebrana.");
+ else if(status==="cancelled")toast("ℹ️ Anulowano weryfikację Discord.");
+ else toast("❌ Weryfikacja Discord nie powiodła się.");
+}
+function startGame(){normalize();normalize05();normalize06();addExtraShop06();currentWorld=worlds[currentUser.world]?currentUser.world:"valley";player.name=currentUser.username;player.x=currentUser.x??worlds[currentWorld].spawn.x;player.y=currentUser.y??worlds[currentWorld].spawn.y;$("authScreen").style.display="none";$("gameContainer").style.display="block";resize();updateHUD();updateQuestUI();renderPowerBar();renderShop05();startPresence072();toast("🌍 "+worlds[currentWorld].name);setTimeout(handleDiscordRewardReturn,500);
  setTimeout(()=>{if(currentUser)toast("💬 Gra Ci się podoba? Dołącz do społeczności Dragon Ball Polska na Discordzie!");},8000)
 }
 async function logout(){
@@ -556,7 +587,7 @@ function openArena(){$("arenaPanel").style.display="block";$("arenaInfo").textCo
 function startArena(){if(currentWorld!=="arena")return;arenaWave++;currentUser.arenaBest=Math.max(currentUser.arenaBest||0,arenaWave);if(currentUser.arenaBest>=10)grantBall(2);arenaKills=0;enemies.filter(e=>e.arena).forEach(e=>{let i=enemies.indexOf(e);enemies.splice(i,1)});for(let i=0;i<3;i++)enemies.push({world:"arena",x:800+i*260,y:850+(i%2)*170,name:"Wojownik Treningowy",level:Math.max(1,currentUser.level+arenaWave-1),maxHp:70+currentUser.level*18+arenaWave*15,hp:70+currentUser.level*18+arenaWave*15,alive:true,respawn:Infinity,arena:true});closeArena();toast("🥋 Fala "+arenaWave+" rozpoczęta!")}
 function checkArenaWave(){if(arenaKills>=3){let bonus=150+arenaWave*75;currentUser.zeni+=bonus;addExp(75+arenaWave*25);toast("🏆 Fala ukończona! +"+bonus+" Zeni");arenaKills=0}}
 function teleport(p){if(currentUser.level<p.min){toast("🔒 Wymagany LVL "+p.min);return}currentWorld=p.to;let s=worlds[currentWorld].spawn;player.x=s.x;player.y=s.y;closeCombat();closeShop();closeArena();updateHUD();savePlayer();toast("🌍 "+worlds[currentWorld].name)}
-function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Górski Mistrz")openMountainQuest07();else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
+function interact(){if(!currentUser)return;let portal=portals.find(p=>p.world===currentWorld&&Math.hypot(player.x-(p.x+p.w/2),player.y-(p.y+p.h/2))<115);if(portal){teleport(portal);return}let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);if(npc){if(npc.name==="Handlarz")openShop();else if(npc.name==="Trener")openArena();else if(npc.name==="Mistrz")openQuestNpc();else if(npc.name==="Dzienny Opiekun")openDailyRewardNpc06();else if(npc.name==="Łowca Dnia")openDailyQuest();else if(npc.name==="Górski Mistrz")openMountainQuest07();else if(npc.name==="Rekruter Discord")$("discordNpcPanel").style.display="flex";else if(npc.name==="Wróżka"){if(!currentUser.dragonBallsOwned[4]){if(currentUser.zeni>=15000){currentUser.zeni-=15000;grantBall(4);updateHUD();toast("🔮 Wróżka ujawniła miejsce 5★ Kuli!")}else toast("🔮 Wróżka: Przynieś mi 15 000 Zeni za wskazówkę.")}else toast("🔮 Wróżka: Już zdobyłeś moją Smoczą Kulę.")}else toast(npc.name+": "+npc.text);return}let en=enemies.find(e=>e.world===currentWorld&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);if(en)openCombat(en)}
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener("resize",resize);
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys[k]=true;if(k==="e")interact()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);$("passwordInput").addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});document.querySelectorAll(".move").forEach(b=>{let k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
 function blocked(x,y){return x<0||y<0||x+player.width>2400||y+player.height>1700}
