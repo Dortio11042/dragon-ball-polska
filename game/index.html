@@ -69,7 +69,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.7.28 — WALKA Z BOSSEM</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.0 — MEGA AKTUALIZACJA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -154,6 +154,34 @@
 <div id="marketSell"></div>
 <div id="marketOffers" class="grid"></div>
 </div>
+
+<div id="miniMap" style="position:fixed;right:12px;top:12px;z-index:45;width:180px;height:125px;background:rgba(5,8,15,.88);border:2px solid #fff;border-radius:8px;overflow:hidden"><canvas id="miniMapCanvas" width="180" height="125"></canvas></div>
+<div id="megaMenu" style="position:fixed;left:10px;bottom:10px;z-index:48;display:flex;gap:5px;flex-wrap:wrap;max-width:520px">
+<button class="menuBtn" onclick="openMegaPanel('settingsMega')">⚙️</button>
+<button class="menuBtn" onclick="openMegaPanel('chatMega');loadGlobalChat08()">💬 Czat</button>
+<button class="menuBtn" onclick="openMegaPanel('upgradeMega');renderUpgrade08()">✨ Kuźnia</button>
+<button class="menuBtn" onclick="openMegaPanel('achMega');renderAchievements08()">🏆 Osiąg.</button>
+<button class="menuBtn" onclick="openMegaPanel('storyMega');renderStory08()">📖 Fabuła</button>
+<button class="menuBtn" onclick="openMegaPanel('profileMega');renderProfile08()">👤 Profil</button>
+</div>
+
+<div id="settingsMega" class="modal"><h2>⚙️ USTAWIENIA</h2>
+<label>Muzyka <input id="musicVol08" type="range" min="0" max="100" value="50" oninput="saveSettings08()"></label><br><br>
+<label>Efekty <input id="sfxVol08" type="range" min="0" max="100" value="70" oninput="saveSettings08()"></label><br><br>
+<label><input id="showPlayers08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj innych graczy</label><br>
+<label><input id="showMini08" type="checkbox" checked onchange="saveSettings08()"> Pokazuj minimapę</label><br>
+<label><input id="showHp08" type="checkbox" checked onchange="saveSettings08()"> Pasek HP nad graczem</label><br><br>
+<button class="action" onclick="closeOverlay('settingsMega')">ZAMKNIJ</button></div>
+
+<div id="chatMega" class="modal" style="width:min(92vw,650px)"><h2>💬 GLOBALNY CZAT</h2>
+<div id="chatList08" style="height:260px;overflow:auto;background:#090d18;padding:10px;text-align:left"></div>
+<input id="chatInput08" maxlength="150" placeholder="Napisz wiadomość..." style="width:70%;padding:10px"><button class="action orange" onclick="sendGlobalChat08()">WYŚLIJ</button>
+<button class="action" onclick="closeOverlay('chatMega')">ZAMKNIJ</button></div>
+
+<div id="upgradeMega" class="modal" style="width:min(92vw,650px)"><h2>✨ KUŹNIA — ULEPSZANIE</h2><p>Ulepsz wyposażenie do +10. Każdy poziom zwiększa jego bonus.</p><div id="upgradeList08"></div><button class="action" onclick="closeOverlay('upgradeMega')">ZAMKNIJ</button></div>
+<div id="achMega" class="modal" style="width:min(92vw,650px)"><h2>🏆 OSIĄGNIĘCIA</h2><div id="achList08"></div><button class="action" onclick="closeOverlay('achMega')">ZAMKNIJ</button></div>
+<div id="storyMega" class="modal" style="width:min(92vw,650px)"><h2>📖 GŁÓWNA FABUŁA</h2><div id="storyList08"></div><button class="action" onclick="closeOverlay('storyMega')">ZAMKNIJ</button></div>
+<div id="profileMega" class="modal" style="width:min(92vw,650px)"><h2>👤 PROFIL WOJOWNIKA</h2><div id="profileContent08"></div><button class="action" onclick="closeOverlay('profileMega')">ZAMKNIJ</button></div>
 <canvas id="game"></canvas></div>
 <script>
 let authMode="login",currentUser=null,currentWorld="valley",activeEnemy=null,arenaWave=0,arenaKills=0;
@@ -302,7 +330,12 @@ const powers05=[
 {id:"Pocisk Energii",level:5,dmg:18,desc:"+18 DMG"},
 {id:"Fala Energii",level:10,dmg:30,desc:"+30 DMG"},
 {id:"Aura",level:15,dmg:42,desc:"+42 DMG"},
-{id:"Super Fala",level:20,dmg:65,desc:"+65 DMG"}
+{id:"Super Fala",level:20,dmg:65,desc:"+65 DMG"},
+{id:"Smoczy Cios",level:25,dmg:82,desc:"+82 DMG"},
+{id:"Błyskawiczna Szarża",level:30,dmg:100,desc:"+100 DMG"},
+{id:"Wielka Fala Energii",level:35,dmg:125,desc:"+125 DMG"},
+{id:"Bariera Ki",level:40,dmg:145,desc:"+145 DMG"},
+{id:"Ostateczny Wybuch",level:50,dmg:190,desc:"+190 DMG"}
 ];
 const quests05=[
 {title:"Problem z bandytami",text:"Pokonaj 5 Bandytów",target:5,minLevel:1,rewardZeni:500,rewardExp:100},
@@ -319,6 +352,7 @@ const quests05=[
 {title:"Próba Mistrzów",text:"Pokonaj 15 przeciwników LVL 50+",target:15,minLevel:50,rewardZeni:45000,rewardExp:6500}
 ];
 function normalize05(){
+ normalizeMega08();
  currentUser.inventory??=[];currentUser.equipment??={gloves:null,outfit:null,boots:null,amulet:null};
  currentUser.equippedPowers??=["Cios"];currentUser.questIndex??=0;currentUser.activeQuest??=null;
  currentUser.questProgress??=0;currentUser.totalKills??=0;currentUser.bigPotions??=0;currentUser.meals??=0;
@@ -476,6 +510,28 @@ const extraWorlds06={
  masters:{name:"🔥 Kraina Mistrzów",bg:"#5b1919",road:"#d88b31",min:50,spawn:{x:260,y:800}}
 };
 Object.assign(worlds,extraWorlds06);
+Object.assign(worlds,{
+ ruins:{name:"🏛️ Starożytne Ruiny",bg:"#75684f",road:"#a18e68",min:55,spawn:{x:260,y:800}},
+ voidzone:{name:"🌌 Szczelina Ki",bg:"#21183b",road:"#594b77",min:65,spawn:{x:260,y:800}},
+ pvp:{name:"🏟️ Arena PvP",bg:"#713d32",road:"#b98a52",min:10,spawn:{x:1050,y:1250}}
+});
+portals.push(
+ {world:"masters",x:2050,y:650,w:90,h:120,to:"ruins",label:"RUINY",min:55},
+ {world:"ruins",x:120,y:650,w:90,h:120,to:"masters",label:"MISTRZOWIE",min:55},
+ {world:"ruins",x:2050,y:650,w:90,h:120,to:"voidzone",label:"SZCZELINA",min:65},
+ {world:"voidzone",x:120,y:650,w:90,h:120,to:"ruins",label:"RUINY",min:65},
+ {world:"arena",x:2050,y:1050,w:90,h:120,to:"pvp",label:"PVP",min:10},
+ {world:"pvp",x:120,y:1050,w:90,h:120,to:"arena",label:"WYJŚCIE",min:10}
+);
+npcs.push(
+ {world:"valley",x:1450,y:560,name:"Mistrz Mocy",text:"Uczę wojowników panowania nad Ki."},
+ {world:"valley",x:620,y:520,name:"Kowal",text:"Ulepszam wyposażenie do +10."},
+ {world:"forest",x:1650,y:1150,name:"Tajemniczy Trener",text:"Sekretna technika czeka na wytrwałych."},
+ {world:"ruins",x:1050,y:900,name:"Strażnik Ruin",text:"W ruinach ukryto pradawne skrzynie."},
+ {world:"voidzone",x:1050,y:900,name:"Mistrz Szczeliny",text:"Tylko najsilniejsi przetrwają energię szczeliny."}
+);
+
+
 
 const dragonTasks=[
 "Ukończ pierwszą serię questów Mistrza",
@@ -863,7 +919,131 @@ function drawWorldDecor(cx,cy){
  }
 }
 
-function draw(){let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
+
+/* ===== ALPHA 0.8.0 — MEGA SYSTEMS ===== */
+
+const oldOpenDragonBalls08=typeof openDragonBalls==="function"?openDragonBalls:null;
+if(oldOpenDragonBalls08)openDragonBalls=function(){oldOpenDragonBalls08();if(currentUser.dragonBalls>=7){let a=$("wishArea");if(a)a.innerHTML=`<h3>🐉 WYBIERZ ŻYCZENIE</h3><button class="action orange" onclick="wish08('zeni')">💰 150 000 Zeni</button><button class="action" onclick="wish08('exp')">⭐ 10 000 EXP</button><button class="action" onclick="wish08('power')">⚡ Specjalna moc</button>`}}
+function wish08(t){if(currentUser.dragonBalls<7)return;currentUser.dragonBalls=0;if(t==="zeni")currentUser.zeni+=150000;if(t==="exp")addExp(10000);if(t==="power"&&!currentUser.equippedPowers.includes("Ostateczny Wybuch"))currentUser.equippedPowers.push("Ostateczny Wybuch");toast("🐉 Shenron spełnił życzenie!");updateHUD();savePlayer();closeOverlay("dragonPanel")}
+
+let settings08={music:50,sfx:70,players:true,minimap:true,hp:true};
+function openMegaPanel(id){openOverlay(id)}
+function normalizeMega08(){
+ currentUser.itemUpgrades??={};currentUser.achievements??={};currentUser.storyStep??=0;
+ currentUser.weeklyKills??=0;currentUser.weeklyStamp??=Date.now();currentUser.prestige??=0;
+ currentUser.transformation??="Base";currentUser.chestsOpened??=0;currentUser.rareDrops??=0;
+ currentUser.partyName??="";currentUser.secretFound??={};
+ let a=localStorage.getItem("dbp_settings08");if(a){try{Object.assign(settings08,JSON.parse(a))}catch{}}
+ applySettings08();
+}
+function applySettings08(){
+ let m=$("miniMap");if(m)m.style.display=settings08.minimap?"block":"none";
+ if($("musicVol08"))$("musicVol08").value=settings08.music;if($("sfxVol08"))$("sfxVol08").value=settings08.sfx;
+ if($("showPlayers08"))$("showPlayers08").checked=settings08.players;if($("showMini08"))$("showMini08").checked=settings08.minimap;if($("showHp08"))$("showHp08").checked=settings08.hp;
+}
+function saveSettings08(){
+ settings08.music=Number($("musicVol08")?.value??50);settings08.sfx=Number($("sfxVol08")?.value??70);
+ settings08.players=$("showPlayers08")?.checked??true;settings08.minimap=$("showMini08")?.checked??true;settings08.hp=$("showHp08")?.checked??true;
+ localStorage.setItem("dbp_settings08",JSON.stringify(settings08));applySettings08();
+}
+const rarity08=["Common","Rare","Epic","Legendary","Mythic"];
+function rollDrop08(enemy){
+ if(!currentUser)return;
+ let r=Math.random(),rar=r<.01?"Mythic":r<.04?"Legendary":r<.12?"Epic":r<.30?"Rare":"Common";
+ if(Math.random()>.32&&!enemy.boss)return;
+ let reward={Common:120,Rare:450,Epic:1400,Legendary:5000,Mythic:18000}[rar]*(enemy.boss?2:1);
+ currentUser.zeni+=reward;if(rar!=="Common")currentUser.rareDrops++;
+ toast("🎁 "+rar+" drop! +"+reward+" Zeni");checkAchievements08();
+}
+const oldRegisterKill08=typeof registerKill==="function"?registerKill:null;
+if(oldRegisterKill08)registerKill=function(e){oldRegisterKill08(e);currentUser.weeklyKills=(currentUser.weeklyKills||0)+1;rollDrop08(e);checkAchievements08();checkStory08();}
+
+function upgradeCost08(id){let l=currentUser.itemUpgrades?.[id]||0;return Math.round((l+1)*900*Math.pow(1.45,l))}
+function renderUpgrade08(){
+ let d=$("upgradeList08"),arr=(currentUser.inventory||[]).map(item05).filter(Boolean);d.innerHTML=arr.length?"":"Brak wyposażenia.";
+ arr.forEach(it=>{let l=currentUser.itemUpgrades[it.id]||0,c=upgradeCost08(it.id);d.innerHTML+=`<div class="card"><b>${it.name} +${l}</b><br>${it.desc}<br>Koszt: ${c.toLocaleString("pl-PL")} Zeni<br><button class="actionBtn" ${l>=10?"disabled":""} onclick="upgradeItem08('${it.id}')">ULEPSZ</button></div>`});
+}
+function upgradeItem08(id){let l=currentUser.itemUpgrades[id]||0,c=upgradeCost08(id);if(l>=10)return toast("Maksymalny poziom +10");if(currentUser.zeni<c)return toast("Za mało Zeni");currentUser.zeni-=c;currentUser.itemUpgrades[id]=l+1;toast("✨ Ulepszono do +"+(l+1));renderUpgrade08();updateHUD();savePlayer()}
+const oldDamageBonus08=damageBonus;damageBonus=function(){let id=currentUser?.equipment?.gloves,l=currentUser?.itemUpgrades?.[id]||0;return oldDamageBonus08()+l*2}
+const oldMaxHp08=maxHp05;maxHp05=function(){let id=currentUser?.equipment?.outfit,l=currentUser?.itemUpgrades?.[id]||0;return oldMaxHp08()+l*8+(currentUser?.prestige||0)*20}
+const oldSpeedBonus08=speedBonus05;speedBonus05=function(){let id=currentUser?.equipment?.boots,l=currentUser?.itemUpgrades?.[id]||0;return oldSpeedBonus08()+l*.01}
+
+const achievements08=[
+ ["firstBoss","👹 Pierwszy boss",()=>Object.values(currentUser.bossKills||{}).reduce((a,b)=>a+b,0)>=1,1000],
+ ["kills100","⚔️ 100 pokonanych",()=>currentUser.totalKills>=100,3000],
+ ["rich","💰 Bogacz",()=>currentUser.zeni>=100000,5000],
+ ["balls","🐉 Łowca Kul",()=>currentUser.dragonBalls>=7,10000],
+ ["rare","💎 Kolekcjoner",()=>currentUser.rareDrops>=10,5000]
+];
+function checkAchievements08(){achievements08.forEach(a=>{if(!currentUser.achievements[a[0]]&&a[2]()){currentUser.achievements[a[0]]=true;currentUser.zeni+=a[3];toast("🏆 Osiągnięcie: "+a[1]+" +"+a[3]+" Zeni")}})}
+function renderAchievements08(){checkAchievements08();$("achList08").innerHTML=achievements08.map(a=>`<div class="card">${currentUser.achievements[a[0]]?"✅":"⬜"} <b>${a[1]}</b><br>Nagroda: ${a[3]} Zeni</div>`).join("")}
+
+const story08=[
+ ["Początek wojownika","Osiągnij LVL 5",u=>u.level>=5],
+ ["Droga przez pustynię","Osiągnij LVL 10",u=>u.level>=10],
+ ["Próba Gór","Osiągnij LVL 15",u=>u.level>=15],
+ ["Mroczny Las","Osiągnij LVL 20",u=>u.level>=20],
+ ["Mistrz Ki","Osiągnij LVL 30",u=>u.level>=30],
+ ["Legenda","Osiągnij LVL 50",u=>u.level>=50],
+ ["Poza granicami","Osiągnij LVL 65",u=>u.level>=65]
+];
+function checkStory08(){while(currentUser.storyStep<story08.length&&story08[currentUser.storyStep][2](currentUser)){currentUser.storyStep++;currentUser.zeni+=2500*currentUser.storyStep;toast("📖 Rozdział ukończony! Nagroda Zeni")}}
+function renderStory08(){checkStory08();$("storyList08").innerHTML=story08.map((q,i)=>`<div class="card">${i<currentUser.storyStep?"✅":i===currentUser.storyStep?"➡️":"🔒"} <b>${q[0]}</b><br>${q[1]}</div>`).join("")}
+
+async function loadGlobalChat08(){
+ let d=$("chatList08");d.innerHTML="Ładowanie...";
+ const {data,error}=await dbpSupabase.from("chat_messages").select("username,message,created_at").order("created_at",{ascending:false}).limit(40);
+ if(error){d.textContent="Błąd czatu: "+error.message;return}
+ d.innerHTML=(data||[]).reverse().map(x=>`<div><b>${escapeHtml05(x.username)}:</b> ${escapeHtml05(x.message)}</div>`).join("");d.scrollTop=d.scrollHeight;
+}
+async function sendGlobalChat08(){
+ let inp=$("chatInput08"),msg=(inp.value||"").trim().slice(0,150);if(!msg)return;
+ const {error}=await dbpSupabase.from("chat_messages").insert({user_id:onlineUserId,username:currentUser.username,message:msg});
+ if(error)return toast("❌ Nie udało się wysłać");inp.value="";loadGlobalChat08();
+}
+
+function renderProfile08(){
+ let bosses=Object.values(currentUser.bossKills||{}).reduce((a,b)=>a+b,0);
+ $("profileContent08").innerHTML=`<div class="card"><b>${escapeHtml05(currentUser.username)}</b><br>⭐ LVL ${currentUser.level}<br>✨ Prestige ${currentUser.prestige||0}<br>⚔️ Pokonani: ${currentUser.totalKills||0}<br>👹 Bossowie: ${bosses}<br>🐉 Kule: ${currentUser.dragonBalls}/7<br>💰 ${Number(currentUser.zeni).toLocaleString("pl-PL")} Zeni<br>⚡ Forma: ${escapeHtml05(currentUser.transformation||"Base")}</div>
+ <button class="action orange" onclick="transform08()">⚡ TRANSFORMACJA</button>
+ <button class="action" onclick="prestige08()">⭐ PRESTIGE</button>`;
+}
+function transform08(){if(currentUser.level<30)return toast("Transformacja od LVL 30");currentUser.transformation=currentUser.transformation==="Base"?"Wzmocniona Aura":"Base";toast("⚡ Forma: "+currentUser.transformation);savePlayer();renderProfile08()}
+function prestige08(){if(currentUser.level<70)return toast("Prestige wymaga LVL 70");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.hp=maxHp05();toast("⭐ PRESTIGE "+currentUser.prestige+"!");savePlayer();updateHUD();renderProfile08()}
+
+function weeklyQuest08(){
+ if(Date.now()-(currentUser.weeklyStamp||0)>604800000){currentUser.weeklyStamp=Date.now();currentUser.weeklyKills=0}
+ if((currentUser.weeklyKills||0)>=100&&!currentUser.weeklyClaimed){currentUser.weeklyClaimed=true;currentUser.zeni+=25000;addExp(5000);toast("📅 Weekly ukończony: +25 000 Zeni")}
+}
+function hiddenChest08(){
+ if(!currentUser)return;
+ let spots={valley:[1850,1350],forest:[1900,300],mountains:[350,300],ruins:[1750,1250]};
+ let p=spots[currentWorld];if(!p)return;
+ if(Math.hypot(player.x-p[0],player.y-p[1])<65&&!currentUser.secretFound[currentWorld]){
+   currentUser.secretFound[currentWorld]=true;currentUser.chestsOpened++;currentUser.zeni+=2500+currentUser.level*100;toast("📦 Znalazłeś sekretną skrzynię!");savePlayer();
+ }
+}
+function drawMiniMap08(){
+ let mc=$("miniMapCanvas");if(!mc||!currentUser||!settings08.minimap)return;let m=mc.getContext("2d"),sx=180/2400,sy=125/1700;
+ m.clearRect(0,0,180,125);m.fillStyle="#101726";m.fillRect(0,0,180,125);
+ m.fillStyle="#725cff";portals.filter(p=>p.world===currentWorld).forEach(p=>m.fillRect(p.x*sx,p.y*sy,5,5));
+ m.fillStyle="#ffd24c";npcs.filter(n=>n.world===currentWorld).forEach(n=>m.fillRect(n.x*sx,n.y*sy,4,4));
+ m.fillStyle="#e54b4b";enemies.filter(e=>e.world===currentWorld&&e.alive&&e.boss).forEach(e=>m.fillRect(e.x*sx,e.y*sy,5,5));
+ m.fillStyle="#fff";m.beginPath();m.arc(player.x*sx,player.y*sy,4,0,Math.PI*2);m.fill();
+ m.fillStyle="#fff";m.font="10px Arial";m.fillText(worlds[currentWorld]?.name||"",5,12);
+}
+const oldDrawRemotePlayers08=drawRemotePlayers072;
+drawRemotePlayers072=function(c){if(settings08.players)oldDrawRemotePlayers08(c)}
+const oldDrawPlayer08=drawPlayer;
+drawPlayer=function(c){
+ oldDrawPlayer08(c);if(!currentUser||!settings08.hp)return;
+ let x=player.x-c.x,y=player.y-c.y,w=42,r=Math.max(0,Math.min(1,currentUser.hp/maxHp05()));
+ ctx.fillStyle="#351313";ctx.fillRect(x-7,y-25,w,5);ctx.fillStyle="#3ed35b";ctx.fillRect(x-7,y-25,w*r,5);
+}
+const oldUpdateHUD08=updateHUD;
+updateHUD=function(){oldUpdateHUD08();if(currentUser){normalizeMega08();weeklyQuest08();checkStory08();checkAchievements08()}}
+
+function draw(){hiddenChest08();drawMiniMap08();let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
 function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=100+(i*317)%2100,y=120+(i*193)%1400;if(Math.abs(x-1050)<180&&Math.abs(y-800)<180)continue;ctx.fillStyle="#754126";ctx.fillRect(x-c.x+14,y-c.y+30,12,25);ctx.fillStyle="#23874b";ctx.fillRect(x-c.x,y-c.y,40,38)}/* Budynek Rynku Graczy */ctx.fillStyle="#6b3f22";ctx.fillRect(250-c.x,930-c.y,250,190);ctx.fillStyle="#d69a3a";ctx.fillRect(230-c.x,900-c.y,290,45);ctx.fillStyle="#2d1c13";ctx.fillRect(330-c.x,1030-c.y,90,90);ctx.fillStyle="#fff";ctx.font="bold 18px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",375-c.x,975-c.y)}else if(currentWorld==="market"){ctx.fillStyle="#3b2618";ctx.fillRect(350-c.x,260-c.y,1400,1150);ctx.fillStyle="#d7b37a";ctx.fillRect(400-c.x,310-c.y,1300,1050);ctx.fillStyle="#70451f";ctx.fillRect(650-c.x,610-c.y,800,85);ctx.fillStyle="#4a2c17";for(let i=0;i<5;i++)ctx.fillRect(500+i*280-c.x,390-c.y,150,120);ctx.fillStyle="#fff";ctx.font="bold 28px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",1050-c.x,350-c.y);ctx.font="16px Arial";ctx.fillText("Podejdź do Handlarza Rynku i naciśnij E",1050-c.x,720-c.y)}else if(currentWorld==="desert"){for(let i=0;i<16;i++){let x=120+(i*401)%2100,y=140+(i*251)%1350;ctx.fillStyle="#a67c38";ctx.fillRect(x-c.x,y-c.y,45,22)}}else if(currentWorld==="mountains"){for(let i=0;i<14;i++){let x=100+(i*433)%2150,y=100+(i*277)%1400;ctx.fillStyle="#555b5e";ctx.beginPath();ctx.moveTo(x-c.x,y-c.y+90);ctx.lineTo(x-c.x+55,y-c.y);ctx.lineTo(x-c.x+110,y-c.y+90);ctx.fill()}}else{ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(600-c.x,400-c.y,1200,850);ctx.beginPath();ctx.arc(1200-c.x,825-c.y,260,0,Math.PI*2);ctx.stroke()}}
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
 function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
