@@ -43,7 +43,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.6 — ŚWIATY I ARENY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.7.26 — WIĘCEJ QUESTÓW</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -63,7 +63,7 @@
  ⛰️ Góry — LVL 10
 </div>
 
-<div id="activeQuest"><b>📜 AKTYWNY QUEST</b><div id="activeQuestText">Brak — porozmawiaj z Mistrzem.</div></div>
+<div id="activeQuest"><b>📜 AKTUALNE QUESTY</b><div id="activeQuestText">Brak — porozmawiaj z Mistrzem.</div></div>
 <div id="powerBar"></div>
 <div id="bottomMenu">
  <button class="menuBtn" onclick="openInventory()">🎒 Ekwipunek</button>
@@ -243,14 +243,14 @@ function normalize(){Object.assign(currentUser,{exp:currentUser.exp??0,zeni:curr
 
 const shopItems05=[
 {id:"smallPotion",name:"🧪 Małe leczenie",price:100,type:"consumable",desc:"+50 HP"},
-{id:"bigPotion",name:"🧪 Duże leczenie",price:350,type:"consumable",desc:"+100 HP"},
-{id:"meal",name:"🍜 Posiłek",price:750,type:"consumable",desc:"Pełne HP"},
+{id:"bigPotion",name:"🧪 Duże leczenie",price:180,type:"consumable",desc:"+100 HP"},
+{id:"meal",name:"🍜 Posiłek",price:450,type:"consumable",desc:"Pełne HP"},
 {id:"gloves1",name:"⚔️ Rękawice treningowe",price:1500,type:"gloves",dmg:3,desc:"+3 DMG"},
-{id:"outfit1",name:"🥋 Strój treningowy",price:3000,type:"outfit",hp:20,desc:"+20 maks. HP"},
+{id:"outfit1",name:"🥋 Strój treningowy",price:2200,type:"outfit",hp:20,desc:"+20 maks. HP"},
 {id:"boots1",name:"👢 Lekkie buty",price:5000,type:"boots",speed:.10,desc:"+10% szybkości"},
 {id:"gloves2",name:"💎 Wzmocnione rękawice",price:10000,type:"gloves",dmg:8,desc:"+8 DMG"},
 {id:"amulet1",name:"🧿 Amulet wojownika",price:20000,type:"amulet",xp:.10,desc:"+10% EXP"},
-{id:"outfit2",name:"🥋 Elitarny strój",price:35000,type:"outfit",hp:75,desc:"+75 maks. HP"}
+{id:"outfit2",name:"🥋 Elitarny strój",price:25000,type:"outfit",hp:75,desc:"+75 maks. HP"}
 ];
 const powers05=[
 {id:"Cios",level:1,dmg:0,desc:"Podstawowy atak"},
@@ -264,7 +264,15 @@ const quests05=[
 {title:"Problem z bandytami",text:"Pokonaj 5 Bandytów",target:5,minLevel:1,rewardZeni:500,rewardExp:100},
 {title:"Silniejsi bandyci",text:"Pokonaj 3 przeciwników LVL 2+",target:3,minLevel:2,rewardZeni:800,rewardExp:180},
 {title:"Elitarny przeciwnik",text:"Pokonaj 1 przeciwnika LVL 3+",target:1,minLevel:3,rewardZeni:1500,rewardExp:300},
-{title:"Próba wojownika",text:"Pokonaj 8 dowolnych przeciwników",target:8,minLevel:1,rewardZeni:2500,rewardExp:500}
+{title:"Próba wojownika",text:"Pokonaj 8 dowolnych przeciwników",target:8,minLevel:1,rewardZeni:2500,rewardExp:500},
+{title:"Łowca pustyni",text:"Pokonaj 6 przeciwników LVL 5+",target:6,minLevel:5,rewardZeni:3500,rewardExp:650},
+{title:"Droga w góry",text:"Pokonaj 6 przeciwników LVL 10+",target:6,minLevel:10,rewardZeni:5500,rewardExp:900},
+{title:"Mroczny trening",text:"Pokonaj 8 przeciwników LVL 15+",target:8,minLevel:15,rewardZeni:8000,rewardExp:1300},
+{title:"Lodowa próba",text:"Pokonaj 8 przeciwników LVL 20+",target:8,minLevel:20,rewardZeni:11000,rewardExp:1700},
+{title:"Ogień wojownika",text:"Pokonaj 10 przeciwników LVL 25+",target:10,minLevel:25,rewardZeni:15000,rewardExp:2200},
+{title:"Ponad chmurami",text:"Pokonaj 10 przeciwników LVL 30+",target:10,minLevel:30,rewardZeni:20000,rewardExp:3000},
+{title:"Obca siła",text:"Pokonaj 12 przeciwników LVL 40+",target:12,minLevel:40,rewardZeni:30000,rewardExp:4500},
+{title:"Próba Mistrzów",text:"Pokonaj 15 przeciwników LVL 50+",target:15,minLevel:50,rewardZeni:45000,rewardExp:6500}
 ];
 function normalize05(){
  currentUser.inventory??=[];currentUser.equipment??={gloves:null,outfit:null,boots:null,amulet:null};
@@ -314,11 +322,21 @@ async function openLeaderboard(){
  }catch(err){console.error("Błąd topki:",err);list.innerHTML="<p>❌ Nie udało się pobrać globalnej topki. Spróbuj ponownie.</p>"}
 }
 function updateQuestUI(){
- let q=quests05[currentUser.questIndex],t=$("activeQuestText");
- if(!q)t.textContent="🏆 Wszystkie obecne questy ukończone.";
- else if(currentUser.activeQuest===null)t.textContent="Brak — podejdź do Mistrza i naciśnij E.";
- else t.textContent=`${q.title}: ${currentUser.questProgress}/${q.target}${currentUser.questProgress>=q.target?" — WRÓĆ DO MISTRZA!":""}`;
+ let t=$("activeQuestText");
+ if(!t||!currentUser)return;
+ let lines=[];
+ let q=quests05[currentUser.questIndex];
+ if(q&&currentUser.activeQuest!==null)lines.push(`📜 ${q.title}: ${currentUser.questProgress}/${q.target}${currentUser.questProgress>=q.target?" — WRÓĆ DO MISTRZA!":""}`);
+ normalizeMountain07();
+ let mq=mountainQuests07[currentUser.mountainQuestIndex];
+ if(mq&&currentUser.mountainQuestActive)lines.push(`⛰️ ${mq.title}: ${currentUser.mountainQuestProgress}/${mq.target}${currentUser.mountainQuestProgress>=mq.target?" — WRÓĆ DO GÓRSKIEGO MISTRZA!":""}`);
+ if(currentUser.dailyQuestActive&&!currentUser.dailyQuestClaimed)lines.push(`☀️ Dzienny quest: ${Math.min(currentUser.dailyQuestKills||0,20)}/20`);
+ if(!lines.length){
+   if(!q&&currentUser.mountainQuestFinished)t.textContent="🏆 Wszystkie obecne questy ukończone.";
+   else t.textContent="Brak — porozmawiaj z Mistrzem lub innym NPC z zadaniem.";
+ }else t.innerHTML=lines.join("<br>");
 }
+
 function openQuestNpc(){
  let q=quests05[currentUser.questIndex],c=$("questNpcContent");
  if(!q)c.innerHTML="<p>🏆 Ukończyłeś wszystkie obecne zadania!</p>";
@@ -360,7 +378,7 @@ function openMountainQuest07(){
 function acceptMountainQuest07(){
  normalizeMountain07();
  currentUser.mountainQuestActive=true;currentUser.mountainQuestProgress=0;
- closeOverlay("mountainQuestPanel");savePlayer();toast("⛰️ Przyjęto próbę Górskiego Mistrza!");
+ closeOverlay("mountainQuestPanel");updateQuestUI();savePlayer();toast("⛰️ Przyjęto próbę Górskiego Mistrza!");
 }
 function turnInMountainQuest07(){
  normalizeMountain07();
@@ -373,7 +391,7 @@ function turnInMountainQuest07(){
   grantBall(3);
   toast("🐉 SERIA GÓRSKA UKOŃCZONA — zdobywasz 4★ Smoczą Kulę!");
  }else toast("⛰️ Próba ukończona! Wróć po kolejną.");
- closeOverlay("mountainQuestPanel");updateHUD();savePlayer();
+ closeOverlay("mountainQuestPanel");updateQuestUI();updateHUD();savePlayer();
 }
 function registerMountainKill07(enemy){
  normalizeMountain07();
@@ -381,6 +399,7 @@ function registerMountainKill07(enemy){
  let q=mountainQuests07[currentUser.mountainQuestIndex];
  if(q&&q.match(enemy)){
   currentUser.mountainQuestProgress=Math.min(q.target,currentUser.mountainQuestProgress+1);
+  updateQuestUI();
   if(currentUser.mountainQuestProgress>=q.target)toast("⛰️ Próba wykonana — wróć do Górskiego Mistrza!");
  }
 }
