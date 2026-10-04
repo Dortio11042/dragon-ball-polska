@@ -152,10 +152,188 @@
  #megaMenu button,#megaMenu .menuBtn{width:95px!important;min-width:95px!important;height:31px!important;font-size:8px!important}
 }
 
+
+/* ===== 0.9.0 GAMEPLAY EXPANSION ===== */
+#gameplay090{display:none;position:fixed;inset:0;z-index:1900;background:rgba(2,5,11,.95);align-items:center;justify-content:center}
+#gameplay090 .bigPanel{width:min(900px,95%)} .tag090{display:inline-block;padding:3px 7px;margin:2px;border-radius:10px;background:#243252}
+.rarity090-common{color:#ddd}.rarity090-rare{color:#61e58a}.rarity090-epic{color:#65a8ff}.rarity090-legendary{color:#d58cff}.rarity090-mythic{color:#ffb52e}
+#speech090{display:none;position:fixed;z-index:500;left:50%;top:24%;transform:translateX(-50%);max-width:360px;padding:8px 12px;background:#fff;color:#111;border:2px solid #111;border-radius:10px;font-weight:bold;text-align:center}
+
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+/* ==================== 0.9.0 WIELKA AKTUALIZACJA ==================== */
+const forms090=[
+ {id:"Base",lvl:1,name:"Base",dmg:1,speed:1,hp:1,aura:"#ffffff"},
+ {id:"Aura",lvl:30,name:"Wzmocniona Aura",dmg:1.15,speed:1.08,hp:1.10,aura:"#ffd84a"},
+ {id:"Ascended",lvl:50,name:"Ascended",dmg:1.30,speed:1.13,hp:1.20,aura:"#6ec5ff"},
+ {id:"Dragon",lvl:75,name:"Smocza Forma",dmg:1.50,speed:1.18,hp:1.30,aura:"#ff7838"},
+ {id:"Master",lvl:100,name:"Forma Mistrza",dmg:1.75,speed:1.25,hp:1.45,aura:"#d68cff"}
+];
+const loot090=[
+ {id:"banditWraps",name:"Rękawice Bandyty",rarity:"rare",dmg:5},
+ {id:"sandCharm",name:"Talizman Pustyni",rarity:"epic",xp:.12},
+ {id:"mountainGi",name:"Gi Strażnika Gór",rarity:"epic",hp:90},
+ {id:"forestBoots",name:"Buty Lasu",rarity:"legendary",speed:.16},
+ {id:"iceGloves",name:"Lodowe Rękawice",rarity:"legendary",dmg:18},
+ {id:"lavaGi",name:"Pancerz Lawy",rarity:"legendary",hp:170},
+ {id:"skyCharm",name:"Amulet Nieba",rarity:"mythic",xp:.22},
+ {id:"alienGloves",name:"Kosmiczne Rękawice",rarity:"mythic",dmg:32},
+ {id:"masterGi",name:"Strój Wielkiego Mistrza",rarity:"mythic",hp:300}
+];
+const trainer090=[
+ {lvl:25,name:"Mistrz Doliny",power:"Smoczy Cios",kills:15},
+ {lvl:35,name:"Mistrz Energii",power:"Wielka Fala Energii",kills:35},
+ {lvl:50,name:"Wielki Mistrz",power:"Ostateczny Wybuch",kills:70}
+];
+function norm090(){
+ if(!currentUser)return;
+ currentUser.form090??="Base";currentUser.ki090??=100;currentUser.maxKi090??=100;
+ currentUser.loot090??=[];currentUser.party090??=[];currentUser.pvpWins090??=0;
+ currentUser.bossKills090??=0;currentUser.prestigePoints090??=0;currentUser.trained090??=[];
+ currentUser.story090??=0;currentUser.chests090??={};currentUser.seasonScore090??=0;
+}
+function currentForm090(){norm090();return forms090.find(f=>f.id===currentUser.form090)||forms090[0]}
+function transform090(id){
+ norm090();let f=forms090.find(x=>x.id===id);if(!f)return;
+ if(currentUser.level<f.lvl)return toast("🔒 Wymagany LVL "+f.lvl);
+ currentUser.form090=id;toast("⚡ Transformacja: "+f.name);savePlayer();renderProfile090()
+}
+function renderProfile090(){
+ norm090();let f=currentForm090(),c=$("profileContent08");if(!c)return;
+ c.innerHTML=`<div class="card"><b>${escapeHtml05(currentUser.username)}</b><br>LVL ${currentUser.level} • Prestige ${currentUser.prestige||0}<br>
+ Forma: <b>${f.name}</b><br>Bonus: DMG +${Math.round((f.dmg-1)*100)}% • SPEED +${Math.round((f.speed-1)*100)}% • HP +${Math.round((f.hp-1)*100)}%</div>
+ <div class="grid">${forms090.map(x=>`<div class="card"><b>${x.name}</b><br>LVL ${x.lvl}<br><button class="actionBtn" onclick="transform090('${x.id}')">${currentUser.form090===x.id?"AKTYWNA":"TRANSFORMUJ"}</button></div>`).join("")}</div>`;
+}
+const oldRenderProfile090=typeof renderProfile08==="function"?renderProfile08:null;
+renderProfile08=function(){renderProfile090()};
+
+function rollBossLoot090(enemy){
+ if(!enemy?.boss)return;
+ norm090();currentUser.bossKills090++;
+ let idx=["valley","desert","mountains","forest","ice","volcano","sky","alien","masters"].indexOf(enemy.bossKey);
+ let item=loot090[Math.max(0,idx)];
+ let chance=.25+Math.min(.20,(currentUser.prestige||0)*.02);
+ if(item&&Math.random()<chance&&!currentUser.loot090.includes(item.id)){
+   currentUser.loot090.push(item.id);toast("🎁 DROP: "+item.name+" ["+item.rarity.toUpperCase()+"]");
+ }
+ currentUser.seasonScore090+=100;savePlayer();
+}
+function chest090(){
+ norm090();let key=currentWorld+":"+Math.floor(player.x/500)+":"+Math.floor(player.y/500);
+ if(currentUser.chests090[key])return toast("📦 Ta skrzynia jest już pusta.");
+ currentUser.chests090[key]=Date.now();let z=500+currentUser.level*80;currentUser.zeni+=z;
+ if(Math.random()<.12){let pool=loot090.filter(i=>!currentUser.loot090.includes(i.id));if(pool.length){let it=pool[Math.floor(Math.random()*pool.length)];currentUser.loot090.push(it.id);toast("📦 Skrzynia: "+it.name)}}
+ else toast("📦 Skrzynia: +"+z+" Zeni");
+ savePlayer();updateHUD();
+}
+function trainerPanel090(){
+ norm090();$("gpTitle090").textContent="🥋 TRENERZY";
+ $("gpContent090").innerHTML=trainer090.map(t=>`<div class="card"><b>${t.name}</b><br>${t.power}<br>LVL ${t.lvl} • ${t.kills} pokonanych
+ <button class="actionBtn" onclick="learn090('${t.power}',${t.lvl},${t.kills})">TRENUJ</button></div>`).join("");openOverlay("gameplay090")
+}
+function learn090(power,lvl,kills){
+ if(currentUser.level<lvl)return toast("🔒 Za niski LVL");
+ if((currentUser.totalKills||0)<kills)return toast("🔒 Pokonaj więcej przeciwników");
+ if(currentUser.trained090.includes(power))return toast("✅ Już nauczone");
+ currentUser.trained090.push(power);toast("🥋 Nauczono: "+power);savePlayer();trainerPanel090()
+}
+function prestigeShop090(){
+ norm090();$("gpTitle090").textContent="⭐ SKLEP PRESTIGE";
+ $("gpContent090").innerHTML=`<p>Punkty Prestige: <b>${currentUser.prestigePoints090}</b></p>
+ <div class="card">🔥 Stałe +5% DMG — 1 PP <button class="actionBtn" onclick="buyPrestige090('dmg')">KUP</button></div>
+ <div class="card">❤️ Stałe +50 HP — 1 PP <button class="actionBtn" onclick="buyPrestige090('hp')">KUP</button></div>`;openOverlay("gameplay090")
+}
+function buyPrestige090(k){if(currentUser.prestigePoints090<1)return toast("Brak punktów Prestige");currentUser.prestigePoints090--;if(k==="dmg")currentUser.prestigeDmg090=(currentUser.prestigeDmg090||0)+.05;else currentUser.prestigeHp090=(currentUser.prestigeHp090||0)+50;savePlayer();prestigeShop090()}
+function story090(){
+ norm090();let stages=["Początek wojownika","Próba Pustyni","Sekret Gór","Strażnicy Światów","Droga Mistrza"];
+ let req=[1,5,10,30,50],i=Math.min(currentUser.story090,stages.length-1);
+ $("gpTitle090").textContent="📖 GŁÓWNA FABUŁA";$("gpContent090").innerHTML=`<div class="card"><b>${stages[i]}</b><br>Osiągnij LVL ${req[i]} i pokonuj bossów.<br>Postęp bossów: ${currentUser.bossKills090}</div>
+ <button class="actionBtn" onclick="advanceStory090()">SPRAWDŹ POSTĘP</button>`;openOverlay("gameplay090")
+}
+function advanceStory090(){let req=[1,5,10,30,50],i=currentUser.story090||0;if(i>=5)return toast("📖 Fabuła ukończona!");if(currentUser.level<req[i]||currentUser.bossKills090<i)return toast("Jeszcze nie spełniasz warunków.");currentUser.story090++;currentUser.zeni+=1000*(i+1);addExp(250*(i+1));toast("📖 Rozdział ukończony!");savePlayer();story090()}
+function party090(){
+ norm090();$("gpTitle090").textContent="👥 PARTY";
+ $("gpContent090").innerHTML=`<p>Gracze w tym świecie:</p>${remotePlayers072.map(r=>`<div class="card">${escapeHtml05(r.username)} • LVL ${r.level}<button class="actionBtn" onclick="inviteParty090('${String(r.user_id).replace(/'/g,"")}','${escapeHtml05(r.username).replace(/'/g,"")}')">ZAPROŚ</button></div>`).join("")||"<p>Nikogo obok.</p>"}
+function inviteParty090(id,name){if(!currentUser.party090.includes(id))currentUser.party090.push(id);toast("👥 Dodano "+name+" do lokalnego party");savePlayer();party090()}
+function pvp090(){
+ $("gpTitle090").textContent="⚔️ PVP ARENA";$("gpContent090").innerHTML=`<p>PvP jest dostępne na mapie PvP. System zapisuje zwycięstwa i ranking sezonowy.</p><div class="card">Wygrane: <b>${currentUser.pvpWins090||0}</b><br>Season score: <b>${currentUser.seasonScore090||0}</b></div>`;openOverlay("gameplay090")
+}
+function rankings090(){
+ $("gpTitle090").textContent="🏆 RANKINGI SEZONOWE";$("gpContent090").innerHTML="<p>⏳ Ładowanie...</p>";openOverlay("gameplay090");
+ dbpSupabase.from("players").select("username,level,zeni,game_data").limit(200).then(({data})=>{
+   let a=(data||[]).map(x=>({u:x.username,l:x.level,z:x.zeni,s:x.game_data?.seasonScore090||0,p:x.game_data?.prestige||0})).sort((a,b)=>b.s-a.s).slice(0,10);
+   $("gpContent090").innerHTML=a.map((x,i)=>`<div class="card">#${i+1} <b>${escapeHtml05(x.u)}</b> — ${x.s} pkt • LVL ${x.l} • P${x.p}</div>`).join("")||"Brak danych";
+ });
+}
+function openSystems090(){
+ norm090();$("gpTitle090").textContent="🔥 SYSTEMY 0.9";$("gpContent090").innerHTML=`
+ <div class="grid">
+ <button class="actionBtn" onclick="renderProfile090();closeOverlay('gameplay090');openOverlay('profileMega')">⚡ TRANSFORMACJE</button>
+ <button class="actionBtn" onclick="trainerPanel090()">🥋 TRENERZY</button>
+ <button class="actionBtn" onclick="story090()">📖 FABUŁA</button>
+ <button class="actionBtn" onclick="chest090()">📦 SZUKAJ SKRZYNI</button>
+ <button class="actionBtn" onclick="party090()">👥 PARTY</button>
+ <button class="actionBtn" onclick="pvp090()">⚔️ PVP</button>
+ <button class="actionBtn" onclick="prestigeShop090()">⭐ PRESTIGE SHOP</button>
+ <button class="actionBtn" onclick="rankings090()">🏆 SEZON</button>
+ </div>
+ <p>Dropy bossów, nowe formy, trenerzy, skrzynie, fabuła, party, PvP foundation i rankingi są aktywne.</p>`;openOverlay("gameplay090")
+}
+function speech090(msg){
+ let b=$("speech090");if(!b)return;b.textContent=msg;b.style.display="block";clearTimeout(speech090.t);speech090.t=setTimeout(()=>b.style.display="none",4500)
+}
+function sendBubble090(msg){speech090((currentUser?.username||"Gracz")+": "+msg)}
+function formVisual090(c){
+ if(!currentUser)return;norm090();let f=currentForm090();if(f.id==="Base")return;
+ let x=player.x-c.x+14,y=player.y-c.y+18;ctx.save();ctx.globalAlpha=.28;ctx.strokeStyle=f.aura;ctx.lineWidth=7;ctx.beginPath();ctx.arc(x,y,30+Math.sin(performance.now()/130)*3,0,Math.PI*2);ctx.stroke();ctx.restore()
+}
+const oldDrawPlayer090=drawPlayer;
+drawPlayer=function(c){formVisual090(c);oldDrawPlayer090(c)}
+
+/* Apply transformation/prestige multipliers to movement. */
+const oldSpeedBonus090=speedBonus05;
+speedBonus05=function(){norm090();return oldSpeedBonus090()+(currentForm090().speed-1)}
+
+/* Extend max HP with form/prestige bonuses. */
+const oldMaxHp090=maxHp05;
+maxHp05=function(){norm090();return Math.round((oldMaxHp090()+(currentUser.prestigeHp090||0))*currentForm090().hp)}
+
+/* Hook boss victory where boss HP becomes zero: harmless fallback scan each update. */
+let bossAlive090=new Map();
+function bossDropWatch090(){
+ if(!currentUser)return;
+ for(const e of enemies.filter(x=>x.boss)){
+   let was=bossAlive090.has(e)?bossAlive090.get(e):e.alive;
+   if(was&&!e.alive)rollBossLoot090(e);
+   bossAlive090.set(e,e.alive);
+ }
+}
+setInterval(bossDropWatch090,350);
+
+/* Visible treasure chests in selected worlds. */
+const chestSpots090={valley:[620,1260],desert:[1550,1180],mountains:[520,420],forest:[1450,380],ice:[780,1280],volcano:[1500,1250],sky:[450,450],alien:[1600,450],masters:[1150,350]};
+function drawChest090(c){let p=chestSpots090[currentWorld];if(!p)return;let x=p[0]-c.x,y=p[1]-c.y;ctx.fillStyle="#6b3c16";ctx.fillRect(x,y,30,20);ctx.fillStyle="#e5b13f";ctx.fillRect(x,y+7,30,5);ctx.fillRect(x+12,y+5,7,9)}
+const oldDraw090=draw;
+draw=function(){oldDraw090();try{drawChest090(camera())}catch(e){}}
+
+/* Upgrade prestige itself: one point per successful reset. */
+const oldPrestige090=prestige08;
+prestige08=function(){let before=currentUser?.prestige||0;oldPrestige090();if((currentUser?.prestige||0)>before){norm090();currentUser.prestigePoints090++;savePlayer()}}
+
+/* Global chat also shows your own bubble immediately. */
+const oldSendChat090=typeof sendGlobalChat08==="function"?sendGlobalChat08:null;
+if(oldSendChat090)sendGlobalChat08=async function(){let v=$("chatInput08")?.value?.trim();if(v)sendBubble090(v);return oldSendChat090()};
+
+/* Extra endgame worlds. */
+if(!worlds.ruins)worlds.ruins={name:"🏛️ Starożytne Ruiny",bg:"#6f6757",road:"#a79772",spawn:{x:250,y:800},min:55};
+if(!worlds.voidzone)worlds.voidzone={name:"🌌 Strefa Pustki",bg:"#171126",road:"#382d55",spawn:{x:250,y:800},min:65};
+if(!worlds.pvp)worlds.pvp={name:"⚔️ Arena PvP",bg:"#4c3030",road:"#7d5a4b",spawn:{x:1050,y:1250},min:10};
+
+setTimeout(()=>{if(currentUser){norm090();savePlayer()}},1500);
+
+</script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.8.9 — ULTRA PŁYNNY MULTIPLAYER</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 0.9.0 — WIELKA AKTUALIZACJA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -249,6 +427,7 @@
 <button class="menuBtn" onclick="openMegaPanel('achMega');renderAchievements08()">🏆 Osiąg.</button>
 <button class="menuBtn" onclick="openMegaPanel('storyMega');renderStory08()">📖 Fabuła</button>
 <button class="menuBtn" onclick="openMegaPanel('profileMega');renderProfile08()">👤 Profil</button>
+<button class="menuBtn" onclick="openSystems090()">🔥 Systemy</button>
 </div>
 
 <div id="settingsMega" class="modal"><h2>⚙️ USTAWIENIA</h2>
@@ -268,6 +447,13 @@
 <div id="achMega" class="modal" style="width:min(92vw,650px)"><h2>🏆 OSIĄGNIĘCIA</h2><div id="achList08"></div><button class="action" onclick="closeOverlay('achMega')">ZAMKNIJ</button></div>
 <div id="storyMega" class="modal" style="width:min(92vw,650px)"><h2>📖 GŁÓWNA FABUŁA</h2><div id="storyList08"></div><button class="action" onclick="closeOverlay('storyMega')">ZAMKNIJ</button></div>
 <div id="profileMega" class="modal" style="width:min(92vw,650px)"><h2>👤 PROFIL WOJOWNIKA</h2><div id="profileContent08"></div><button class="action" onclick="closeOverlay('profileMega')">ZAMKNIJ</button></div>
+
+<div id="speech090"></div>
+<div id="gameplay090"><div class="bigPanel">
+ <h2 id="gpTitle090">🔥 SYSTEMY 0.9</h2>
+ <div id="gpContent090"></div>
+ <button class="actionBtn" onclick="closeOverlay('gameplay090')">ZAMKNIJ</button>
+</div></div>
 <canvas id="game"></canvas></div>
 <script>
 let authMode="login",currentUser=null,currentWorld="valley",activeEnemy=null,arenaWave=0,arenaKills=0;
