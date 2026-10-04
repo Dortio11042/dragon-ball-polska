@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.0.1 — PRZYCISKI + KI/FORMA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.1.1 — BOSS HP + LECZENIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1804,4 +1804,152 @@ openSystems090=function(){norm100();$("gpTitle090").textContent="🔥 SYSTEMY 1.
 
 /* initialize */
 setTimeout(()=>{if(currentUser){norm100();updateSpecialHud100();savePlayer()}},1200);
+
+
+/* ==================== 1.1.0 — 95 ZADAŃ + NPC ==================== */
+const masterQuests110=[{"id":1,"title":"1. Pierwszy krok","text":"Pokonaj 3 przeciwników w świecie: Zielonej Dolinie.","target":3,"world":"valley","minLevel":1,"boss":false,"rewardZeni":600,"rewardExp":120},{"id":2,"title":"2. Rozgrzewka wojownika","text":"Pokonaj 5 przeciwników w świecie: Zielonej Dolinie.","target":5,"world":"valley","minLevel":1,"boss":false,"rewardZeni":1450,"rewardExp":235},{"id":3,"title":"3. Ochrona doliny","text":"Pokonaj 7 przeciwników w świecie: Zielonej Dolinie.","target":7,"world":"valley","minLevel":1,"boss":false,"rewardZeni":2300,"rewardExp":350},{"id":4,"title":"4. Rosnąca siła","text":"Pokonaj 9 przeciwników w świecie: Zielonej Dolinie.","target":9,"world":"valley","minLevel":1,"boss":false,"rewardZeni":3150,"rewardExp":465},{"id":5,"title":"5. Próba Mistrza","text":"Pokonaj 11 przeciwników w świecie: Zielonej Dolinie.","target":11,"world":"valley","minLevel":1,"boss":false,"rewardZeni":4000,"rewardExp":580},{"id":6,"title":"6. Piasek i pot","text":"Pokonaj 3 przeciwników w świecie: Pustyni.","target":3,"world":"desert","minLevel":5,"boss":false,"rewardZeni":4850,"rewardExp":695},{"id":7,"title":"7. Łowca pustyni","text":"Pokonaj 5 przeciwników w świecie: Pustyni.","target":5,"world":"desert","minLevel":5,"boss":false,"rewardZeni":5700,"rewardExp":810},{"id":8,"title":"8. Twardy przeciwnik","text":"Pokonaj 7 przeciwników w świecie: Pustyni.","target":7,"world":"desert","minLevel":5,"boss":false,"rewardZeni":6550,"rewardExp":925},{"id":9,"title":"9. Pustynna próba","text":"Pokonaj 9 przeciwników w świecie: Pustyni.","target":9,"world":"desert","minLevel":5,"boss":false,"rewardZeni":7400,"rewardExp":1040},{"id":10,"title":"10. Droga dalej","text":"Pokonaj bossa w świecie: Pustyni.","target":1,"world":"desert","minLevel":5,"boss":true,"rewardZeni":8250,"rewardExp":1155},{"id":11,"title":"11. Kamienna ścieżka","text":"Pokonaj 3 przeciwników w świecie: Górach.","target":3,"world":"mountains","minLevel":10,"boss":false,"rewardZeni":9100,"rewardExp":1270},{"id":12,"title":"12. Górski trening","text":"Pokonaj 5 przeciwników w świecie: Górach.","target":5,"world":"mountains","minLevel":10,"boss":false,"rewardZeni":9950,"rewardExp":1385},{"id":13,"title":"13. Wysokie wymagania","text":"Pokonaj 7 przeciwników w świecie: Górach.","target":7,"world":"mountains","minLevel":10,"boss":false,"rewardZeni":10800,"rewardExp":1500},{"id":14,"title":"14. Elita szlaku","text":"Pokonaj 9 przeciwników w świecie: Górach.","target":9,"world":"mountains","minLevel":10,"boss":false,"rewardZeni":11650,"rewardExp":1615},{"id":15,"title":"15. Serce wojownika","text":"Pokonaj bossa w świecie: Mrocznym Lesie.","target":1,"world":"forest","minLevel":15,"boss":true,"rewardZeni":12500,"rewardExp":1730},{"id":16,"title":"16. Cień lasu","text":"Pokonaj 4 przeciwników w świecie: Mrocznym Lesie.","target":4,"world":"forest","minLevel":15,"boss":false,"rewardZeni":13350,"rewardExp":1845},{"id":17,"title":"17. Leśne zagrożenie","text":"Pokonaj 6 przeciwników w świecie: Mrocznym Lesie.","target":6,"world":"forest","minLevel":15,"boss":false,"rewardZeni":14200,"rewardExp":1960},{"id":18,"title":"18. Polowanie w mroku","text":"Pokonaj 8 przeciwników w świecie: Mrocznym Lesie.","target":8,"world":"forest","minLevel":15,"boss":false,"rewardZeni":15050,"rewardExp":2075},{"id":19,"title":"19. Próba odwagi","text":"Pokonaj 10 przeciwników w świecie: Mrocznym Lesie.","target":10,"world":"forest","minLevel":15,"boss":false,"rewardZeni":15900,"rewardExp":2190},{"id":20,"title":"20. Strażnik natury","text":"Pokonaj bossa w świecie: Lodowej Krainie.","target":1,"world":"ice","minLevel":20,"boss":true,"rewardZeni":16750,"rewardExp":2305},{"id":21,"title":"21. Mróz nie zatrzyma","text":"Pokonaj 4 przeciwników w świecie: Lodowej Krainie.","target":4,"world":"ice","minLevel":20,"boss":false,"rewardZeni":17600,"rewardExp":2420},{"id":22,"title":"22. Lodowi wojownicy","text":"Pokonaj 6 przeciwników w świecie: Lodowej Krainie.","target":6,"world":"ice","minLevel":20,"boss":false,"rewardZeni":18450,"rewardExp":2535},{"id":23,"title":"23. Zimna determinacja","text":"Pokonaj 8 przeciwników w świecie: Lodowej Krainie.","target":8,"world":"ice","minLevel":20,"boss":false,"rewardZeni":19300,"rewardExp":2650},{"id":24,"title":"24. Próba lodu","text":"Pokonaj 10 przeciwników w świecie: Wulkanie.","target":10,"world":"volcano","minLevel":25,"boss":false,"rewardZeni":20150,"rewardExp":2765},{"id":25,"title":"25. Hart ducha","text":"Pokonaj bossa w świecie: Wulkanie.","target":1,"world":"volcano","minLevel":25,"boss":true,"rewardZeni":21000,"rewardExp":2880},{"id":26,"title":"26. Gorący trening","text":"Pokonaj 4 przeciwników w świecie: Wulkanie.","target":4,"world":"volcano","minLevel":25,"boss":false,"rewardZeni":21850,"rewardExp":2995},{"id":27,"title":"27. Wulkaniczna siła","text":"Pokonaj 6 przeciwników w świecie: Wulkanie.","target":6,"world":"volcano","minLevel":25,"boss":false,"rewardZeni":22700,"rewardExp":3110},{"id":28,"title":"28. Ognista próba","text":"Pokonaj 8 przeciwników w świecie: Wulkanie.","target":8,"world":"volcano","minLevel":25,"boss":false,"rewardZeni":23550,"rewardExp":3225},{"id":29,"title":"29. W samym żarze","text":"Pokonaj 10 przeciwników w świecie: Niebie.","target":10,"world":"sky","minLevel":30,"boss":false,"rewardZeni":24400,"rewardExp":3340},{"id":30,"title":"30. Władca ognia","text":"Pokonaj bossa w świecie: Niebie.","target":1,"world":"sky","minLevel":30,"boss":true,"rewardZeni":25250,"rewardExp":3455},{"id":31,"title":"31. Ponad chmurami","text":"Pokonaj 5 przeciwników w świecie: Niebie.","target":5,"world":"sky","minLevel":30,"boss":false,"rewardZeni":26100,"rewardExp":3570},{"id":32,"title":"32. Powietrzny trening","text":"Pokonaj 7 przeciwników w świecie: Niebie.","target":7,"world":"sky","minLevel":30,"boss":false,"rewardZeni":26950,"rewardExp":3685},{"id":33,"title":"33. Niebo wojownika","text":"Pokonaj 9 przeciwników w świecie: Obcej Planecie.","target":9,"world":"alien","minLevel":40,"boss":false,"rewardZeni":27800,"rewardExp":3800},{"id":34,"title":"34. Burza energii","text":"Pokonaj 11 przeciwników w świecie: Obcej Planecie.","target":11,"world":"alien","minLevel":40,"boss":false,"rewardZeni":28650,"rewardExp":3915},{"id":35,"title":"35. Strażnik nieba","text":"Pokonaj bossa w świecie: Obcej Planecie.","target":1,"world":"alien","minLevel":40,"boss":true,"rewardZeni":29500,"rewardExp":4030},{"id":36,"title":"36. Obcy teren","text":"Pokonaj 5 przeciwników w świecie: Obcej Planecie.","target":5,"world":"alien","minLevel":40,"boss":false,"rewardZeni":30350,"rewardExp":4145},{"id":37,"title":"37. Kosmiczna próba","text":"Pokonaj 7 przeciwników w świecie: Obcej Planecie.","target":7,"world":"alien","minLevel":40,"boss":false,"rewardZeni":31200,"rewardExp":4260},{"id":38,"title":"38. Siła z gwiazd","text":"Pokonaj 9 przeciwników w świecie: Krainie Mistrzów.","target":9,"world":"masters","minLevel":50,"boss":false,"rewardZeni":32050,"rewardExp":4375},{"id":39,"title":"39. Dowódca planety","text":"Pokonaj 11 przeciwników w świecie: Krainie Mistrzów.","target":11,"world":"masters","minLevel":50,"boss":false,"rewardZeni":32900,"rewardExp":4490},{"id":40,"title":"40. Powrót bohatera","text":"Pokonaj bossa w świecie: Krainie Mistrzów.","target":1,"world":"masters","minLevel":50,"boss":true,"rewardZeni":33750,"rewardExp":4605},{"id":41,"title":"41. Droga mistrzów","text":"Pokonaj 5 przeciwników w świecie: Krainie Mistrzów.","target":5,"world":"masters","minLevel":50,"boss":false,"rewardZeni":34600,"rewardExp":4720},{"id":42,"title":"42. Technika i siła","text":"Pokonaj 7 przeciwników w świecie: Starożytnych Ruinach.","target":7,"world":"ruins","minLevel":55,"boss":false,"rewardZeni":35450,"rewardExp":4835},{"id":43,"title":"43. Próba elity","text":"Pokonaj 9 przeciwników w świecie: Starożytnych Ruinach.","target":9,"world":"ruins","minLevel":55,"boss":false,"rewardZeni":36300,"rewardExp":4950},{"id":44,"title":"44. Wielki trening","text":"Pokonaj 11 przeciwników w świecie: Starożytnych Ruinach.","target":11,"world":"ruins","minLevel":55,"boss":false,"rewardZeni":37150,"rewardExp":5065},{"id":45,"title":"45. Mistrz ponad mistrzami","text":"Pokonaj bossa w świecie: Starożytnych Ruinach.","target":1,"world":"ruins","minLevel":55,"boss":true,"rewardZeni":38000,"rewardExp":5180},{"id":46,"title":"46. Sekret ruin","text":"Pokonaj 6 przeciwników w świecie: Starożytnych Ruinach.","target":6,"world":"ruins","minLevel":55,"boss":false,"rewardZeni":38850,"rewardExp":5295},{"id":47,"title":"47. Starożytna próba","text":"Pokonaj 8 przeciwników w świecie: Strefie Pustki.","target":8,"world":"voidzone","minLevel":65,"boss":false,"rewardZeni":39700,"rewardExp":5410},{"id":48,"title":"48. Energia pustki","text":"Pokonaj 10 przeciwników w świecie: Strefie Pustki.","target":10,"world":"voidzone","minLevel":65,"boss":false,"rewardZeni":40550,"rewardExp":5525},{"id":49,"title":"49. Ostatnia granica","text":"Pokonaj 12 przeciwników w świecie: Strefie Pustki.","target":12,"world":"voidzone","minLevel":65,"boss":false,"rewardZeni":41400,"rewardExp":5640},{"id":50,"title":"50. Legenda Zielonej Doliny","text":"Pokonaj bossa w świecie: Strefie Pustki.","target":1,"world":"voidzone","minLevel":65,"boss":true,"rewardZeni":42250,"rewardExp":5755}];
+const questNpcs110=[{"name":"Pustynny Łowca","world":"desert","x":950,"y":1160,"minLevel":5},{"name":"Badacz Piasku","world":"desert","x":1450,"y":480,"minLevel":5},{"name":"Leśny Strażnik","world":"forest","x":1000,"y":1150,"minLevel":15},{"name":"Lodowy Wędrowiec","world":"ice","x":1050,"y":1180,"minLevel":20},{"name":"Strażnik Wulkanu","world":"volcano","x":980,"y":1180,"minLevel":25},{"name":"Podniebny Mędrzec","world":"sky","x":1050,"y":1120,"minLevel":30},{"name":"Kosmiczny Badacz","world":"alien","x":1000,"y":1120,"minLevel":40},{"name":"Uczeń Wielkiego Mistrza","world":"masters","x":1050,"y":1120,"minLevel":50},{"name":"Archeolog Ruin","world":"ruins","x":1050,"y":1100,"minLevel":55}];
+const sideQuestChains110={};
+for(const n of questNpcs110){
+ sideQuestChains110[n.name]=Array.from({length:5},(_,i)=>({
+   title:`${n.name} — zadanie ${i+1}/5`,
+   text:i===4?`Pokonaj bossa w tym świecie.`:`Pokonaj ${3+i*2} przeciwników w tym świecie.`,
+   target:i===4?1:3+i*2,world:n.world,minLevel:n.minLevel,boss:i===4,
+   rewardZeni:1500+n.minLevel*180+i*1200,rewardExp:300+n.minLevel*35+i*250
+ }));
+ if(!npcs.some(x=>x.name===n.name))npcs.push({...n,questNpc110:true,text:"Mam dla ciebie serię zadań."});
+}
+function normQuests110(){
+ if(!currentUser)return;
+ currentUser.master110??={index:0,active:false,progress:0};
+ currentUser.side110??={};
+ for(const n of questNpcs110)currentUser.side110[n.name]??={index:0,active:false,progress:0};
+}
+function questMatch110(q,e){
+ if(!q||!e)return false;
+ if(q.world&&e.world!==q.world)return false;
+ if((e.level||0)<(q.minLevel||1))return false;
+ if(q.boss&&!e.boss)return false;
+ return true;
+}
+function renderQuestDialog110(title,q,state,total,onAccept,onTurn){
+ const c=$("questNpcContent");if(!c)return;
+ if(!q) c.innerHTML=`<h3>🏆 ${title}</h3><p>Ukończyłeś wszystkie ${total} zadań tego NPC!</p>`;
+ else if(!state.active)c.innerHTML=`<h3>${escapeHtml05(title)}</h3><p><b>Zadanie ${state.index+1}/${total}: ${escapeHtml05(q.title)}</b></p><p>${escapeHtml05(q.text)}</p><p>🎁 ${q.rewardZeni.toLocaleString("pl-PL")} Zeni + ${q.rewardExp} EXP</p><button class="actionBtn" onclick="${onAccept}">PRZYJMIJ ZADANIE</button>`;
+ else if(state.progress>=q.target)c.innerHTML=`<h3>✅ ${escapeHtml05(q.title)}</h3><p>Gotowe! Postęp: ${state.progress}/${q.target}</p><p>🎁 ${q.rewardZeni.toLocaleString("pl-PL")} Zeni + ${q.rewardExp} EXP</p><button class="actionBtn" onclick="${onTurn}">ODBIERZ NAGRODĘ</button>`;
+ else c.innerHTML=`<h3>${escapeHtml05(q.title)}</h3><p>${escapeHtml05(q.text)}</p><p><b>Postęp: ${state.progress}/${q.target}</b></p><p>Wróć po wykonaniu zadania.</p>`;
+ openOverlay("questNpcPanel");
+}
+function openMaster110(){
+ normQuests110();let st=currentUser.master110,q=masterQuests110[st.index];
+ renderQuestDialog110("🥋 Mistrz — 50 zadań",q,st,50,"acceptMaster110()","turnMaster110()");
+}
+function acceptMaster110(){normQuests110();let st=currentUser.master110;if(st.index>=50)return;st.active=true;st.progress=0;closeOverlay("questNpcPanel");updateQuestUI();savePlayer();toast(`📜 Mistrz: zadanie ${st.index+1}/50 przyjęte!`)}
+function turnMaster110(){
+ normQuests110();let st=currentUser.master110,q=masterQuests110[st.index];if(!q||!st.active||st.progress<q.target)return;
+ currentUser.zeni+=q.rewardZeni;addExp(Math.round(q.rewardExp*(1+xpBonus())));st.index++;st.active=false;st.progress=0;
+ closeOverlay("questNpcPanel");updateHUD();updateQuestUI();savePlayer();
+ toast(st.index>=50?"🏆 UKOŃCZYŁEŚ WSZYSTKIE 50 ZADAŃ MISTRZA!":`🏆 Zadanie Mistrza ukończone! ${st.index}/50`);
+}
+function openSide110(name){
+ normQuests110();let st=currentUser.side110[name],arr=sideQuestChains110[name],q=arr?.[st?.index];
+ renderQuestDialog110("📜 "+name,q,st,arr?.length||5,`acceptSide110('${name.replace("'","\\'")}')`,`turnSide110('${name.replace("'","\\'")}')`);
+}
+function acceptSide110(name){normQuests110();let st=currentUser.side110[name];if(!st||st.index>=5)return;st.active=true;st.progress=0;closeOverlay("questNpcPanel");updateQuestUI();savePlayer();toast("📜 "+name+": zadanie przyjęte!")}
+function turnSide110(name){
+ normQuests110();let st=currentUser.side110[name],q=sideQuestChains110[name]?.[st.index];if(!q||!st.active||st.progress<q.target)return;
+ currentUser.zeni+=q.rewardZeni;addExp(Math.round(q.rewardExp*(1+xpBonus())));st.index++;st.active=false;st.progress=0;
+ closeOverlay("questNpcPanel");updateHUD();updateQuestUI();savePlayer();toast(st.index>=5?"🏆 Ukończono całą serię: "+name:"🏆 Zadanie ukończone!");
+}
+const registerKillBefore110=registerKill;
+registerKill=function(enemy){
+ registerKillBefore110(enemy);if(!currentUser)return;normQuests110();
+ let ms=currentUser.master110,mq=masterQuests110[ms.index];
+ if(ms.active&&mq&&questMatch110(mq,enemy))ms.progress=Math.min(mq.target,ms.progress+1);
+ for(const n of questNpcs110){let st=currentUser.side110[n.name],q=sideQuestChains110[n.name]?.[st.index];if(st?.active&&q&&questMatch110(q,enemy))st.progress=Math.min(q.target,st.progress+1)}
+ updateQuestUI();savePlayer();
+}
+const updateQuestUIBefore110=updateQuestUI;
+updateQuestUI=function(){
+ updateQuestUIBefore110();if(!currentUser)return;normQuests110();let t=$("activeQuestText");if(!t)return;
+ let extra=[];let ms=currentUser.master110,mq=masterQuests110[ms.index];
+ if(ms.active&&mq)extra.push(`🥋 Mistrz ${ms.index+1}/50: ${ms.progress}/${mq.target}${ms.progress>=mq.target?" — WRÓĆ!":""}`);
+ for(const n of questNpcs110){let st=currentUser.side110[n.name],q=sideQuestChains110[n.name]?.[st.index];if(st?.active&&q)extra.push(`📜 ${n.name}: ${st.progress}/${q.target}${st.progress>=q.target?" — WRÓĆ!":""}`)}
+ if(extra.length)t.innerHTML=(t.innerHTML&& !t.innerHTML.startsWith("Brak")?t.innerHTML+"<br>":"")+extra.join("<br>");
+}
+const interactBefore110=interact;
+interact=function(){
+ if(!currentUser)return;
+ let npc=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+ if(npc?.name==="Mistrz"){openMaster110();return}
+ if(npc?.questNpc110){openSide110(npc.name);return}
+ interactBefore110();
+}
+setTimeout(()=>{if(currentUser){normQuests110();updateQuestUI();savePlayer()}},1300);
+
+
+
+/* ==================== 1.1.1 — BOSS: HP GRACZA + PEŁNE LECZENIE ==================== */
+(function(){
+ const css=document.createElement("style");
+ css.textContent=`
+ #bossPlayerHud111{margin:10px auto 12px;max-width:520px;padding:10px;background:#111827;border:2px solid #65e884;border-radius:8px;text-align:left}
+ #bossPlayerHud111 .hp111{height:22px;background:#3a1414;border:2px solid #fff;border-radius:5px;overflow:hidden;margin-top:5px}
+ #bossPlayerHud111 .hpfill111{height:100%;background:#43c96b;transition:width .18s ease}
+ #bossHeal111{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+ #bossHeal111 button{padding:8px 10px;background:#17351f;color:#fff;border:2px solid #65e884;border-radius:6px;font-weight:bold;cursor:pointer}
+ #bossHeal111 button:disabled{opacity:.4;cursor:not-allowed}
+ `;
+ document.head.appendChild(css);
+
+ function maxHP111(){
+   try{return Math.max(1,Number(typeof maxHp05==="function"?maxHp05():currentUser?.max_hp||100)||100)}catch(e){return 100}
+ }
+ window.renderBossPlayer111=function(){
+   if(!currentUser)return;
+   const host=document.querySelector("#bossBattlePanel .modal,#bossBattlePanel,#bossBattleMega .modal,#bossBattleMega");
+   if(!host)return;
+   let box=document.getElementById("bossPlayerHud111");
+   if(!box){
+     box=document.createElement("div");box.id="bossPlayerHud111";
+     const h=host.querySelector("h2,h3"); if(h)h.insertAdjacentElement("afterend",box); else host.prepend(box);
+   }
+   const max=maxHP111(), hp=Math.max(0,Math.min(max,Number(currentUser.hp)||0)), pct=Math.round(hp/max*100);
+   const small=Number(currentUser.potions||currentUser.potion||0);
+   const big=Number(currentUser.bigPotions||0), meals=Number(currentUser.meals||0);
+   box.innerHTML=`<b>❤️ TWOJE HP: ${Math.round(hp)} / ${Math.round(max)}</b>
+    <div class="hp111"><div class="hpfill111" style="width:${pct}%"></div></div>
+    <div id="bossHeal111">
+      <button onclick="bossHeal111('small')">🧪 Małe +50 (${small})</button>
+      <button onclick="bossHeal111('big')">🧪 Duże +100 (${big})</button>
+      <button onclick="bossHeal111('meal')">🍖 Pełne leczenie (${meals})</button>
+    </div>`;
+ };
+ window.bossHeal111=function(type){
+   if(!currentUser)return;
+   const max=maxHP111();
+   if(Number(currentUser.hp)>=max){toast("❤️ Masz pełne HP.");return}
+   if(type==="small"){
+     let key=("potions" in currentUser)?"potions":(("potion" in currentUser)?"potion":"potions");
+     if(!(Number(currentUser[key])>0)){toast("❌ Nie masz małego leczenia.");return}
+     currentUser[key]--; currentUser.hp=Math.min(max,Number(currentUser.hp||0)+50);
+   }else if(type==="big"){
+     if(!(Number(currentUser.bigPotions)>0)){toast("❌ Nie masz dużego leczenia.");return}
+     currentUser.bigPotions--; currentUser.hp=Math.min(max,Number(currentUser.hp||0)+100);
+   }else{
+     if(!(Number(currentUser.meals)>0)){toast("❌ Nie masz pełnego posiłku.");return}
+     currentUser.meals--; currentUser.hp=max;
+   }
+   if(typeof updateHUD==="function")updateHUD();
+   if(typeof savePlayer==="function")savePlayer();
+   renderBossPlayer111();
+   toast(type==="meal"?"🍖 HP odnowione do pełna!":"❤️ Uleczono gracza!");
+ };
+ // Refresh while boss overlay is visible, so damage immediately updates the player's bar.
+ setInterval(()=>{
+   const p=document.getElementById("bossBattlePanel")||document.getElementById("bossBattleMega");
+   if(p && getComputedStyle(p).display!=="none")renderBossPlayer111();
+ },120);
+})();
+
 </script></body></html>
