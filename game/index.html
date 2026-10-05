@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.2 — KOPALNIE PEŁNA NAPRAWA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.6.0 — ŁOWIENIE MINIGRA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2687,5 +2687,93 @@ window.startMine140=function(mine){norm140();if(!pickPower140())return toast("�
 })();
 
 
+
+
+
+/* ==================== 1.6.0 — ŁOWIENIE: MINIGRA KLIKANIA W KULKI ==================== */
+(function(){
+const css=document.createElement("style");
+css.textContent=`
+#fishGame160{display:none;position:fixed;inset:0;z-index:6100;background:rgba(3,8,14,.94);align-items:center;justify-content:center;color:#fff}
+#fishGame160 .fg160{width:min(650px,94vw);background:#0b1824;border:3px solid #527b91;border-radius:15px;padding:16px;text-align:center}
+#fishPond160{position:relative;height:380px;overflow:hidden;border:3px solid #446979;border-radius:12px;background:linear-gradient(#18394a,#0b2738);margin:12px 0}
+#fishBall160{position:absolute;width:58px;height:58px;border-radius:50%;border:4px solid #fff;background:#e7c34f;transform:translate(-50%,-50%);cursor:pointer;box-shadow:0 0 0 7px rgba(255,255,255,.12);font-size:25px}
+#fishBall160:active{transform:translate(-50%,-50%) scale(.86)}
+#fishBar160{height:17px;background:#16232d;border:2px solid #fff;border-radius:12px;overflow:hidden}
+#fishFill160{height:100%;background:#70b7d3;width:100%;transition:width .08s linear}
+`;
+document.head.appendChild(css);
+let panel=document.createElement("div");panel.id="fishGame160";document.body.appendChild(panel);
+
+let G=null,timer=null;
+function stop160(){if(timer){clearInterval(timer);timer=null}}
+function moveBall160(){
+ if(!G)return;
+ const b=document.getElementById("fishBall160");if(!b)return;
+ b.style.left=(10+Math.random()*80)+"%";
+ b.style.top=(15+Math.random()*70)+"%";
+}
+function end160(win){
+ if(!G)return;stop160();
+ const old=G;G=null;
+ if(!win){panel.style.display="none";toast("🎣 Ryba uciekła! Spróbuj ponownie.");return}
+ panel.style.display="none";
+ /* Wywołujemy dopiero teraz oryginalną nagrodę za udane łowienie. */
+ try{old.finish()}catch(e){console.error(e)}
+}
+window.hitFishBall160=function(){
+ if(!G)return;
+ G.hits++;G.time=Math.min(G.maxTime,G.time+420);
+ const need=G.need;
+ const info=document.getElementById("fishInfo160");
+ if(info)info.textContent=`Trafienia: ${G.hits}/${need}`;
+ if(G.hits>=need){end160(true);return}
+ moveBall160();
+};
+function start160(finish,rodPower){
+ stop160();
+ const need=Math.max(3,7-Math.min(4,Number(rodPower||1)));
+ G={finish,hits:0,need,time:5200,maxTime:6200};
+ panel.innerHTML=`<div class="fg160"><h2>🎣 RYBA BIERZE!</h2>
+ <p>Klikaj szybko w <b>żółte kółko</b>, zanim skończy się czas.</p>
+ <div id="fishBar160"><div id="fishFill160"></div></div>
+ <div id="fishPond160"><button id="fishBall160" onclick="hitFishBall160()" aria-label="Złap rybę">🐟</button></div>
+ <b id="fishInfo160">Trafienia: 0/${need}</b><br>
+ <button class="actionBtn" onclick="cancelFish160()">ANULUJ</button></div>`;
+ panel.style.display="flex";moveBall160();
+ timer=setInterval(()=>{
+   if(!G)return stop160();
+   G.time-=80;
+   const f=document.getElementById("fishFill160");if(f)f.style.width=Math.max(0,G.time/G.maxTime*100)+"%";
+   if(G.time<=0)end160(false);
+ },80);
+}
+window.cancelFish160=function(){stop160();G=null;panel.style.display="none";toast("🎣 Przerwano łowienie.")};
+
+/* Podpinamy minigrę przed momentem przyznania ryby.
+   Szukamy funkcji łowienia z 1.3 i przechwytujemy ją bez zmiany tabel ryb/nagród. */
+const candidates=["catchFish130","fishCatch130","doFish130","startFishing130","fish130"];
+let hooked=false;
+for(const name of candidates){
+ if(typeof window[name]==="function"){
+   const original=window[name];
+   window[name]=function(...args){
+     const self=this;
+     const rod=(currentUser?.fishing130?.rodPower||currentUser?.fishing?.rodPower||1);
+     start160(()=>original.apply(self,args),rod);
+   };
+   hooked=true;break;
+ }
+}
+/* Jeżeli bazowa wersja używa globalnego startFishing, też obsługujemy tę nazwę. */
+if(!hooked&&typeof window.startFishing==="function"){
+ const original=window.startFishing;
+ window.startFishing=function(...args){
+   const self=this;
+   const rod=(currentUser?.fishing130?.rodPower||currentUser?.fishing?.rodPower||1);
+   start160(()=>original.apply(self,args),rod);
+ };
+}
+})();
 
 </script></body></html>
