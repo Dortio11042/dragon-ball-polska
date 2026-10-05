@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.0 — KOPALNIE DUNGEONY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.1 — KOPALNIE INTERAKCJA + MAPA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2670,6 +2670,98 @@ window.leaveMineDungeon150=function(){if(!dungeon150)return;currentUser.hp=Math.
 
 // Dotychczasowa interakcja z kopalnią teraz OTWIERA dungeon zamiast jednego paska kopania.
 window.startMine140=function(mine){norm140();if(!pickPower140())return toast("❌ Najpierw kup i załóż kilof u Górnika.");makeDungeon150(mine)};
+})();
+
+
+
+/* ==================== 1.5.1 — KOPALNIE: E / POZYCJE / SEKRETY / HINT FIX ==================== */
+(function(){
+/* Rozdzielamy zwykłe kopalnie i sekrety — nie stoją już praktycznie na sobie. */
+const posMine151={
+ valley:[520,1390], mountains:[270,1320], volcano:[1660,1320], ruins:[300,1320], voidzone:[1640,1280]
+};
+const posSecret151={
+ valley:[1880,330], mountains:[1740,360], volcano:[310,360], ruins:[1770,350]
+};
+for(const m of mines140){let p=posMine151[m.world];if(p){m.x=p[0];m.y=p[1]}}
+for(const c of caves140){let p=posSecret151[c.world];if(p){c.x=p[0];c.y=p[1]}}
+
+/* Hint wyżej, żeby dolne przyciski go nie przykrywały. */
+const hs=document.createElement("style");
+hs.textContent=`
+#hint{bottom:150px!important;z-index:2500!important;max-width:min(520px,88vw)!important}
+@media(max-width:700px){#hint{bottom:190px!important}}
+`;
+document.head.appendChild(hs);
+
+/* Najważniejszy fix: obsługujemy E bezpośrednio dla kopalni.
+   Nie polegamy wyłącznie na starej kolejce wrapperów interact(). */
+function nearestMine151(){
+ return mines140.find(m=>m.world===currentWorld&&Math.hypot(player.x-m.x,player.y-m.y)<=145);
+}
+function nearestSecret151(){
+ return caves140.find(c=>c.world===currentWorld&&Math.hypot(player.x-c.x,player.y-c.y)<=125);
+}
+window.enterMine151=function(m){
+ if(!m)return;
+ norm140();
+ if(!pickPower140()){toast("❌ Najpierw kup i załóż kilof u Górnika.");return}
+ startMine140(m);
+};
+const interactBefore151=interact;
+window.interact=function(){
+ const sec=nearestSecret151();
+ if(sec){enterCave140(sec);return}
+ const mine=nearestMine151();
+ if(mine){enterMine151(mine);return}
+ return interactBefore151();
+};
+
+/* Łapiemy fizyczny klawisz E w fazie capture. Dzięki temu starszy handler
+   nie przejmie interakcji, kiedy stoimy przy kopalni/sekrecie. */
+window.addEventListener("keydown",function(e){
+ if((e.key==="e"||e.key==="E")&&!e.repeat){
+   const sec=nearestSecret151(),mine=nearestMine151();
+   if(sec||mine){
+     e.preventDefault();e.stopImmediatePropagation();
+     if(sec)enterCave140(sec);else enterMine151(mine);
+   }
+ }
+},true);
+
+/* Czytelna wskazówka z nazwą miejsca. */
+const hintOld151=updateHint;
+window.updateHint=function(){
+ hintOld151();
+ const sec=nearestSecret151(),mine=nearestMine151();
+ if(sec){$("hint").textContent=`E — 🕳️ ODKRYJ: ${sec.name}`;$("hint").style.display="block"}
+ else if(mine){$("hint").textContent=`E — ⛏️ WEJDŹ: ${mine.name}`;$("hint").style.display="block"}
+};
+
+/* Rysujemy wejścia jeszcze czytelniej: zwykła kopalnia i ukryta jaskinia
+   mają kompletnie inny wygląd. */
+const drawOld151=draw;
+window.draw=function(){
+ drawOld151();
+ try{
+  const c=camera();
+  for(const m of mines140.filter(x=>x.world===currentWorld)){
+    const x=m.x-c.x,y=m.y-c.y;
+    ctx.save();ctx.fillStyle="#5c646c";ctx.fillRect(x-46,y-20,92,40);
+    ctx.fillStyle="#101419";ctx.beginPath();ctx.arc(x,y+17,30,Math.PI,0);ctx.fill();
+    ctx.strokeStyle="#d5bd72";ctx.lineWidth=3;ctx.strokeRect(x-48,y-22,96,44);
+    ctx.fillStyle="#fff";ctx.font="bold 11px Arial";ctx.textAlign="center";
+    ctx.fillText("⛏️ "+m.name,x,y-32);ctx.restore();
+  }
+  for(const q of caves140.filter(x=>x.world===currentWorld)){
+    const x=q.x-c.x,y=q.y-c.y;
+    ctx.save();ctx.globalAlpha=.72;ctx.fillStyle="#0d0b12";ctx.beginPath();ctx.arc(x,y+10,32,Math.PI,0);ctx.fill();
+    ctx.strokeStyle="#5e456e";ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle="#bda9c8";ctx.font="bold 9px Arial";ctx.textAlign="center";
+    ctx.fillText("???",x,y-29);ctx.restore();
+  }
+ }catch(e){}
+};
 })();
 
 </script></body></html>
