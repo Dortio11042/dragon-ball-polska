@@ -2386,8 +2386,8 @@ let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appen
  function palette131(p){
    const a=[
     {title:"Wojownik Doliny",skin:"#efb17f",hair:"#151515",gi:"#ef7d22",under:"#183f83",pants:"#e97b21",boots:"#203d72",aura:null,ear:"#efb17f"},
-    {title:"Vegeta",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
-    {title:"Piccolo",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
+    {title:"Książę Wojowników",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
+    {title:"Namekijski Strażnik",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
     {title:"Złoty Mistrz",skin:"#efb17d",hair:"#f3d642",gi:"#ee7c22",under:"#19468c",pants:"#e97820",boots:"#22467e",aura:"#ffe96a",ear:"#efb17d"},
     {title:"Boski Wojownik",skin:"#efb27e",hair:"#5bd5ff",gi:"#24489b",under:"#161d34",pants:"#243f84",boots:"#f2f4ff",aura:"#5de8ff",ear:"#efb27e"},
     {title:"Legendarny Wojownik",skin:"#efb17c",hair:"#9bec69",gi:"#313842",under:"#6d2c34",pants:"#24282f",boots:"#7b5a37",aura:"#9dff78",ear:"#efb17c"}
@@ -2858,71 +2858,7 @@ document.addEventListener("pointerdown",e=>{
 
 
 
-/* ==================== 1.8.0 — NPC: DB-INSPIRED PIXEL LOOK ==================== */
-(function(){
-function npcStyle180(name){
- name=(name||"").toLowerCase();
- if(name.includes("wróżka")) return {skin:"#e7b486",hair:"#e8d7ff",body:"#8f54c7",accent:"#ffd86b",type:"fairy"};
- if(name.includes("górski mistrz")) return {skin:"#d6a276",hair:"#f2f2f2",body:"#6b3e25",accent:"#e9c36b",type:"master"};
- if(name==="mistrz"||name.includes("wielkiego mistrza")||name.includes("uczeń")) return {skin:"#d9a77c",hair:"#eeeeee",body:"#e18432",accent:"#1c2634",type:"master"};
- if(name.includes("trener")) return {skin:"#d3a075",hair:"#151515",body:"#d96b25",accent:"#214b91",type:"fighter"};
- if(name.includes("wędk")||name.includes("skup ryb")) return {skin:"#d4a276",hair:"#e8e0c8",body:"#355e74",accent:"#d6b96c",type:"fisher"};
- if(name.includes("kowal")) return {skin:"#c99268",hair:"#27211f",body:"#4a3430",accent:"#e58a3b",type:"smith"};
- if(name.includes("górnik")) return {skin:"#c9966c",hair:"#4b3425",body:"#c49a3c",accent:"#707c83",type:"miner"};
- if(name.includes("handlarz")) return {skin:"#d4a174",hair:"#34231b",body:"#365f42",accent:"#e3c05d",type:"merchant"};
- if(name.includes("strażnik smoczych")) return {skin:"#6caf68",hair:"#1d2422",body:"#5b3294",accent:"#f1e9df",type:"guardian"};
- if(name.includes("rekruter")) return {skin:"#d1a077",hair:"#273f78",body:"#5865f2",accent:"#ffffff",type:"recruit"};
- if(name.includes("łowca")) return {skin:"#cf9b70",hair:"#161616",body:"#813a2c",accent:"#d6b56c",type:"hunter"};
- if(name.includes("opiekun")) return {skin:"#d6a77e",hair:"#ececec",body:"#3e7190",accent:"#f3d36b",type:"elder"};
- if(name.includes("badacz")||name.includes("archeolog")) return {skin:"#d3a076",hair:"#6a4b31",body:"#a07b3c",accent:"#d7c29b",type:"scholar"};
- if(name.includes("strażnik")) return {skin:"#77ad6e",hair:"#18221b",body:"#4b6f42",accent:"#e8e0c7",type:"guardian"};
- return {skin:"#d5a176",hair:"#202020",body:"#744bb5",accent:"#f0c55e",type:"fighter"};
-}
-function px(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
-function drawNpc180(n,c){
- const s=npcStyle180(n.name),x=Math.round(n.x-c.x),y=Math.round(n.y-c.y);
- ctx.save();
- // shadow
- ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(x+18,y+39,18,6,0,0,Math.PI*2);ctx.fill();
- // legs + boots
- px(ctx,x+8,y+28,8,11,s.body);px(ctx,x+20,y+28,8,11,s.body);
- px(ctx,x+6,y+37,11,5,"#17191d");px(ctx,x+20,y+37,11,5,"#17191d");
- // torso
- px(ctx,x+6,y+13,24,18,s.body);px(ctx,x+15,y+13,5,18,s.accent);
- // arms
- px(ctx,x+2,y+16,6,15,s.skin);px(ctx,x+30,y+16,6,15,s.skin);
- // head
- px(ctx,x+9,y+1,20,14,s.skin);px(ctx,x+7,y+5,3,7,s.skin);px(ctx,x+29,y+5,3,7,s.skin);
- // eyes/brows
- px(ctx,x+13,y+7,3,2,"#111");px(ctx,x+22,y+7,3,2,"#111");
- // hair silhouettes
- ctx.fillStyle=s.hair;
- if(s.type==="master"||s.type==="elder"){
-   px(ctx,x+8,y-2,22,5,s.hair);px(ctx,x+6,y+1,5,8,s.hair);px(ctx,x+28,y+1,5,8,s.hair);
-   px(ctx,x+12,y+13,14,6,"#eee"); // beard
- }else if(s.type==="fairy"){
-   px(ctx,x+7,y-3,24,6,s.hair);px(ctx,x+5,y+1,6,13,s.hair);px(ctx,x+28,y+1,6,13,s.hair);
-   ctx.globalAlpha=.65;ctx.fillStyle="#b986e8";ctx.beginPath();ctx.ellipse(x+3,y+20,8,13,-.4,0,Math.PI*2);ctx.ellipse(x+35,y+20,8,13,.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
- }else{
-   // spiky anime-inspired hair
-   ctx.beginPath();ctx.moveTo(x+8,y+4);ctx.lineTo(x+5,y-8);ctx.lineTo(x+13,y-3);ctx.lineTo(x+16,y-12);ctx.lineTo(x+20,y-4);ctx.lineTo(x+27,y-11);ctx.lineTo(x+27,y-2);ctx.lineTo(x+33,y-5);ctx.lineTo(x+29,y+5);ctx.closePath();ctx.fill();
- }
- // role props
- if(s.type==="fisher"){ctx.strokeStyle="#b58a55";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+34,y+18);ctx.lineTo(x+48,y-9);ctx.stroke();px(ctx,x+7,y-6,24,4,"#b58a55")}
- if(s.type==="smith"){px(ctx,x+32,y+20,13,4,"#8d9499");px(ctx,x+40,y+14,4,16,"#6b482d")}
- if(s.type==="miner"){px(ctx,x+7,y-5,24,5,"#d3a638");ctx.strokeStyle="#aeb7bd";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x+40,y+15,9,Math.PI,Math.PI*2);ctx.stroke()}
- if(s.type==="merchant"){px(ctx,x+30,y+26,10,10,"#8b6336");px(ctx,x+32,y+23,6,4,"#d2b05e")}
- if(s.type==="guardian"){px(ctx,x+2,y+12,5,24,"#eee")}
- // label plate
- ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.85)";ctx.strokeText(n.name,x+19,y-17);ctx.fillStyle="#fff";ctx.fillText(n.name,x+19,y-17);
- ctx.restore();
-}
-window.drawNPC=drawNpc180;
-})();
-
-
-
-/* ==================== 1.8.1 — PEWNY PRESTIŻ + POSTACIE ==================== */
+/* ==================== 1.8.1 — PRESTIŻ FIX (BEZ ZMIAN NPC) ==================== */
 (function(){
   function prestigeCharacter181(p){
     p=Number(p)||0;
@@ -2935,44 +2871,35 @@ window.drawNPC=drawNpc180;
   }
   window.prestigeCharacter181=prestigeCharacter181;
 
-  // Nadpisujemy stare, wielokrotnie opakowane funkcje prestige jedną stabilną wersją.
   window.prestige08 = async function(){
     if(!currentUser)return;
+
     const lvl=Number(currentUser.level)||1;
     if(lvl<100){
       toast("⭐ Prestige wymaga LVL 100 — masz LVL "+lvl);
       return;
     }
 
-    const oldP=Number(currentUser.prestige)||0;
-    const newP=oldP+1;
-
+    const newP=(Number(currentUser.prestige)||0)+1;
     currentUser.prestige=newP;
     currentUser.level=1;
     currentUser.exp=0;
     currentUser.zeni=10000;
-
-    // Punkty ze starszych systemów zachowujemy i dodajemy dokładnie po 1.
     currentUser.prestigePoints090=(Number(currentUser.prestigePoints090)||0)+1;
     currentUser.prestigePoints100=(Number(currentUser.prestigePoints100)||0)+1;
 
-    // HP liczymy już po zwiększeniu prestige, więc +20 MAX HP działa od razu.
     try{ currentUser.hp=Math.max(1,Math.round(Number(maxHp05())||100)); }
     catch(e){ currentUser.hp=100+newP*20; }
 
     try{ updateHUD(); }catch(e){}
     try{ renderProfile08(); }catch(e){}
-
-    // Zapis online przed komunikatem, żeby reset nie zginął przy szybkim odświeżeniu.
     try{ await savePlayer(true); }catch(e){ console.error("Prestige save:",e); }
 
-    const charName=prestigeCharacter181(newP);
-    toast("⭐ PRESTIGE "+newP+"! Od teraz grasz jako "+charName+"!");
+    toast("⭐ PRESTIGE "+newP+"! Od teraz grasz jako "+prestigeCharacter181(newP)+"!");
     try{ updateHUD(); }catch(e){}
     try{ renderProfile08(); }catch(e){}
   };
 
-  // Dodatkowa informacja w profilu po jego normalnym wyrenderowaniu.
   if(typeof renderProfile08==="function"){
     const baseRenderProfile181=renderProfile08;
     window.renderProfile08=function(){
