@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.3.1 — POSTACIE + SKLEP + RYNEK FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.4.0 — GÓRNICTWO + CRAFTING + JASKINIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2430,6 +2430,154 @@ let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appen
      drawFighter131(c,x,y,r.username||"Gracz",Number(r.prestige||0),.92);
    }
  };
+})();
+
+
+
+/* ==================== 1.4.0 — GÓRNICTWO + CRAFTING + SEKRETNE JASKINIE ==================== */
+(function(){
+const st=document.createElement("style");
+st.textContent=`
+#minePanel140,#craftPanel140{display:none;position:fixed;inset:0;z-index:3600;background:rgba(2,6,12,.94);align-items:center;justify-content:center}
+#minePanel140 .box140,#craftPanel140 .box140{width:min(760px,94vw);max-height:86vh;overflow:auto;background:#09131f;border:3px solid #9da9b8;border-radius:14px;padding:20px;text-align:center}
+.grid140{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
+.card140{background:#111f2e;border:1px solid #40536a;border-radius:10px;padding:12px}
+.minebar140{height:18px;background:#1b2733;border:2px solid #fff;border-radius:12px;overflow:hidden;margin:12px}.minefill140{height:100%;width:0;background:#c9d0d8}
+`;
+document.head.appendChild(st);
+for(const id of ["minePanel140","craftPanel140"]){let d=document.createElement("div");d.id=id;document.body.appendChild(d)}
+
+const ores140={
+ stone:{name:"🪨 Kamień",value:20,xp:8},
+ iron:{name:"⛓️ Ruda Żelaza",value:80,xp:22},
+ crystal:{name:"💎 Kryształ Ki",value:260,xp:55},
+ dragonore:{name:"🐉 Smocza Ruda",value:900,xp:150},
+ voidore:{name:"🌌 Ruda Pustki",value:2200,xp:300}
+};
+const picks140=[
+ {id:"pick1",name:"⛏️ Kamienny Kilof",price:1500,power:1},
+ {id:"pick2",name:"⛏️ Stalowy Kilof",price:8500,power:2},
+ {id:"pick3",name:"⚡ Kilof Ki",price:35000,power:3},
+ {id:"pick4",name:"🐉 Smoczy Kilof",price:90000,power:4}
+];
+const mines140=[
+ {world:"valley",x:790,y:1320,tier:1,name:"Stara Kopalnia"},
+ {world:"mountains",x:380,y:1250,tier:2,name:"Górska Kopalnia"},
+ {world:"volcano",x:1830,y:1240,tier:3,name:"Kopalnia Lawy"},
+ {world:"ruins",x:420,y:1200,tier:4,name:"Starożytne Wyrobisko"},
+ {world:"voidzone",x:1820,y:1180,tier:5,name:"Szczelina Pustki"}
+];
+const caves140=[
+ {world:"valley",x:860,y:1320,name:"Jaskinia Początku",level:5,reward:"crystal"},
+ {world:"mountains",x:450,y:1250,name:"Kryształowa Grota",level:15,reward:"dragonore"},
+ {world:"volcano",x:1900,y:1240,name:"Komnata Magmy",level:30,reward:"dragonore"},
+ {world:"ruins",x:490,y:1200,name:"Zapomniana Krypta",level:55,reward:"voidore"}
+];
+const recipes140=[
+ {id:"minerGloves140",name:"⛏️ Rękawice Górnika",need:{iron:8,crystal:2},desc:"+20 obrażeń",slot:"gloves",dmg:20},
+ {id:"crystalBoots140",name:"💎 Kryształowe Buty",need:{iron:12,crystal:5},desc:"+18% szybkości",slot:"boots",speed:.18},
+ {id:"dragonAmulet140",name:"🐉 Amulet Smoczej Rudy",need:{crystal:10,dragonore:3},desc:"+28% EXP",slot:"amulet",xp:.28},
+ {id:"magmaGi140",name:"🌋 Pancerz Magmy",need:{iron:20,dragonore:6},desc:"+320 HP",slot:"outfit",hp:320},
+ {id:"voidMinerGi140",name:"🌌 Pancerz Górnika Pustki",need:{dragonore:8,voidore:4},desc:"+600 HP",slot:"outfit",hp:600}
+];
+for(const r of recipes140)if(!shopItems05.some(x=>x.id===r.id))shopItems05.push({...r,price:null});
+
+function norm140(){
+ currentUser.mining140??={level:1,xp:0,ores:{},pick:null,items:[],caves:{}};
+ let m=currentUser.mining140;m.ores??={};m.items??=[];m.caves??={};m.level=Math.max(1,Number(m.level||1));m.xp=Number(m.xp||0);
+}
+function oq140(id){norm140();return Number(currentUser.mining140.ores[id]||0)}
+function addOre140(id,n=1){norm140();currentUser.mining140.ores[id]=(currentUser.mining140.ores[id]||0)+n}
+function pickPower140(){norm140();return picks140.find(p=>p.id===currentUser.mining140.pick)?.power||0}
+function mineNeed140(){norm140();return 80+currentUser.mining140.level*35}
+function mineXp140(n){norm140();currentUser.mining140.xp+=n;while(currentUser.mining140.xp>=mineNeed140()){currentUser.mining140.xp-=mineNeed140();currentUser.mining140.level++;toast("⛏️ Poziom górnictwa "+currentUser.mining140.level+"!")}}
+
+// osobne NPC: sklep górniczy + kowal craftingowy
+if(!npcs.some(n=>n.name==="Górnik"))npcs.push({world:"valley",x:760,y:1190,name:"Górnik",text:"Sprzedaję kilofy."});
+if(!npcs.some(n=>n.name==="Kowal Górniczy"))npcs.push({world:"valley",x:940,y:1190,name:"Kowal Górniczy",text:"Tworzę sprzęt z rud."});
+
+window.openMiner140=function(){
+ norm140();let m=currentUser.mining140;
+ let cards=picks140.map(p=>`<div class="card140"><b>${p.name}</b><br>Moc: ${p.power}<br>${m.items.includes(p.id)?`✅ Masz<br><button class="actionBtn" onclick="equipPick140('${p.id}')">${m.pick===p.id?"ZAŁOŻONY":"ZAŁÓŻ"}</button>`:`💰 ${p.price.toLocaleString("pl-PL")} Zeni<br><button class="actionBtn" onclick="buyPick140('${p.id}')">KUP</button>`}</div>`).join("");
+ let p=$("minePanel140");p.innerHTML=`<div class="box140"><h2>⛏️ GÓRNIK</h2><p>Poziom górnictwa: <b>${m.level}</b> • EXP ${m.xp}/${mineNeed140()}</p><div class="grid140">${cards}</div><button class="actionBtn" onclick="$('minePanel140').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex";
+};
+window.buyPick140=function(id){norm140();let p=picks140.find(x=>x.id===id);if(!p||currentUser.mining140.items.includes(id))return;if(Number(currentUser.zeni||0)<p.price)return toast("❌ Za mało Zeni.");currentUser.zeni-=p.price;currentUser.mining140.items.push(id);currentUser.mining140.pick=id;savePlayer();updateHUD();toast("⛏️ Kupiono "+p.name);openMiner140()};
+window.equipPick140=function(id){norm140();if(!currentUser.mining140.items.includes(id))return;currentUser.mining140.pick=id;savePlayer();toast("⛏️ Założono kilof.");openMiner140()};
+
+function canCraft140(r){return Object.entries(r.need).every(([id,n])=>oq140(id)>=n)}
+window.openCraft140=function(){
+ norm140();
+ let inv=Object.entries(ores140).map(([id,o])=>`${o.name}: <b>${oq140(id)}</b>`).join(" • ");
+ let cards=recipes140.map(r=>`<div class="card140"><b>${r.name}</b><br>${r.desc}<br>${Object.entries(r.need).map(([id,n])=>`${ores140[id].name} ${oq140(id)}/${n}`).join("<br>")}<br><button class="actionBtn" ${canCraft140(r)?"":"disabled"} onclick="craftMine140('${r.id}')">STWÓRZ</button></div>`).join("");
+ let p=$("craftPanel140");p.innerHTML=`<div class="box140"><h2>🔨 KOWAL GÓRNICZY</h2><p>${inv}</p><div class="grid140">${cards}</div><button class="actionBtn" onclick="$('craftPanel140').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex";
+};
+window.craftMine140=function(id){norm140();let r=recipes140.find(x=>x.id===id);if(!r||!canCraft140(r))return toast("❌ Brakuje rud.");for(const [ore,n] of Object.entries(r.need))currentUser.mining140.ores[ore]-=n;currentUser.inventory??=[];currentUser.inventory.push(id);savePlayer();toast("🔨 Stworzono "+r.name);openCraft140()};
+
+let miningBusy140=false;
+function rollOre140(tier,power){
+ let x=Math.random()*100;
+ if(tier>=5&&power>=4&&x<7)return"voidore";
+ if(tier>=3&&power>=3&&x<16)return"dragonore";
+ if(tier>=2&&power>=2&&x<35)return"crystal";
+ if(x<70)return"iron";return"stone";
+}
+window.startMine140=function(mine){
+ norm140();if(miningBusy140)return;if(!pickPower140())return toast("❌ Kup i załóż kilof u Górnika.");
+ miningBusy140=true;let p=$("minePanel140");p.innerHTML=`<div class="box140"><h2>⛏️ ${mine.name}</h2><div class="minebar140"><div class="minefill140" id="mineFill140"></div></div><p id="mineText140">Wydobywasz...</p></div>`;p.style.display="flex";
+ let v=0,t=setInterval(()=>{v+=5+pickPower140();$("mineFill140").style.width=Math.min(100,v)+"%";if(v>=100){clearInterval(t);let id=rollOre140(mine.tier,pickPower140()),o=ores140[id];addOre140(id);mineXp140(o.xp);addExp(Math.floor(o.xp*.65));$("mineText140").innerHTML=`🎉 Wydobyto <b>${o.name}</b><br>+${o.xp} Mining EXP`;savePlayer();setTimeout(()=>{p.style.display="none";miningBusy140=false},1200)}},55);
+};
+window.enterCave140=function(c){
+ norm140();if(currentUser.level<c.level)return toast("🔒 Jaskinia wymaga LVL "+c.level);
+ if(currentUser.mining140.caves[c.name])return toast("🕳️ Tę sekretną jaskinię już przeszukałeś.");
+ currentUser.mining140.caves[c.name]=true;
+ let amount=c.reward==="voidore"?1:c.reward==="dragonore"?2:4;addOre140(c.reward,amount);
+ currentUser.zeni+=c.level*180;addExp(c.level*18);savePlayer();updateHUD();
+ toast(`🕳️ Odkryto ${c.name}! ${ores140[c.reward].name} x${amount}`);
+};
+
+// rudy mogą być sprzedawane u Kowala/Górnika za prostą wartość
+window.sellOres140=function(){
+ norm140();let total=0;for(const [id,o] of Object.entries(ores140)){total+=oq140(id)*o.value;currentUser.mining140.ores[id]=0}
+ if(!total)return toast("❌ Nie masz rud.");currentUser.zeni+=total;savePlayer();updateHUD();toast("💰 Sprzedano rudy za "+total.toLocaleString("pl-PL")+" Zeni");
+};
+
+// interakcje
+const interactPrev140=interact;
+interact=function(){
+ let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+ if(n?.name==="Górnik"){openMiner140();return}
+ if(n?.name==="Kowal Górniczy"){openCraft140();return}
+ let cave=caves140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<105);
+ if(cave){enterCave140(cave);return}
+ let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<100);
+ if(mine){startMine140(mine);return}
+ interactPrev140();
+};
+
+// rysowanie lokacji
+const drawPrev140=draw;
+draw=function(){
+ drawPrev140();try{let c=camera();
+  for(const m of mines140.filter(x=>x.world===currentWorld)){let x=m.x-c.x,y=m.y-c.y;ctx.save();ctx.fillStyle="#3b4650";ctx.fillRect(x-38,y-24,76,48);ctx.fillStyle="#151b21";ctx.beginPath();ctx.arc(x,y+10,25,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.fillText("⛏️ KOPALNIA",x,y-34);ctx.restore()}
+  for(const q of caves140.filter(x=>x.world===currentWorld)){let x=q.x-c.x,y=q.y-c.y;ctx.save();ctx.fillStyle="#1a1519";ctx.beginPath();ctx.arc(x,y+10,34,Math.PI,0);ctx.fill();ctx.strokeStyle="#805da0";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("🕳️ SEKRET",x,y-32);ctx.restore()}
+ }catch(e){}
+};
+const hintPrev140=updateHint;
+updateHint=function(){hintPrev140();
+ let cave=caves140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<105);
+ let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<100);
+ if(cave){$("hint").textContent="E — 🕳️ PRZESZUKAJ JASKINIĘ";$("hint").style.display="block"}
+ else if(mine){$("hint").textContent="E — ⛏️ WYDOBYWAJ";$("hint").style.display="block"}
+};
+
+// crafted mining gear ma działać w istniejących statystykach
+const dmgPrev140=damageBonus;window.damageBonus=function(){let b=dmgPrev140();let id=currentUser?.equipment?.gloves,r=recipes140.find(x=>x.id===id);return b+Number(r?.dmg||0)};
+const speedPrev140=speedBonus05;window.speedBonus05=function(){let b=speedPrev140();let id=currentUser?.equipment?.boots,r=recipes140.find(x=>x.id===id);return b+Number(r?.speed||0)};
+const xpPrev140=xpBonus;window.xpBonus=function(){let b=xpPrev140();let id=currentUser?.equipment?.amulet,r=recipes140.find(x=>x.id===id);return b+Number(r?.xp||0)};
+const hpPrev140=maxHp05;window.maxHp05=function(){let b=hpPrev140();let id=currentUser?.equipment?.outfit,r=recipes140.find(x=>x.id===id);return b+Number(r?.hp||0)};
+
+// dodaj stan rud do panelu Systemy, jeśli istnieje
+window.openMiningSummary140=function(){norm140();let p=$("craftPanel140");p.innerHTML=`<div class="box140"><h2>⛏️ GÓRNICTWO</h2><p>LVL ${currentUser.mining140.level} • EXP ${currentUser.mining140.xp}/${mineNeed140()}</p><div class="grid140">${Object.entries(ores140).map(([id,o])=>`<div class="card140">${o.name}<br><b>${oq140(id)}</b> szt.</div>`).join("")}</div><button class="actionBtn" onclick="sellOres140()">💰 SPRZEDAJ WSZYSTKIE RUDY</button><button class="actionBtn" onclick="$('craftPanel140').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex"};
 })();
 
 </script></body></html>
