@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.6.0 — ŁOWIENIE MINIGRA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.7.0 — GRAPHICS UPDATE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2774,6 +2774,86 @@ if(!hooked&&typeof window.startFishing==="function"){
    start160(()=>original.apply(self,args),rod);
  };
 }
+})();
+
+
+
+/* ==================== 1.7.0 — GRAPHICS UPDATE ==================== */
+(function(){
+const css=document.createElement("style");
+css.textContent=`
+:root{--g170:#0a111b;--g170b:#162538;--g170line:#47647f;--g170gold:#e6c56c}
+body{background:radial-gradient(circle at 50% 15%,#172b3d 0,#071019 55%,#03070b 100%)!important}
+button,.actionBtn{border-radius:9px!important;border:1px solid #5b7690!important;box-shadow:inset 0 1px rgba(255,255,255,.12),0 3px 8px rgba(0,0,0,.35)!important;transition:transform .12s,filter .12s!important}
+button:hover,.actionBtn:hover{filter:brightness(1.16);transform:translateY(-1px)}
+#hud,#topHud,.hud{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#hint{background:linear-gradient(180deg,rgba(17,31,45,.97),rgba(5,13,21,.97))!important;border:2px solid var(--g170gold)!important;border-radius:10px!important;padding:9px 16px!important;box-shadow:0 5px 18px #0009!important}
+canvas{filter:saturate(1.12) contrast(1.04)}
+`;
+document.head.appendChild(css);
+
+function rr170(c,x,y,w,h,r,fill,stroke){
+ c.beginPath();c.roundRect(x,y,w,h,r);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.stroke()}
+}
+function tree170(c,x,y,scale=1){
+ c.save();c.translate(x,y);c.scale(scale,scale);
+ c.fillStyle="#553b27";c.fillRect(-5,8,10,27);
+ c.fillStyle="#183f2b";c.beginPath();c.arc(-12,4,17,0,Math.PI*2);c.arc(10,1,19,0,Math.PI*2);c.arc(0,-12,21,0,Math.PI*2);c.fill();
+ c.fillStyle="#2e6b3b";c.beginPath();c.arc(-9,-1,11,0,Math.PI*2);c.arc(7,-7,12,0,Math.PI*2);c.fill();
+ c.fillStyle="#70a95b";c.beginPath();c.arc(-5,-10,5,0,Math.PI*2);c.fill();c.restore();
+}
+function rock170(c,x,y,s=1){
+ c.save();c.translate(x,y);c.scale(s,s);c.fillStyle="#59646a";c.beginPath();c.moveTo(-16,11);c.lineTo(-11,-8);c.lineTo(2,-15);c.lineTo(16,-5);c.lineTo(18,11);c.closePath();c.fill();
+ c.fillStyle="#829097";c.beginPath();c.moveTo(-9,-6);c.lineTo(1,-11);c.lineTo(7,-5);c.lineTo(-5,0);c.closePath();c.fill();c.restore();
+}
+function worldDecor170(c){
+ let cam;try{cam=camera()}catch(e){return}
+ const w=currentWorld||"valley";
+ c.save();
+ // subtelne kafle/ziarno terenu
+ c.globalAlpha=.12;c.fillStyle=w==="ice"?"#d9f4ff":w==="volcano"?"#ff7545":w==="voidzone"?"#8954b8":"#f4d58a";
+ for(let yy=40;yy<innerHeight;yy+=72)for(let xx=30;xx<innerWidth;xx+=84){let q=((xx+Math.floor(cam.x/50))^(yy+Math.floor(cam.y/50)))%17;c.fillRect(xx+(q%9),yy+(q%7),2,2)}
+ c.globalAlpha=1;
+ // dekoracje deterministyczne względem świata
+ const seed=[...w].reduce((a,ch)=>a+ch.charCodeAt(0),0);
+ for(let i=0;i<16;i++){
+   let wx=(seed*31+i*337)%2200,wy=(seed*17+i*263)%1500,x=wx-cam.x,y=wy-cam.y;
+   if(x<-50||y<-50||x>innerWidth+50||y>innerHeight+50)continue;
+   if(["valley","forest","sky"].includes(w))tree170(c,x,y,.72+(i%3)*.1); else rock170(c,x,y,.65+(i%3)*.1);
+ }
+ c.restore();
+}
+function vignette170(c){
+ c.save();let g=c.createRadialGradient(innerWidth/2,innerHeight/2,innerHeight*.15,innerWidth/2,innerHeight/2,Math.max(innerWidth,innerHeight)*.7);
+ g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.25)");c.fillStyle=g;c.fillRect(0,0,innerWidth,innerHeight);c.restore();
+}
+
+/* Dekoracje dokładamy do istniejącego renderu bez zmiany mechanik. */
+const draw170=draw;
+window.draw=function(){
+ draw170();
+ try{worldDecor170(ctx);vignette170(ctx)}catch(e){}
+};
+
+/* Ulepszamy wizualnie wejścia do kopalni jeszcze jedną warstwą detalu. */
+const draw171=window.draw;
+window.draw=function(){
+ draw171();
+ try{
+  const cam=camera();
+  if(typeof mines140!=="undefined")for(const m of mines140.filter(q=>q.world===currentWorld)){
+   let x=m.x-cam.x,y=m.y-cam.y;ctx.save();
+   ctx.fillStyle="rgba(0,0,0,.32)";ctx.beginPath();ctx.ellipse(x,y+27,55,13,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle="#9b8250";ctx.lineWidth=5;ctx.beginPath();ctx.arc(x,y+9,31,Math.PI,0);ctx.stroke();
+   ctx.fillStyle="#d6b56b";ctx.font="18px Arial";ctx.textAlign="center";ctx.fillText("⛏",x,y-18);ctx.restore();
+  }
+ }catch(e){}
+};
+
+/* Małe efekty kliknięcia dla całego UI. */
+document.addEventListener("pointerdown",e=>{
+ const b=e.target.closest("button");if(!b)return;b.animate([{transform:"scale(1)"},{transform:"scale(.96)"},{transform:"scale(1)"}],{duration:130});
+},{passive:true});
 })();
 
 </script></body></html>
