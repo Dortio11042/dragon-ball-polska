@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.7.0 — GRAPHICS UPDATE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.0 — NPC DB STYLE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2854,6 +2854,70 @@ window.draw=function(){
 document.addEventListener("pointerdown",e=>{
  const b=e.target.closest("button");if(!b)return;b.animate([{transform:"scale(1)"},{transform:"scale(.96)"},{transform:"scale(1)"}],{duration:130});
 },{passive:true});
+})();
+
+
+
+/* ==================== 1.8.0 — NPC: DB-INSPIRED PIXEL LOOK ==================== */
+(function(){
+function npcStyle180(name){
+ name=(name||"").toLowerCase();
+ if(name.includes("wróżka")) return {skin:"#e7b486",hair:"#e8d7ff",body:"#8f54c7",accent:"#ffd86b",type:"fairy"};
+ if(name.includes("górski mistrz")) return {skin:"#d6a276",hair:"#f2f2f2",body:"#6b3e25",accent:"#e9c36b",type:"master"};
+ if(name==="mistrz"||name.includes("wielkiego mistrza")||name.includes("uczeń")) return {skin:"#d9a77c",hair:"#eeeeee",body:"#e18432",accent:"#1c2634",type:"master"};
+ if(name.includes("trener")) return {skin:"#d3a075",hair:"#151515",body:"#d96b25",accent:"#214b91",type:"fighter"};
+ if(name.includes("wędk")||name.includes("skup ryb")) return {skin:"#d4a276",hair:"#e8e0c8",body:"#355e74",accent:"#d6b96c",type:"fisher"};
+ if(name.includes("kowal")) return {skin:"#c99268",hair:"#27211f",body:"#4a3430",accent:"#e58a3b",type:"smith"};
+ if(name.includes("górnik")) return {skin:"#c9966c",hair:"#4b3425",body:"#c49a3c",accent:"#707c83",type:"miner"};
+ if(name.includes("handlarz")) return {skin:"#d4a174",hair:"#34231b",body:"#365f42",accent:"#e3c05d",type:"merchant"};
+ if(name.includes("strażnik smoczych")) return {skin:"#6caf68",hair:"#1d2422",body:"#5b3294",accent:"#f1e9df",type:"guardian"};
+ if(name.includes("rekruter")) return {skin:"#d1a077",hair:"#273f78",body:"#5865f2",accent:"#ffffff",type:"recruit"};
+ if(name.includes("łowca")) return {skin:"#cf9b70",hair:"#161616",body:"#813a2c",accent:"#d6b56c",type:"hunter"};
+ if(name.includes("opiekun")) return {skin:"#d6a77e",hair:"#ececec",body:"#3e7190",accent:"#f3d36b",type:"elder"};
+ if(name.includes("badacz")||name.includes("archeolog")) return {skin:"#d3a076",hair:"#6a4b31",body:"#a07b3c",accent:"#d7c29b",type:"scholar"};
+ if(name.includes("strażnik")) return {skin:"#77ad6e",hair:"#18221b",body:"#4b6f42",accent:"#e8e0c7",type:"guardian"};
+ return {skin:"#d5a176",hair:"#202020",body:"#744bb5",accent:"#f0c55e",type:"fighter"};
+}
+function px(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
+function drawNpc180(n,c){
+ const s=npcStyle180(n.name),x=Math.round(n.x-c.x),y=Math.round(n.y-c.y);
+ ctx.save();
+ // shadow
+ ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(x+18,y+39,18,6,0,0,Math.PI*2);ctx.fill();
+ // legs + boots
+ px(ctx,x+8,y+28,8,11,s.body);px(ctx,x+20,y+28,8,11,s.body);
+ px(ctx,x+6,y+37,11,5,"#17191d");px(ctx,x+20,y+37,11,5,"#17191d");
+ // torso
+ px(ctx,x+6,y+13,24,18,s.body);px(ctx,x+15,y+13,5,18,s.accent);
+ // arms
+ px(ctx,x+2,y+16,6,15,s.skin);px(ctx,x+30,y+16,6,15,s.skin);
+ // head
+ px(ctx,x+9,y+1,20,14,s.skin);px(ctx,x+7,y+5,3,7,s.skin);px(ctx,x+29,y+5,3,7,s.skin);
+ // eyes/brows
+ px(ctx,x+13,y+7,3,2,"#111");px(ctx,x+22,y+7,3,2,"#111");
+ // hair silhouettes
+ ctx.fillStyle=s.hair;
+ if(s.type==="master"||s.type==="elder"){
+   px(ctx,x+8,y-2,22,5,s.hair);px(ctx,x+6,y+1,5,8,s.hair);px(ctx,x+28,y+1,5,8,s.hair);
+   px(ctx,x+12,y+13,14,6,"#eee"); // beard
+ }else if(s.type==="fairy"){
+   px(ctx,x+7,y-3,24,6,s.hair);px(ctx,x+5,y+1,6,13,s.hair);px(ctx,x+28,y+1,6,13,s.hair);
+   ctx.globalAlpha=.65;ctx.fillStyle="#b986e8";ctx.beginPath();ctx.ellipse(x+3,y+20,8,13,-.4,0,Math.PI*2);ctx.ellipse(x+35,y+20,8,13,.4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ }else{
+   // spiky anime-inspired hair
+   ctx.beginPath();ctx.moveTo(x+8,y+4);ctx.lineTo(x+5,y-8);ctx.lineTo(x+13,y-3);ctx.lineTo(x+16,y-12);ctx.lineTo(x+20,y-4);ctx.lineTo(x+27,y-11);ctx.lineTo(x+27,y-2);ctx.lineTo(x+33,y-5);ctx.lineTo(x+29,y+5);ctx.closePath();ctx.fill();
+ }
+ // role props
+ if(s.type==="fisher"){ctx.strokeStyle="#b58a55";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+34,y+18);ctx.lineTo(x+48,y-9);ctx.stroke();px(ctx,x+7,y-6,24,4,"#b58a55")}
+ if(s.type==="smith"){px(ctx,x+32,y+20,13,4,"#8d9499");px(ctx,x+40,y+14,4,16,"#6b482d")}
+ if(s.type==="miner"){px(ctx,x+7,y-5,24,5,"#d3a638");ctx.strokeStyle="#aeb7bd";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x+40,y+15,9,Math.PI,Math.PI*2);ctx.stroke()}
+ if(s.type==="merchant"){px(ctx,x+30,y+26,10,10,"#8b6336");px(ctx,x+32,y+23,6,4,"#d2b05e")}
+ if(s.type==="guardian"){px(ctx,x+2,y+12,5,24,"#eee")}
+ // label plate
+ ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.85)";ctx.strokeText(n.name,x+19,y-17);ctx.fillStyle="#fff";ctx.fillText(n.name,x+19,y-17);
+ ctx.restore();
+}
+window.drawNPC=drawNpc180;
 })();
 
 </script></body></html>
