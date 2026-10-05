@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.0 — NPC DB STYLE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.1 — PRESTIŻ FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2386,8 +2386,8 @@ let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appen
  function palette131(p){
    const a=[
     {title:"Wojownik Doliny",skin:"#efb17f",hair:"#151515",gi:"#ef7d22",under:"#183f83",pants:"#e97b21",boots:"#203d72",aura:null,ear:"#efb17f"},
-    {title:"Książę Wojowników",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
-    {title:"Namekijski Strażnik",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
+    {title:"Vegeta",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
+    {title:"Piccolo",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
     {title:"Złoty Mistrz",skin:"#efb17d",hair:"#f3d642",gi:"#ee7c22",under:"#19468c",pants:"#e97820",boots:"#22467e",aura:"#ffe96a",ear:"#efb17d"},
     {title:"Boski Wojownik",skin:"#efb27e",hair:"#5bd5ff",gi:"#24489b",under:"#161d34",pants:"#243f84",boots:"#f2f4ff",aura:"#5de8ff",ear:"#efb27e"},
     {title:"Legendarny Wojownik",skin:"#efb17c",hair:"#9bec69",gi:"#313842",under:"#6d2c34",pants:"#24282f",boots:"#7b5a37",aura:"#9dff78",ear:"#efb17c"}
@@ -2918,6 +2918,77 @@ function drawNpc180(n,c){
  ctx.restore();
 }
 window.drawNPC=drawNpc180;
+})();
+
+
+
+/* ==================== 1.8.1 — PEWNY PRESTIŻ + POSTACIE ==================== */
+(function(){
+  function prestigeCharacter181(p){
+    p=Number(p)||0;
+    if(p===0)return "Wojownik";
+    if(p===1)return "Vegeta";
+    if(p===2)return "Piccolo";
+    if(p===3)return "Złoty Mistrz";
+    if(p===4)return "Boski Wojownik";
+    return "Legendarny Wojownik";
+  }
+  window.prestigeCharacter181=prestigeCharacter181;
+
+  // Nadpisujemy stare, wielokrotnie opakowane funkcje prestige jedną stabilną wersją.
+  window.prestige08 = async function(){
+    if(!currentUser)return;
+    const lvl=Number(currentUser.level)||1;
+    if(lvl<100){
+      toast("⭐ Prestige wymaga LVL 100 — masz LVL "+lvl);
+      return;
+    }
+
+    const oldP=Number(currentUser.prestige)||0;
+    const newP=oldP+1;
+
+    currentUser.prestige=newP;
+    currentUser.level=1;
+    currentUser.exp=0;
+    currentUser.zeni=10000;
+
+    // Punkty ze starszych systemów zachowujemy i dodajemy dokładnie po 1.
+    currentUser.prestigePoints090=(Number(currentUser.prestigePoints090)||0)+1;
+    currentUser.prestigePoints100=(Number(currentUser.prestigePoints100)||0)+1;
+
+    // HP liczymy już po zwiększeniu prestige, więc +20 MAX HP działa od razu.
+    try{ currentUser.hp=Math.max(1,Math.round(Number(maxHp05())||100)); }
+    catch(e){ currentUser.hp=100+newP*20; }
+
+    try{ updateHUD(); }catch(e){}
+    try{ renderProfile08(); }catch(e){}
+
+    // Zapis online przed komunikatem, żeby reset nie zginął przy szybkim odświeżeniu.
+    try{ await savePlayer(true); }catch(e){ console.error("Prestige save:",e); }
+
+    const charName=prestigeCharacter181(newP);
+    toast("⭐ PRESTIGE "+newP+"! Od teraz grasz jako "+charName+"!");
+    try{ updateHUD(); }catch(e){}
+    try{ renderProfile08(); }catch(e){}
+  };
+
+  // Dodatkowa informacja w profilu po jego normalnym wyrenderowaniu.
+  if(typeof renderProfile08==="function"){
+    const baseRenderProfile181=renderProfile08;
+    window.renderProfile08=function(){
+      baseRenderProfile181();
+      const box=document.getElementById("profileContent08");
+      if(box && currentUser){
+        const p=Number(currentUser.prestige)||0;
+        const info=document.createElement("div");
+        info.className="card";
+        info.style.marginTop="8px";
+        info.innerHTML="<b>🥋 Postać po Prestige:</b> "+prestigeCharacter181(p)+
+          "<br><small>Prestige 1 → Vegeta • Prestige 2 → Piccolo</small>";
+        box.appendChild(info);
+      }
+    };
+  }
 })();
 
 </script></body></html>
