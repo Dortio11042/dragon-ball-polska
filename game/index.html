@@ -10,7 +10,7 @@
 #gameContainer{display:none;width:100%;height:100%}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
 .panel{position:fixed;z-index:120;padding:11px;background:rgba(7,10,18,.9);border:3px solid #ff9700;border-radius:7px;box-shadow:4px 4px 0 rgba(0,0,0,.55);font-size:13px}.title{font-weight:bold;color:#ffad21;margin-bottom:5px}#hud{left:15px;top:15px;min-width:220px}#worldName{top:15px;left:50%;transform:translateX(-50%);font-weight:bold}#questPanel{right:15px;top:15px;width:270px}#dailyPanel{right:15px;top:145px;width:270px}.action{padding:7px 9px;margin-top:7px}.action:disabled{opacity:.45;cursor:not-allowed}
 .modal{display:none;position:fixed;z-index:700;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92%);padding:22px;background:#0b101d;border:4px solid #ff9700;box-shadow:8px 8px #000;text-align:center}.bar{height:18px;background:#351313;border:2px solid #fff;margin:10px}.fill{height:100%;background:#d84a3c}.modal .action{margin:5px}#toast{display:none;position:fixed;z-index:1000;left:50%;top:75px;transform:translateX(-50%);padding:10px 16px;background:#111827;border:2px solid #ff9700;font-weight:bold}
-#hint{position:fixed;z-index:130;left:50%;bottom:22px;transform:translateX(-50%);padding:9px 14px;background:rgba(0,0,0,.8);border:2px solid #fff;display:none;text-align:center}.logout{margin-top:6px;background:#202b48;border:1px solid #50628c;color:#fff;padding:5px 8px;cursor:pointer}
+#hint{position:fixed;z-index:2600;left:50%;bottom:155px;transform:translateX(-50%);padding:9px 14px;background:rgba(0,0,0,.8);border:2px solid #fff;display:none;text-align:center}.logout{margin-top:6px;background:#202b48;border:1px solid #50628c;color:#fff;padding:5px 8px;cursor:pointer}
 #mobileControls{display:none;position:fixed;left:18px;bottom:18px;z-index:300}.row{display:flex;justify-content:center}.move{width:55px;height:55px;margin:2px;background:rgba(0,0,0,.7);border:2px solid #fff;border-radius:8px;color:#fff;font-size:22px;touch-action:none}#mobileE{position:fixed;right:22px;bottom:28px;z-index:300;width:68px;height:68px;border-radius:50%;display:none;background:#ff9700;border:3px solid #fff;font-weight:bold}
 @media(max-width:800px){#questPanel,#dailyPanel{display:none}#mobileControls,#mobileE{display:block}#worldName{top:auto;bottom:12px;left:auto;right:12px;transform:none}#hud{font-size:11px;min-width:175px}}
 
@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.1 — KOPALNIE INTERAKCJA + MAPA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.2 — KOPALNIE PEŁNA NAPRAWA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2461,17 +2461,17 @@ const picks140=[
  {id:"pick4",name:"🐉 Smoczy Kilof",price:90000,power:4}
 ];
 const mines140=[
- {world:"valley",x:790,y:1320,tier:1,name:"Stara Kopalnia"},
- {world:"mountains",x:380,y:1250,tier:2,name:"Górska Kopalnia"},
- {world:"volcano",x:1830,y:1240,tier:3,name:"Kopalnia Lawy"},
- {world:"ruins",x:420,y:1200,tier:4,name:"Starożytne Wyrobisko"},
- {world:"voidzone",x:1820,y:1180,tier:5,name:"Szczelina Pustki"}
+ {world:"valley",x:520,y:1390,tier:1,name:"Stara Kopalnia"},
+ {world:"mountains",x:270,y:1320,tier:2,name:"Górska Kopalnia"},
+ {world:"volcano",x:1660,y:1320,tier:3,name:"Kopalnia Lawy"},
+ {world:"ruins",x:300,y:1320,tier:4,name:"Starożytne Wyrobisko"},
+ {world:"voidzone",x:1640,y:1280,tier:5,name:"Szczelina Pustki"}
 ];
 const caves140=[
- {world:"valley",x:860,y:1320,name:"Jaskinia Początku",level:5,reward:"crystal"},
- {world:"mountains",x:450,y:1250,name:"Kryształowa Grota",level:15,reward:"dragonore"},
- {world:"volcano",x:1900,y:1240,name:"Komnata Magmy",level:30,reward:"dragonore"},
- {world:"ruins",x:490,y:1200,name:"Zapomniana Krypta",level:55,reward:"voidore"}
+ {world:"valley",x:1940,y:300,name:"Jaskinia Początku",level:5,reward:"crystal"},
+ {world:"mountains",x:1880,y:300,name:"Kryształowa Grota",level:15,reward:"dragonore"},
+ {world:"volcano",x:280,y:300,name:"Komnata Magmy",level:30,reward:"dragonore"},
+ {world:"ruins",x:1900,y:300,name:"Zapomniana Krypta",level:55,reward:"voidore"}
 ];
 const recipes140=[
  {id:"minerGloves140",name:"⛏️ Rękawice Górnika",need:{iron:8,crystal:2},desc:"+20 obrażeń",slot:"gloves",dmg:20},
@@ -2549,7 +2549,7 @@ interact=function(){
  if(n?.name==="Kowal Górniczy"){openCraft140();return}
  let cave=caves140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<105);
  if(cave){enterCave140(cave);return}
- let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<100);
+ let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<145);
  if(mine){startMine140(mine);return}
  interactPrev140();
 };
@@ -2559,15 +2559,15 @@ const drawPrev140=draw;
 draw=function(){
  drawPrev140();try{let c=camera();
   for(const m of mines140.filter(x=>x.world===currentWorld)){let x=m.x-c.x,y=m.y-c.y;ctx.save();ctx.fillStyle="#3b4650";ctx.fillRect(x-38,y-24,76,48);ctx.fillStyle="#151b21";ctx.beginPath();ctx.arc(x,y+10,25,Math.PI,0);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.fillText("⛏️ KOPALNIA",x,y-34);ctx.restore()}
-  for(const q of caves140.filter(x=>x.world===currentWorld)){let x=q.x-c.x,y=q.y-c.y;ctx.save();ctx.fillStyle="#1a1519";ctx.beginPath();ctx.arc(x,y+10,34,Math.PI,0);ctx.fill();ctx.strokeStyle="#805da0";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("🕳️ SEKRET",x,y-32);ctx.restore()}
+  for(const q of caves140.filter(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<230)){let x=q.x-c.x,y=q.y-c.y;ctx.save();ctx.globalAlpha=.72;ctx.fillStyle="#141017";ctx.beginPath();ctx.arc(x,y+10,27,Math.PI,0);ctx.fill();ctx.strokeStyle="#58445f";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#a999ad";ctx.font="bold 9px Arial";ctx.textAlign="center";ctx.fillText("???",x,y-25);ctx.restore()}
  }catch(e){}
 };
 const hintPrev140=updateHint;
 updateHint=function(){hintPrev140();
  let cave=caves140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<105);
- let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<100);
- if(cave){$("hint").textContent="E — 🕳️ PRZESZUKAJ JASKINIĘ";$("hint").style.display="block"}
- else if(mine){$("hint").textContent="E — ⛏️ WYDOBYWAJ";$("hint").style.display="block"}
+ let mine=mines140.find(x=>x.world===currentWorld&&Math.hypot(player.x-x.x,player.y-x.y)<145);
+ if(cave){$("hint").textContent="E — 🕳️ ZBADAJ TAJEMNICZE WEJŚCIE";$("hint").style.display="block"}
+ else if(mine){$("hint").textContent="E — ⛏️ WEJDŹ DO KOPALNI";$("hint").style.display="block"}
 };
 
 // crafted mining gear ma działać w istniejących statystykach
@@ -2578,6 +2578,20 @@ const hpPrev140=maxHp05;window.maxHp05=function(){let b=hpPrev140();let id=curre
 
 // dodaj stan rud do panelu Systemy, jeśli istnieje
 window.openMiningSummary140=function(){norm140();let p=$("craftPanel140");p.innerHTML=`<div class="box140"><h2>⛏️ GÓRNICTWO</h2><p>LVL ${currentUser.mining140.level} • EXP ${currentUser.mining140.xp}/${mineNeed140()}</p><div class="grid140">${Object.entries(ores140).map(([id,o])=>`<div class="card140">${o.name}<br><b>${oq140(id)}</b> szt.</div>`).join("")}</div><button class="actionBtn" onclick="sellOres140()">💰 SPRZEDAJ WSZYSTKIE RUDY</button><button class="actionBtn" onclick="$('craftPanel140').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex"};
+
+/* API górnictwa dla kolejnych modułów */
+window.ores140=ores140;
+window.picks140=picks140;
+window.mines140=mines140;
+window.caves140=caves140;
+window.recipes140=recipes140;
+window.norm140=norm140;
+window.oq140=oq140;
+window.addOre140=addOre140;
+window.pickPower140=pickPower140;
+window.mineNeed140=mineNeed140;
+window.mineXp140=mineXp140;
+window.rollOre140=rollOre140;
 })();
 
 
@@ -2673,95 +2687,5 @@ window.startMine140=function(mine){norm140();if(!pickPower140())return toast("�
 })();
 
 
-
-/* ==================== 1.5.1 — KOPALNIE: E / POZYCJE / SEKRETY / HINT FIX ==================== */
-(function(){
-/* Rozdzielamy zwykłe kopalnie i sekrety — nie stoją już praktycznie na sobie. */
-const posMine151={
- valley:[520,1390], mountains:[270,1320], volcano:[1660,1320], ruins:[300,1320], voidzone:[1640,1280]
-};
-const posSecret151={
- valley:[1880,330], mountains:[1740,360], volcano:[310,360], ruins:[1770,350]
-};
-for(const m of mines140){let p=posMine151[m.world];if(p){m.x=p[0];m.y=p[1]}}
-for(const c of caves140){let p=posSecret151[c.world];if(p){c.x=p[0];c.y=p[1]}}
-
-/* Hint wyżej, żeby dolne przyciski go nie przykrywały. */
-const hs=document.createElement("style");
-hs.textContent=`
-#hint{bottom:150px!important;z-index:2500!important;max-width:min(520px,88vw)!important}
-@media(max-width:700px){#hint{bottom:190px!important}}
-`;
-document.head.appendChild(hs);
-
-/* Najważniejszy fix: obsługujemy E bezpośrednio dla kopalni.
-   Nie polegamy wyłącznie na starej kolejce wrapperów interact(). */
-function nearestMine151(){
- return mines140.find(m=>m.world===currentWorld&&Math.hypot(player.x-m.x,player.y-m.y)<=145);
-}
-function nearestSecret151(){
- return caves140.find(c=>c.world===currentWorld&&Math.hypot(player.x-c.x,player.y-c.y)<=125);
-}
-window.enterMine151=function(m){
- if(!m)return;
- norm140();
- if(!pickPower140()){toast("❌ Najpierw kup i załóż kilof u Górnika.");return}
- startMine140(m);
-};
-const interactBefore151=interact;
-window.interact=function(){
- const sec=nearestSecret151();
- if(sec){enterCave140(sec);return}
- const mine=nearestMine151();
- if(mine){enterMine151(mine);return}
- return interactBefore151();
-};
-
-/* Łapiemy fizyczny klawisz E w fazie capture. Dzięki temu starszy handler
-   nie przejmie interakcji, kiedy stoimy przy kopalni/sekrecie. */
-window.addEventListener("keydown",function(e){
- if((e.key==="e"||e.key==="E")&&!e.repeat){
-   const sec=nearestSecret151(),mine=nearestMine151();
-   if(sec||mine){
-     e.preventDefault();e.stopImmediatePropagation();
-     if(sec)enterCave140(sec);else enterMine151(mine);
-   }
- }
-},true);
-
-/* Czytelna wskazówka z nazwą miejsca. */
-const hintOld151=updateHint;
-window.updateHint=function(){
- hintOld151();
- const sec=nearestSecret151(),mine=nearestMine151();
- if(sec){$("hint").textContent=`E — 🕳️ ODKRYJ: ${sec.name}`;$("hint").style.display="block"}
- else if(mine){$("hint").textContent=`E — ⛏️ WEJDŹ: ${mine.name}`;$("hint").style.display="block"}
-};
-
-/* Rysujemy wejścia jeszcze czytelniej: zwykła kopalnia i ukryta jaskinia
-   mają kompletnie inny wygląd. */
-const drawOld151=draw;
-window.draw=function(){
- drawOld151();
- try{
-  const c=camera();
-  for(const m of mines140.filter(x=>x.world===currentWorld)){
-    const x=m.x-c.x,y=m.y-c.y;
-    ctx.save();ctx.fillStyle="#5c646c";ctx.fillRect(x-46,y-20,92,40);
-    ctx.fillStyle="#101419";ctx.beginPath();ctx.arc(x,y+17,30,Math.PI,0);ctx.fill();
-    ctx.strokeStyle="#d5bd72";ctx.lineWidth=3;ctx.strokeRect(x-48,y-22,96,44);
-    ctx.fillStyle="#fff";ctx.font="bold 11px Arial";ctx.textAlign="center";
-    ctx.fillText("⛏️ "+m.name,x,y-32);ctx.restore();
-  }
-  for(const q of caves140.filter(x=>x.world===currentWorld)){
-    const x=q.x-c.x,y=q.y-c.y;
-    ctx.save();ctx.globalAlpha=.72;ctx.fillStyle="#0d0b12";ctx.beginPath();ctx.arc(x,y+10,32,Math.PI,0);ctx.fill();
-    ctx.strokeStyle="#5e456e";ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle="#bda9c8";ctx.font="bold 9px Arial";ctx.textAlign="center";
-    ctx.fillText("???",x,y-29);ctx.restore();
-  }
- }catch(e){}
-};
-})();
 
 </script></body></html>
