@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.4.0 — GÓRNICTWO + CRAFTING + JASKINIE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.5.0 — KOPALNIE DUNGEONY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -2578,6 +2578,98 @@ const hpPrev140=maxHp05;window.maxHp05=function(){let b=hpPrev140();let id=curre
 
 // dodaj stan rud do panelu Systemy, jeśli istnieje
 window.openMiningSummary140=function(){norm140();let p=$("craftPanel140");p.innerHTML=`<div class="box140"><h2>⛏️ GÓRNICTWO</h2><p>LVL ${currentUser.mining140.level} • EXP ${currentUser.mining140.xp}/${mineNeed140()}</p><div class="grid140">${Object.entries(ores140).map(([id,o])=>`<div class="card140">${o.name}<br><b>${oq140(id)}</b> szt.</div>`).join("")}</div><button class="actionBtn" onclick="sellOres140()">💰 SPRZEDAJ WSZYSTKIE RUDY</button><button class="actionBtn" onclick="$('craftPanel140').style.display='none'">ZAMKNIJ</button></div>`;p.style.display="flex"};
+})();
+
+
+
+/* ==================== 1.5.0 — KOPALNIE DUNGEONY ==================== */
+(function(){
+const css=document.createElement("style");
+css.textContent=`
+#mineDungeon150{display:none;position:fixed;inset:0;z-index:5200;background:rgba(3,5,8,.97);align-items:center;justify-content:center;color:white}
+#mineDungeon150 .wrap150{width:min(940px,96vw);max-height:94vh;overflow:auto;background:#0c1118;border:3px solid #687787;border-radius:14px;padding:14px;text-align:center}
+#mineMap150{position:relative;height:470px;background:#15191e;border:3px solid #3d4650;border-radius:10px;overflow:hidden;margin:10px 0}
+.floor150{position:absolute;background:#2a2d31;border:3px solid #555d65;border-radius:9px}
+.rock150,.mob150,.door150,.chest150{position:absolute;transform:translate(-50%,-50%);background:transparent;border:0;min-width:46px;min-height:46px;cursor:pointer;font-size:27px}
+.rock150.dead,.mob150.dead,.chest150.dead{opacity:.18;pointer-events:none}
+.mob150 small{display:block;font-size:9px;color:#fff;background:#121212aa;border-radius:4px;padding:1px 3px}
+.stats150{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+@media(max-width:600px){#mineMap150{height:390px}.rock150,.mob150,.door150,.chest150{font-size:23px}}
+`;
+document.head.appendChild(css);
+let panel=document.createElement("div");panel.id="mineDungeon150";document.body.appendChild(panel);
+
+const roomSets150=[
+ [{x:4,y:10,w:27,h:34},{x:37,y:10,w:27,h:34},{x:69,y:10,w:27,h:34},{x:20,y:57,w:27,h:32},{x:53,y:57,w:27,h:32}],
+ [{x:5,y:8,w:25,h:30},{x:37,y:5,w:25,h:32},{x:69,y:9,w:25,h:30},{x:8,y:58,w:25,h:30},{x:39,y:55,w:25,h:33},{x:70,y:58,w:24,h:30}]
+];
+const caveMobs150=[
+ {id:"spider",name:"Jaskiniowy Pająk",icon:"🕷️",hp:65,dmg:7,xp:28},
+ {id:"bat",name:"Nietoperz Ki",icon:"🦇",hp:50,dmg:6,xp:22},
+ {id:"cow",name:"Dzika Krowa",icon:"🐄",hp:90,dmg:9,xp:35},
+ {id:"beast",name:"Jaskiniowa Bestia",icon:"🐗",hp:115,dmg:12,xp:45},
+ {id:"golem",name:"Kamienny Golem",icon:"🗿",hp:165,dmg:15,xp:65}
+];
+let dungeon150=null;
+
+function makeDungeon150(mine){
+ norm140();
+ const rooms=roomSets150[(mine.tier-1)%roomSets150.length];
+ const rocks=[],mobs=[],chests=[];
+ rooms.forEach((r,ri)=>{
+   const rn=2+Math.min(3,mine.tier);
+   for(let i=0;i<rn;i++)rocks.push({id:`r${ri}_${i}`,room:ri,x:r.x+5+Math.random()*(r.w-10),y:r.y+7+Math.random()*(r.h-14),hp:1+Math.floor(mine.tier/2),dead:false});
+   const mn=ri===0?1:1+((ri+mine.tier)%3);
+   for(let i=0;i<mn;i++){const b=caveMobs150[(ri+i+mine.tier)%caveMobs150.length],hp=b.hp+mine.tier*20;mobs.push({...b,uid:`m${ri}_${i}`,room:ri,x:r.x+6+Math.random()*(r.w-12),y:r.y+8+Math.random()*(r.h-16),hp,maxhp:hp,dead:false})}
+   if(ri===rooms.length-1)chests.push({id:"final",room:ri,x:r.x+r.w/2,y:r.y+r.h/2+8,dead:false});
+ });
+ let mh=typeof maxHp05==="function"?Number(maxHp05()||100):100;
+ dungeon150={mine,rooms,room:0,rocks,mobs,chests,hp:Math.max(1,Math.min(mh,Number(currentUser.hp||mh))),maxhp:mh,kills:0,ores:0};
+ renderDungeon150();
+}
+function roomClear150(){return dungeon150.mobs.filter(x=>x.room===dungeon150.room).every(x=>x.dead)}
+function renderDungeon150(){
+ const D=dungeon150;if(!D)return;
+ const r=D.rooms[D.room],rocks=D.rocks.filter(x=>x.room===D.room),mobs=D.mobs.filter(x=>x.room===D.room),ch=D.chests.filter(x=>x.room===D.room),clear=roomClear150();
+ panel.innerHTML=`<div class="wrap150"><h2>⛏️ ${D.mine.name}</h2><div class="stats150"><b>❤️ ${Math.max(0,D.hp)}/${D.maxhp}</b><b>🚪 Pokój ${D.room+1}/${D.rooms.length}</b><b>🪨 Wydobyte: ${D.ores}</b><b>⚔️ Pokonani: ${D.kills}</b></div>
+ <div id="mineMap150"><div class="floor150" style="left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%"></div>
+ ${rocks.map(x=>`<button class="rock150 ${x.dead?"dead":""}" style="left:${x.x}%;top:${x.y}%" onclick="mineRock150('${x.id}')">🪨</button>`).join("")}
+ ${mobs.map(x=>`<button class="mob150 ${x.dead?"dead":""}" style="left:${x.x}%;top:${x.y}%" onclick="fightCaveMob150('${x.uid}')">${x.icon}<small>${Math.max(0,x.hp)} HP</small></button>`).join("")}
+ ${ch.map(x=>`<button class="chest150 ${x.dead?"dead":""}" style="left:${x.x}%;top:${x.y}%" onclick="openMineChest150('${x.id}')">🎁</button>`).join("")}
+ ${clear&&D.room<D.rooms.length-1?`<button class="door150" style="left:${r.x+r.w-5}%;top:${r.y+r.h/2}%" onclick="nextMineRoom150()">🚪</button>`:""}
+ </div><p>${clear?(D.room<D.rooms.length-1?"✅ Pokój oczyszczony. Drzwi dalej są otwarte.":"🏆 Dotarłeś do końca kopalni. Otwórz skrzynię i wyjdź."):"⚠️ Pokonaj potwory, aby otworzyć następne pomieszczenie."}</p>
+ <button class="actionBtn" onclick="leaveMineDungeon150()">🚪 WYJDŹ Z KOPALNI</button></div>`;
+ panel.style.display="flex";
+}
+window.mineRock150=function(id){
+ const D=dungeon150,r=D?.rocks.find(x=>x.id===id);if(!r||r.dead)return;
+ const power=pickPower140();if(!power)return toast("❌ Nie masz założonego kilofa.");
+ r.hp-=Math.max(1,power);
+ if(r.hp<=0){r.dead=true;const ore=rollOre140(D.mine.tier,power);addOre140(ore);mineXp140(ores140[ore].xp);addExp(Math.floor(ores140[ore].xp*.5));D.ores++;toast("⛏️ "+ores140[ore].name)}
+ renderDungeon150();
+};
+window.fightCaveMob150=function(uid){
+ const D=dungeon150,m=D?.mobs.find(x=>x.uid===uid);if(!m||m.dead)return;
+ const hit=Math.max(10,Math.floor(15+Number(currentUser.level||1)*2+Number(typeof damageBonus==="function"?damageBonus():0)));
+ m.hp-=hit;
+ if(m.hp<=0){m.dead=true;D.kills++;addExp(m.xp+D.mine.tier*8);currentUser.zeni+=30+D.mine.tier*40;toast("⚔️ Pokonano "+m.name)}
+ else{D.hp-=m.dmg+D.mine.tier*2;if(D.hp<=0){currentUser.hp=1;savePlayer();updateHUD();toast("💥 Przegrywasz walkę i uciekasz z kopalni!");panel.style.display="none";dungeon150=null;return}}
+ renderDungeon150();
+};
+window.nextMineRoom150=function(){if(!dungeon150||!roomClear150())return toast("❌ Najpierw pokonaj wszystkie potwory.");dungeon150.room=Math.min(dungeon150.rooms.length-1,dungeon150.room+1);renderDungeon150()};
+window.openMineChest150=function(id){
+ const D=dungeon150,c=D?.chests.find(x=>x.id===id);if(!c||c.dead)return;
+ if(!roomClear150())return toast("❌ Najpierw pokonaj potwory.");
+ c.dead=true;let z=500+D.mine.tier*700;currentUser.zeni+=z;
+ let rare=D.mine.tier>=4?"voidore":D.mine.tier>=2?"dragonore":"crystal";addOre140(rare,1);
+ if(Math.random()<.20){currentUser.bigPotions=(currentUser.bigPotions||0)+1;toast(`🎁 Skrzynia: ${z} Zeni, ${ores140[rare].name} i Duże Leczenie!`)}
+ else toast(`🎁 Skrzynia: ${z} Zeni + ${ores140[rare].name}!`);
+ savePlayer();updateHUD();renderDungeon150();
+};
+window.leaveMineDungeon150=function(){if(!dungeon150)return;currentUser.hp=Math.max(1,Math.min(dungeon150.maxhp,dungeon150.hp));savePlayer();updateHUD();toast(`⛏️ Wychodzisz z kopalni. Rudy: ${dungeon150.ores}, potwory: ${dungeon150.kills}`);panel.style.display="none";dungeon150=null};
+
+// Dotychczasowa interakcja z kopalnią teraz OTWIERA dungeon zamiast jednego paska kopania.
+window.startMine140=function(mine){norm140();if(!pickPower140())return toast("❌ Najpierw kup i załóż kilof u Górnika.");makeDungeon150(mine)};
 })();
 
 </script></body></html>
