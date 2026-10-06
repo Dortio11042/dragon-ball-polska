@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.2 — PRZYCISK PRESTIŻ FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.1 — PRESTIŻ FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1338,7 +1338,39 @@ function renderProfile08(){
  <button class="action" onclick="prestige08()">⭐ PRESTIGE</button>`;
 }
 function transform08(){if(currentUser.level<30)return toast("Transformacja od LVL 30");currentUser.transformation=currentUser.transformation==="Base"?"Wzmocniona Aura":"Base";toast("⚡ Forma: "+currentUser.transformation);savePlayer();renderProfile08()}
-function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.zeni=10000;currentUser.hp=maxHp05();toast("⭐ PRESTIGE "+currentUser.prestige+"! LVL zresetowany, Zeni ustawione na 10 000, trwałe +20 MAX HP");savePlayer();updateHUD();renderProfile08()}
+function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.zeni=10000;
+    // Prestige = nowy cykl gry: Smocze Kule i zadania od początku.
+    currentUser.dragonBalls=0;
+    currentUser.dragon_balls=0;
+    currentUser.questIndex=0;
+    currentUser.questProgress=0;
+    currentUser.totalKills=0;
+    currentUser.dailyKills=0;
+    currentUser.dailyClaimed=false;
+    currentUser.weeklyKills=0;
+    currentUser.weeklyClaimed=false;
+    currentUser.mountainQuestIndex=0;
+    currentUser.mountainQuestProgress=0;
+    currentUser.storyStep=0;
+    currentUser.storyStep08=0;
+    currentUser.sideQuestProgress={};
+    currentUser.sideQuests={};
+    currentUser.completedQuests=[];
+    currentUser.completedSideQuests=[];
+    if(currentUser.game_data){
+      currentUser.game_data.questIndex=0;
+      currentUser.game_data.questProgress=0;
+      currentUser.game_data.totalKills=0;
+      currentUser.game_data.dailyKills=0;
+      currentUser.game_data.dailyClaimed=false;
+      currentUser.game_data.weeklyKills=0;
+      currentUser.game_data.weeklyClaimed=false;
+      currentUser.game_data.mountainQuestIndex=0;
+      currentUser.game_data.mountainQuestProgress=0;
+      currentUser.game_data.storyStep=0;
+      currentUser.game_data.sideQuestProgress={};
+      currentUser.game_data.completedQuests=[];
+    }currentUser.hp=maxHp05();toast("⭐ PRESTIGE "+currentUser.prestige+"! LVL zresetowany, Zeni ustawione na 10 000, trwałe +20 MAX HP");savePlayer();updateHUD();renderProfile08()}
 
 function weeklyQuest08(){
  if(Date.now()-(currentUser.weeklyStamp||0)>604800000){currentUser.weeklyStamp=Date.now();currentUser.weeklyKills=0}
@@ -2920,39 +2952,97 @@ document.addEventListener("pointerdown",e=>{
 
 </script>
 
-<style>
-#prestigeButton182{position:fixed;right:18px;bottom:88px;z-index:5000;min-width:178px;padding:11px 15px;border-radius:12px;border:2px solid #ffd65a;background:rgba(24,18,8,.95);color:#fff0a0;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 0 18px rgba(255,201,55,.28)}
-#prestigeButton182:hover{filter:brightness(1.18);transform:translateY(-1px)}
-#prestigeButton182.locked{opacity:.72;border-color:#777;color:#ddd;box-shadow:none}
-</style>
 <script>
+/* 1.8.3 — Prestige: nazwy postaci + ekskluzywne lobby */
 (function(){
- function player182(){
-   try{return currentUser||null}catch(e){return null}
- }
- function updatePrestigeButton182(){
-   let b=document.getElementById("prestigeButton182");
-   if(!b){
-     b=document.createElement("button");
-     b.id="prestigeButton182";
-     b.onclick=function(){
-       const u=player182();
-       if(!u)return typeof toast==="function"&&toast("Najpierw zaloguj się.");
-       if(Number(u.level||1)<100)return typeof toast==="function"&&toast("⭐ Prestige wymaga LVL 100 — masz LVL "+u.level);
-       if(typeof window.prestige08==="function")window.prestige08();
-     };
-     document.body.appendChild(b);
-   }
-   const u=player182();
-   if(!u){b.style.display="none";return}
-   b.style.display="";
-   const lvl=Number(u.level)||1,p=Number(u.prestige)||0;
-   b.textContent=lvl>=100?"⭐ ZRÓB PRESTIŻ "+(p+1):"🔒 PRESTIŻ — LVL "+lvl+"/100";
-   b.classList.toggle("locked",lvl<100);
- }
- window.updatePrestigeButton182=updatePrestigeButton182;
- setTimeout(updatePrestigeButton182,500);
- setInterval(updatePrestigeButton182,1000);
+  window.prestigeCharacter181=function(p){
+    p=Number(p)||0;
+    if(p===0)return "Goku";
+    if(p===1)return "Vegeta";
+    if(p===2)return "Piccolo";
+    if(p===3)return "Gohan";
+    if(p===4)return "Trunks";
+    return "Wojownik Prestige "+p;
+  };
+
+  function prestigeTitle183(){
+    try{return window.prestigeCharacter181(Number(currentUser?.prestige)||0)}
+    catch(e){return "Goku"}
+  }
+  window.prestigeTitle183=prestigeTitle183;
+
+  // Usuwa stare tytuły typu "Książę Wojowników" z tekstów UI po renderze.
+  function cleanTitles183(){
+    const map=[
+      ["Książę Wojowników","Vegeta"],
+      ["Książę Saiyan","Vegeta"],
+      ["Namekijski Strażnik","Piccolo"],
+      ["Namekijski Wojownik","Piccolo"],
+      ["Mistrz Energii","Gohan"],
+      ["Boski Wojownik","Trunks"],
+      ["Legendarny Wojownik","Wojownik Prestige"]
+    ];
+    document.querySelectorAll("body *").forEach(el=>{
+      if(el.children.length===0 && el.textContent){
+        let t=el.textContent,n=t;
+        map.forEach(([a,b])=>n=n.split(a).join(b));
+        if(n!==t)el.textContent=n;
+      }
+    });
+  }
+  setInterval(cleanTitles183,1200);
+
+  // Portal do lobby Prestige. Nie zmienia zwykłych światów.
+  const portal={x:1260,y:1330,w:105,h:115,world:"valley"};
+  function near183(){
+    try{
+      if(!currentUser||currentUser.world!=="valley")return false;
+      const px=Number(currentUser.x)||0,py=Number(currentUser.y)||0;
+      return Math.hypot(px-(portal.x+portal.w/2),py-(portal.y+portal.h/2))<145;
+    }catch(e){return false}
+  }
+
+  const oldDraw183=window.draw;
+  if(typeof oldDraw183==="function"){
+    window.draw=function(){
+      oldDraw183.apply(this,arguments);
+      try{
+        if(!currentUser||currentUser.world!=="valley")return;
+        const c=window.camera||{x:0,y:0},x=portal.x-c.x,y=portal.y-c.y;
+        ctx.save();
+        ctx.shadowBlur=22;ctx.shadowColor="#62ff9b";
+        ctx.fillStyle="rgba(20,95,55,.72)";ctx.fillRect(x,y,portal.w,portal.h);
+        ctx.strokeStyle="#78ffac";ctx.lineWidth=4;ctx.strokeRect(x,y,portal.w,portal.h);
+        ctx.shadowBlur=0;ctx.fillStyle="#d8ffe6";ctx.textAlign="center";
+        ctx.font="bold 13px Arial";ctx.fillText("PRESTIGE",x+portal.w/2,y-12);
+        ctx.font="11px Arial";ctx.fillText("wymaga 1 Prestige",x+portal.w/2,y+portal.h+17);
+        ctx.restore();
+      }catch(e){}
+    };
+  }
+
+  document.addEventListener("keydown",function(e){
+    if((e.key==="e"||e.key==="E")&&near183()){
+      const p=Number(currentUser.prestige)||0;
+      if(p<1){ if(typeof toast==="function")toast("🔒 To miejsce wymaga 1 Prestige."); return; }
+      openPrestigeLobby183();
+    }
+  },true);
+
+  function openPrestigeLobby183(){
+    let m=document.getElementById("prestigeLobby183");
+    if(!m){
+      m=document.createElement("div");m.id="prestigeLobby183";
+      m.style.cssText="position:fixed;inset:0;z-index:9000;background:radial-gradient(circle at 50% 35%,#173f2c,#07130e 70%);display:flex;align-items:center;justify-content:center;color:white;font-family:Arial";
+      m.innerHTML='<div style="width:min(760px,90vw);padding:32px;border:2px solid #63e895;border-radius:20px;background:rgba(4,20,13,.92);box-shadow:0 0 45px #2f9c6044;text-align:center"><div style="font-size:13px;color:#83f5ac">STREFA PRESTIGE</div><h1 style="margin:8px 0">🌿 Sanktuarium Odrodzonych</h1><p>Lobby tylko dla graczy, którzy wykonali co najmniej 1 Prestige.</p><div style="margin:22px auto;padding:18px;border:1px solid #41765a;border-radius:14px;background:#0c281b"><b id="prestigeLobbyName183"></b><br><span id="prestigeLobbyInfo183"></span></div><p style="opacity:.72">Tu później możemy dodać nowych NPC, sklep Prestige, zadania, bossów i portale dostępne tylko po Prestige.</p><button id="prestigeLobbyClose183" class="actionBtn" style="margin-top:15px">← WRÓĆ DO ZIELONEJ DOLINY</button></div>';
+      document.body.appendChild(m);
+      m.querySelector("#prestigeLobbyClose183").onclick=()=>m.style.display="none";
+    }
+    m.style.display="flex";
+    m.querySelector("#prestigeLobbyName183").textContent=prestigeTitle183();
+    m.querySelector("#prestigeLobbyInfo183").textContent="Prestige "+(Number(currentUser.prestige)||0);
+  }
+  window.openPrestigeLobby183=openPrestigeLobby183;
 })();
 </script>
 
