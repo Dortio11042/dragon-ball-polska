@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.1 — ZIELONA DOLINA REWORK</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.2 — PRZYCISKI HUD FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4879,6 +4879,97 @@ updateHint=function(){
    if(d){hint.textContent="🥋 MANEKIN TRENINGOWY — bij go, żeby zdobyć trochę EXP";hint.style.display="block"}
  }
 };
+})();
+</script>
+
+
+
+<style>
+/* 4.0.2 — jeden stabilny panel przycisków po zalogowaniu */
+#hudDock402{
+ position:fixed;right:14px;top:50%;transform:translateY(-50%);
+ z-index:14500;width:158px;padding:8px;background:rgba(14,19,16,.92);
+ border:2px solid #756848;border-radius:9px;display:none;
+ box-shadow:0 4px 18px rgba(0,0,0,.38)
+}
+body.dbpLogged331 #hudDock402{display:flex!important;flex-direction:column;gap:5px}
+#hudDock402 button{
+ position:static!important;inset:auto!important;transform:none!important;
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:100%!important;margin:0!important;padding:7px 6px!important;
+ background:#2b3029!important;color:#fff!important;border:1px solid #665f48!important;
+ border-radius:5px!important;font:11px Arial!important;cursor:pointer!important;
+ pointer-events:auto!important
+}
+#hudDock402 button:hover{background:#3a4037!important}
+</style>
+<div id="hudDock402"></div>
+<script>
+(function(){
+/* Naprawa regresji: starsze skanery 3.2/3.3 chowały albo przestawiały przyciski.
+   Tu przenosimy ISTNIEJĄCE elementy DOM, więc zachowują swoje click listenery. */
+const dock=document.getElementById("hudDock402");
+const wanted=[
+ ["ekwipun","🎒 EKWIPUNEK"],["equipment","🎒 EKWIPUNEK"],
+ ["moce","⚡ MOCE"],["powers","⚡ MOCE"],
+ ["top","🏆 TOPKA"],["ranking","🏆 TOPKA"],
+ ["profil","👤 PROFIL"],["profile","👤 PROFIL"],
+ ["ustaw","⚙️ USTAWIENIA"],["settings","⚙️ USTAWIENIA"],
+ ["osiąg","🏅 OSIĄGNIĘCIA"],["achiev","🏅 OSIĄGNIĘCIA"],
+ ["party","👥 PARTY"],["druż","👥 PARTY"],
+ ["drop","💎 DROP"],
+ ["rynek","🛒 RYNEK"],["market","🛒 RYNEK"],
+ ["map","🗺️ MAPA"],
+ ["music","🎵 MUZYKA"],["muzyk","🎵 MUZYKA"]
+];
+const forbidden=["kuź","kuz","formy","fabu","trener","pvp","bestiariusz"];
+function norm(t){return (t||"").trim().toLowerCase()}
+function labelFor(t){
+ let n=norm(t);for(const [key,label] of wanted)if(n.includes(key))return label;return null
+}
+function bad(t){let n=norm(t);return forbidden.some(x=>n.includes(x))}
+function collect402(){
+ if(!window.currentUser)return;
+ const all=[...document.querySelectorAll("button")];
+ const used=new Set([...dock.querySelectorAll("button")].map(b=>norm(b.textContent)));
+ for(const b of all){
+   if(b.closest("#hudDock402,#systems400,#fullPanel300,#prestigeNpc210,#questNpc310,#liveChat320"))continue;
+   let txt=b.textContent||"",label=labelFor(txt);
+   if(!label||bad(txt))continue;
+   // zachowaj oryginalny button i jego onclick/listenery
+   b.style.cssText="";
+   b.hidden=false;b.disabled=false;
+   b.style.display="block";b.style.visibility="visible";b.style.opacity="1";b.style.pointerEvents="auto";
+   b.textContent=label;
+   if(!used.has(norm(label))){dock.appendChild(b);used.add(norm(label))}
+ }
+ // jeśli przycisk już siedzi w starym docku 321, przenieś go stamtąd
+ [...document.querySelectorAll("#rpgDock321 button")].forEach(b=>{
+   let label=labelFor(b.textContent);
+   if(label&&!bad(b.textContent)&&!used.has(norm(label))){
+     b.style.cssText="";b.hidden=false;b.disabled=false;b.textContent=label;
+     dock.appendChild(b);used.add(norm(label));
+   }
+ });
+ // stary dock wyłączamy dopiero po zabraniu z niego funkcjonalnych przycisków
+ let old=document.getElementById("rpgDock321");if(old)old.style.setProperty("display","none","important");
+}
+setTimeout(collect402,400);setTimeout(collect402,1200);setInterval(collect402,2500);
+
+// Ochrona przed starymi funkcjami, które co sekundę próbują ponownie schować/przesunąć przyciski.
+setInterval(()=>{
+ if(!window.currentUser)return;
+ dock.querySelectorAll("button").forEach(b=>{
+   b.hidden=false;b.disabled=false;
+   b.style.setProperty("display","block","important");
+   b.style.setProperty("visibility","visible","important");
+   b.style.setProperty("opacity","1","important");
+   b.style.setProperty("position","static","important");
+   b.style.setProperty("pointer-events","auto","important");
+   b.style.setProperty("inset","auto","important");
+   b.style.setProperty("transform","none","important");
+ });
+},350);
 })();
 </script>
 
