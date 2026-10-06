@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.2.0 — DOMY + DUNGEONY + NPC FULL</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.2.1 — RYNEK GLOBALNY FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5420,6 +5420,128 @@ drawPlayer=function(){
 
 /* Eksporty zgodne ze starym kodem */
 Object.assign(window,{home420:homeMenu420,dungeon420:dungeonMenu420,guild420,skills420,craft420,bank420,mail420,explore420,events420,pvp420,trade420});
+})();
+</script>
+
+
+
+<style>
+#market421{position:fixed;inset:0;z-index:80000;background:#000c;display:none;align-items:center;justify-content:center}
+#market421.on{display:flex}
+#market421 .m421{width:min(780px,94vw);max-height:84vh;overflow:auto;background:#171b18;color:#fff;border:2px solid #a17f45;border-radius:10px;padding:16px}
+#market421 button,#market421 select,#market421 input{padding:8px;margin:4px;background:#30372f;color:#fff;border:1px solid #746649;border-radius:5px}
+#market421 .offer421{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#252b25;border:1px solid #4e584e;border-radius:7px;padding:9px;margin:6px 0}
+</style>
+<div id="market421"><div class="m421">
+<div style="display:flex;justify-content:space-between"><b>🏪 RYNEK GRACZY</b><button id="mx421">✕</button></div>
+<div id="earn421"></div>
+<hr>
+<b>WYSTAW PRZEDMIOT</b><br>
+<select id="item421"></select>
+<input id="price421" type="number" min="1" max="100000000" placeholder="Cena Zeni">
+<button id="sell421">📦 WYSTAW</button>
+<hr>
+<div style="display:flex;justify-content:space-between;align-items:center"><b>OFERTY GRACZY</b><button id="refresh421">🔄 ODŚWIEŻ</button></div>
+<div id="offers421">Ładowanie...</div>
+</div></div>
+<script>
+(function(){
+const modal=document.getElementById("market421"),items=document.getElementById("item421"),price=document.getElementById("price421"),offers=document.getElementById("offers421"),earn=document.getElementById("earn421");
+document.getElementById("mx421").onclick=()=>modal.classList.remove("on");
+
+function sb421(){
+ return window.dbpSupabase||window.supabaseClient||window.sb||
+   (typeof supabaseClient!=="undefined"?supabaseClient:null)||
+   (typeof dbpSupabase!=="undefined"?dbpSupabase:null);
+}
+function toast421(t){if(typeof toast==="function")toast(t)}
+function inv421(){
+ let a=[];
+ const inv=currentUser?.inventory;
+ if(Array.isArray(inv)) a=inv.map((x,i)=>({id:typeof x==="string"?x:(x.id||x.item_id||x.name||("item_"+i)),name:typeof x==="string"?x:(x.name||x.item_name||x.id||"Przedmiot")}));
+ else if(inv&&typeof inv==="object") Object.entries(inv).forEach(([id,v])=>{if(v&&(+v>0||typeof v==="object"))a.push({id,name:v?.name||id})});
+ // healing counters / starsze itemy
+ [["senzu","Fasolka Senzu"],["healing","Mikstura Leczenia"],["heal","Mikstura Leczenia"]].forEach(([id,n])=>{
+   if(typeof currentUser?.[id]==="number"&&currentUser[id]>0)a.push({id,name:n})
+ });
+ return a.filter((x,i,A)=>A.findIndex(y=>y.id===x.id)===i);
+}
+function fill421(){
+ items.innerHTML="";
+ let a=inv421();
+ if(!a.length){let o=document.createElement("option");o.textContent="Brak przedmiotów do wystawienia";o.value="";items.appendChild(o);return}
+ a.forEach(x=>{let o=document.createElement("option");o.value=x.id;o.textContent=x.name;o.dataset.name=x.name;items.appendChild(o)})
+}
+async function rpc421(name,args={}){
+ const sb=sb421();if(!sb)throw new Error("Brak połączenia z Supabase");
+ const {data,error}=await sb.rpc(name,args);if(error)throw error;return data;
+}
+async function load421(){
+ fill421();
+ const sb=sb421();if(!sb){offers.innerHTML="❌ Brak połączenia z rynkiem online.";return}
+ offers.innerHTML="Ładowanie...";
+ try{
+  const {data,error}=await sb.from("market_listings").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error)throw error;
+  offers.innerHTML="";
+  if(!data?.length)offers.innerHTML="<div style='padding:15px;opacity:.75'>Na rynku nie ma jeszcze ofert.</div>";
+  data?.forEach(x=>{
+   let row=document.createElement("div");row.className="offer421";
+   let mine=x.seller_id===currentUser?.id;
+   row.innerHTML="<span><b>"+String(x.item_name||x.item_id).replace(/[<>]/g,"")+"</b><br><small>"+String(x.seller_username||"Gracz").replace(/[<>]/g,"")+" • "+Number(x.price||0).toLocaleString("pl-PL")+" Zeni</small></span>";
+   let b=document.createElement("button");b.textContent=mine?"ANULUJ":"KUP";
+   b.onclick=async()=>{b.disabled=true;try{
+     if(mine)await rpc421("cancel_market_listing",{p_listing_id:x.id});
+     else await rpc421("buy_market_listing",{p_listing_id:x.id});
+     toast421(mine?"📦 Oferta anulowana.":"🛒 Kupiono przedmiot!");
+     if(typeof loadPlayer==="function")await loadPlayer();
+     await load421();
+   }catch(e){toast421("❌ "+(e.message||"Błąd rynku"));b.disabled=false}};
+   row.appendChild(b);offers.appendChild(row)
+  });
+  let pe=currentUser?.market_earnings||0;
+  earn.innerHTML=pe>0?`💰 Do odebrania ze sprzedaży: <b>${Number(pe).toLocaleString("pl-PL")} Zeni</b> <button id="claim421">ODBIERZ</button>`:"";
+  let cb=document.getElementById("claim421");if(cb)cb.onclick=async()=>{try{await rpc421("claim_market_earnings");toast421("💰 Odebrano zarobek.");if(typeof loadPlayer==="function")await loadPlayer();load421()}catch(e){toast421("❌ "+e.message)}};
+ }catch(e){offers.innerHTML="❌ Nie udało się pobrać ofert: "+String(e.message||e)}
+}
+async function sell421(){
+ let id=items.value,p=Number(price.value),o=items.options[items.selectedIndex];
+ if(!id)return toast421("❌ Wybierz przedmiot.");
+ if(!Number.isInteger(p)||p<1)return toast421("❌ Podaj poprawną cenę.");
+ const b=document.getElementById("sell421");b.disabled=true;b.textContent="WYSTAWIAM...";
+ try{
+  await rpc421("create_market_listing",{p_item_id:id,p_price:p});
+  toast421("📦 Przedmiot wystawiony!");
+  price.value="";
+  if(typeof loadPlayer==="function")await loadPlayer();
+  await load421();
+ }catch(e){toast421("❌ "+(e.message||"Nie udało się wystawić."))}
+ finally{b.disabled=false;b.textContent="📦 WYSTAW"}
+}
+document.getElementById("sell421").onclick=sell421;
+document.getElementById("refresh421").onclick=load421;
+window.openMarket421=()=>{modal.classList.add("on");load421()};
+
+/* Rynek jest globalny: ten sam panel działa w Dolinie i światach Prestige.
+   Przechwytujemy E przy każdym NPC/obiekcie rynku. */
+document.addEventListener("keydown",e=>{
+ if(e.repeat||!(e.key==="e"||e.key==="E")||modal.classList.contains("on"))return;
+ let hit=false;
+ if(typeof npcs!=="undefined")hit=npcs.some(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<115&&/rynek|market|handlarz/i.test((n.name||"")+" "+(n.role||"")+" "+(n.text||"")));
+ if(hit){e.preventDefault();e.stopImmediatePropagation();window.openMarket421()}
+},true);
+
+/* Stare przyciski/wywołania rynku kierujemy do jednego globalnego rynku. */
+["openMarket","openMarket05","openMarket100","openMarket110","openMarket140","openMarket300","openMarket400","market400"].forEach(n=>{
+ try{window[n]=window.openMarket421}catch(e){}
+});
+document.addEventListener("click",e=>{
+ let b=e.target.closest("button");if(!b)return;
+ let t=(b.textContent||"").toLowerCase();
+ if((t.includes("rynek")||t.includes("market"))&&!b.closest("#market421")){
+   e.preventDefault();e.stopImmediatePropagation();window.openMarket421()
+ }
+},true);
 })();
 </script>
 
