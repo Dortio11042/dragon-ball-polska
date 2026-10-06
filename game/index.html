@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 2.0.1 — PORTAL PRESTIGE FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 2.1.0 — PRESTIGE NPC FUNKCJE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3378,6 +3378,138 @@ document.addEventListener("pointerdown",e=>{
     if(p&&p.to==="prestige"){player.x=1160;player.y=1320;currentUser.x=player.x;currentUser.y=player.y}
     return r;
   };
+})();
+</script>
+
+
+
+<style>
+#prestigeNpc210{position:fixed;inset:0;background:rgba(5,9,7,.72);display:none;align-items:center;justify-content:center;z-index:9000}
+#prestigeNpc210 .box{width:min(560px,92vw);max-height:82vh;overflow:auto;background:#171b18;border:3px solid #9b865c;border-radius:8px;padding:18px;box-shadow:0 12px 50px #000}
+#prestigeNpc210 h2{margin:0 0 8px;color:#f0d58a}#prestigeNpc210 p{color:#ddd;line-height:1.45}
+#prestigeNpc210 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#prestigeNpc210 button{padding:10px 13px;border:1px solid #88764e;background:#302a20;color:#fff;border-radius:5px;cursor:pointer}
+#prestigeNpc210 button:hover{background:#4b402e}
+#prestigeNpc210 .item{padding:10px;margin:7px 0;background:#222821;border:1px solid #4c5947}
+</style>
+<div id="prestigeNpc210"><div class="box"><h2 id="pNpcTitle210"></h2><div id="pNpcBody210"></div><div class="row" id="pNpcButtons210"></div></div></div>
+<script>
+/* 2.1.0 — NPC Prestige mają konkretne funkcje; lore/info przeniesione na tabliczki */
+(function(){
+ const panel=document.getElementById("prestigeNpc210"),title=document.getElementById("pNpcTitle210"),
+ body=document.getElementById("pNpcBody210"),buttons=document.getElementById("pNpcButtons210");
+ function close210(){panel.style.display="none"}
+ function btn210(t,fn){let b=document.createElement("button");b.textContent=t;b.onclick=fn;buttons.appendChild(b)}
+ function open210(t,html){title.textContent=t;body.innerHTML=html;buttons.innerHTML="";panel.style.display="flex";btn210("ZAMKNIJ",close210)}
+ panel.addEventListener("click",e=>{if(e.target===panel)close210()});
+
+ function state210(){
+   currentUser.prestige210??={tokens:0,training:0,bounties:0,bountyKills:0};
+   return currentUser.prestige210;
+ }
+ function token210(n){let st=state210();st.tokens+=n;savePlayer();updateHUD()}
+ function inv210(id){currentUser.inventory??=[];return currentUser.inventory.includes(id)}
+ function addInv210(id){currentUser.inventory??=[];currentUser.inventory.push(id);savePlayer()}
+
+ // Tabliczki zastępują NPC, którzy mieliby tylko mówić.
+ const signs210=[
+  {world:"prestige",x:1110,y:690,text:"KRaina Odrodzenia",msg:"⭐ KRAINA ODRODZENIA\nDostęp od 1 Prestige. Osada jest bezpiecznym centrum tej krainy."},
+  {world:"prestige",x:420,y:430,text:"Stare Ruiny",msg:"⚠️ STARE RUINY\nIm dalej od osady, tym silniejsi przeciwnicy."},
+  {world:"prestige",x:1780,y:900,text:"Rzeka Duchów",msg:"🌊 RZEKA DUCHÓW\nKamienny most prowadzi do wschodniej części krainy."}
+ ];
+
+ // Usuwamy czysto informacyjnego Strażnika; jego informacja trafia na tablicę.
+ for(let i=npcs.length-1;i>=0;i--)if(npcs[i].world==="prestige"&&npcs[i].name==="Strażnik Odrodzenia")npcs.splice(i,1);
+
+ // Pozostałe NPC dostają role.
+ const merchant=npcs.find(n=>n.world==="prestige"&&n.name==="Kupiec Odrodzenia");
+ const master=npcs.find(n=>n.world==="prestige"&&n.name==="Mistrz Odrodzenia");
+ const explorer=npcs.find(n=>n.world==="prestige"&&n.name==="Badacz Katakumb");
+ if(merchant)merchant.function210="shop";
+ if(master)master.function210="trainer";
+ if(explorer)explorer.function210="bounty";
+
+ function shop210(){
+   let st=state210();
+   open210("🛒 Kupiec Odrodzenia",`<p>Waluta krainy: <b>Odłamki Odrodzenia: ${st.tokens}</b></p>
+   <div class="item">🧪 Eliksir Odrodzenia — 3 odłamki — +250 HP</div>
+   <div class="item">🗡️ Rękawice Odrodzenia — 15 odłamków — przedmiot Prestige</div>
+   <div class="item">💠 Amulet Odrodzenia — 25 odłamków — przedmiot Prestige</div>`);
+   btn210("🧪 KUP ELIKSIR — 3",()=>{if(st.tokens<3)return toast("Za mało Odłamków Odrodzenia.");st.tokens-=3;currentUser.hp=Math.min(currentUser.maxHp||9999,(currentUser.hp||1)+250);savePlayer();toast("🧪 +250 HP");shop210()});
+   btn210("🗡️ RĘKAWICE — 15",()=>{if(inv210("rebirthGloves210"))return toast("Już je posiadasz.");if(st.tokens<15)return toast("Za mało odłamków.");st.tokens-=15;addInv210("rebirthGloves210");toast("🗡️ Zdobyto Rękawice Odrodzenia!");shop210()});
+   btn210("💠 AMULET — 25",()=>{if(inv210("rebirthAmulet210"))return toast("Już go posiadasz.");if(st.tokens<25)return toast("Za mało odłamków.");st.tokens-=25;addInv210("rebirthAmulet210");toast("💠 Zdobyto Amulet Odrodzenia!");shop210()});
+ }
+ function trainer210(){
+   let st=state210(),cost=5000+(st.training*3500);
+   open210("🥋 Mistrz Odrodzenia",`<p>Stały trening Prestige: <b>${st.training}/10</b>.</p><p>Kolejny trening kosztuje <b>${cost.toLocaleString()} Zeni</b> i daje +20 Max HP.</p>`);
+   btn210("TRENUJ",()=>{if(st.training>=10)return toast("Osiągnąłeś limit treningu.");if(currentUser.zeni<cost)return toast("Za mało Zeni.");currentUser.zeni-=cost;st.training++;currentUser.maxHp=(currentUser.maxHp||100)+20;currentUser.hp=currentUser.maxHp;savePlayer();updateHUD();toast("🥋 +20 Max HP!");trainer210()});
+ }
+ function bounty210(){
+   let st=state210(),need=8+st.bounties*2;
+   open210("📜 Badacz Katakumb",`<p>Zlecenie #${st.bounties+1}: pokonaj <b>${need}</b> potworów w Krainie Odrodzenia.</p><p>Postęp: <b>${st.bountyKills}/${need}</b></p><p>Nagroda: <b>${4+st.bounties} Odłamków Odrodzenia</b> + Zeni.</p>`);
+   if(st.bountyKills>=need)btn210("ODBIERZ NAGRODĘ",()=>{let reward=4+st.bounties;st.tokens+=reward;currentUser.zeni+=2500+st.bounties*1000;st.bounties++;st.bountyKills=0;savePlayer();updateHUD();toast("📜 Zlecenie ukończone! +"+reward+" odłamków");bounty210()});
+ }
+
+ // Liczymy zabójstwa mobów Prestige do zleceń i dajemy małą szansę na odłamek.
+ if(typeof registerKill==="function"){
+   const oldKill210=registerKill;
+   registerKill=function(e){
+     const r=oldKill210.apply(this,arguments);
+     if(e&&e.world==="prestige"){
+       let st=state210();st.bountyKills++;
+       if(Math.random()<.18){st.tokens++;toast("💠 Potwór upuścił Odłamek Odrodzenia!")}
+       savePlayer();
+     }
+     return r;
+   };
+ }
+
+ // Interakcja NPC + tabliczki jest obsłużona PRZED starym interact().
+ const oldInteract210=interact;
+ interact=function(){
+   if(currentUser&&currentWorld==="prestige"){
+     let sign=signs210.find(a=>Math.hypot(player.x-a.x,player.y-a.y)<90);
+     if(sign){toast(sign.msg);return}
+     let n=npcs.find(n=>n.world==="prestige"&&n.function210&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+     if(n){
+       if(n.function210==="shop")shop210();
+       else if(n.function210==="trainer")trainer210();
+       else if(n.function210==="bounty")bounty210();
+       return;
+     }
+   }
+   return oldInteract210();
+ };
+
+ // Podmieniamy hinty, żeby od razu było wiadomo CO robi NPC.
+ const oldHint210=updateHint;
+ updateHint=function(){
+   oldHint210();
+   if(!currentUser||currentWorld!=="prestige")return;
+   let sign=signs210.find(a=>Math.hypot(player.x-a.x,player.y-a.y)<90);
+   if(sign){hint.textContent="E — 📋 CZYTAJ TABLICĘ";hint.style.display="block";return}
+   let n=npcs.find(n=>n.world==="prestige"&&n.function210&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+   if(n){
+     hint.textContent=n.function210==="shop"?"E — 🛒 SKLEP ODRODZENIA":n.function210==="trainer"?"E — 🥋 TRENING PRESTIGE":"E — 📜 ZLECENIA";
+     hint.style.display="block";
+   }
+ };
+
+ // Rysowanie drewnianych tablic.
+ const oldScenery210=drawScenery;
+ drawScenery=function(c){
+   oldScenery210(c);
+   if(currentWorld!=="prestige")return;
+   ctx.save();
+   for(const a of signs210){
+     let x=a.x-c.x,y=a.y-c.y;
+     ctx.fillStyle="#50351f";ctx.fillRect(x+14,y+16,6,25);
+     ctx.fillStyle="#9b7442";ctx.fillRect(x,y,35,20);
+     ctx.strokeStyle="#3a2718";ctx.lineWidth=2;ctx.strokeRect(x,y,35,20);
+     ctx.fillStyle="#ead69c";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("INFO",x+17,y+14);
+   }
+   ctx.restore();
+ };
 })();
 </script>
 
