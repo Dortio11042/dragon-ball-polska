@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.11 — STABILNY HUD + MINIMAPA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.2.0 — DOMY + DUNGEONY + NPC FULL</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5270,6 +5270,156 @@ function stabilize411(){
 setInterval(stabilize411,250);
 setTimeout(stabilize411,100);
 new MutationObserver(()=>setTimeout(stabilize411,0)).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+
+
+<style>
+#sys420{position:fixed;inset:0;z-index:70000;background:#000b;display:none;align-items:center;justify-content:center}
+#sys420.on{display:flex}
+#sys420 .p420{width:min(720px,92vw);max-height:82vh;overflow:auto;background:#171b18;color:#fff;border:2px solid #88744b;border-radius:10px;padding:16px}
+#sys420 button{background:#343c33;color:#fff;border:1px solid #776b49;border-radius:5px;padding:8px 10px;margin:4px;cursor:pointer}
+#sys420 .card420{background:#242a24;border:1px solid #4c574d;border-radius:7px;padding:10px;margin:7px 0}
+</style>
+<div id="sys420"><div class="p420"><div style="display:flex;justify-content:space-between"><b id="ttl420"></b><button id="x420">✕</button></div><div id="body420"></div><div id="btn420"></div></div></div>
+<script>
+(function(){
+/* =========================================================
+   4.2.0 — pełne lokalne gameplay systems dla NPC:
+   dom, meble, ogródek, pety, wyprawy, eksploracja, gildia,
+   umiejętności, runy, bank, poczta, eventy, turniej, handel.
+   ========================================================= */
+const UI=document.getElementById("sys420"),BODY=document.getElementById("body420"),BT=document.getElementById("btn420"),TTL=document.getElementById("ttl420");
+document.getElementById("x420").onclick=()=>UI.classList.remove("on");
+function esc420(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function open420(t,h){TTL.textContent=t;BODY.innerHTML=h;BT.innerHTML="";UI.classList.add("on")}
+function b420(t,f){let b=document.createElement("button");b.textContent=t;b.onclick=f;BT.appendChild(b);return b}
+function msg420(t){if(typeof toast==="function")toast(t)}
+function save420(){if(typeof savePlayer==="function")savePlayer()}
+function S(){
+ currentUser.systems420??={};
+ let z=currentUser.systems420;
+ z.home??={owned:false,level:1,furniture:[],placed:[],storage:[],farm:{plots:0,seeds:0,crops:0,ready:0}};
+ z.guild??={name:"",xp:0,level:1,bank:0};
+ z.keys??=1;z.profession??="";z.skillPoints??=0;z.skills??={power:0,hp:0,ki:0};
+ z.runes??=[];z.bank??=[];z.mail??=[];z.secrets??=[];z.lore??=[];z.mount??="";
+ z.daily??={day:"",kills:0,claimed:false};z.tournament??={wins:0,losses:0,seasonPoints:0};
+ return z
+}
+function spend420(n){if((currentUser.zeni||0)<n){msg420("❌ Za mało Zeni.");return false}currentUser.zeni-=n;return true}
+
+/* ---------- DOM: prawdziwe wnętrze + ustawianie mebli ---------- */
+const HOME="playerHome420";
+let homeEdit420=false;
+function ensureHome420(){
+ if(typeof worlds==="undefined")return;
+ worlds[HOME]??={name:"Twój Dom",width:1200,height:800,bg:"#34291f",ground:"#5a4936"};
+}
+function homeMenu420(){
+ let z=S().home,f=z.farm;
+ open420("🏡 DOM GRACZA",z.owned?
+ `<div class=card420>Poziom domu: <b>${z.level}</b><br>Meble: ${z.furniture.length} | Ustawione: ${z.placed.length}<br>Grządki: ${f.plots} | Gotowe plony: ${f.ready}</div>`:
+ `<div class=card420>Własny fizyczny dom kosztuje <b>50 000 Zeni</b>.</div>`);
+ if(!z.owned){b420("KUP DOM — 50 000",()=>{if(!spend420(50000))return;z.owned=true;save420();homeMenu420()});return}
+ b420("WEJDŹ DO DOMU",()=>{ensureHome420();UI.classList.remove("on");window._homeReturn420={w:currentWorld,x:player.x,y:player.y};currentWorld=HOME;player.x=150;player.y=400});
+ b420("KUP MEBEL — 1 500",()=>{if(!spend420(1500))return;z.furniture.push(["Stół","Łóżko","Lampa","Gablota","Skrzynia","Krzesło"][Math.floor(Math.random()*6)]);save420();homeMenu420()});
+ b420("ULEPSZ DOM — "+(z.level*20000),()=>{let c=z.level*20000;if(z.level>=5)return msg420("MAX poziom domu.");if(!spend420(c))return;z.level++;save420();homeMenu420()});
+ b420("KUP GRZĄDKĘ — 2 000",()=>{if(!spend420(2000))return;f.plots++;f.seeds++;save420();homeMenu420()});
+ b420("POSADŹ",()=>{if(f.plots<1)return msg420("Najpierw kup grządkę.");f.crops+=f.plots;setTimeout(()=>{if(currentUser){S().home.farm.ready+=f.plots;save420();msg420("🌱 Plony w domu są gotowe!")}},30000);save420();msg420("🌱 Posadzone. Plony dojrzeją za 30 s.")});
+ b420("ZBIERZ PLONY",()=>{if(!f.ready)return msg420("Brak gotowych plonów.");currentUser.zeni+=f.ready*400;f.ready=0;save420();homeMenu420()});
+}
+window.home400=homeMenu420;
+
+function placeFurniture420(){
+ let z=S().home;if(currentWorld!==HOME||!z.owned||!z.furniture.length)return false;
+ let name=z.furniture.shift();z.placed.push({name,x:Math.round(player.x+60),y:Math.round(player.y)});
+ save420();msg420("🪑 Ustawiono: "+name);return true
+}
+document.addEventListener("keydown",e=>{
+ if(currentWorld!==HOME||e.repeat)return;
+ if(e.key==="e"||e.key==="E"){
+   if(player.x<95&&window._homeReturn420){let r=window._homeReturn420;currentWorld=r.w;player.x=r.x;player.y=r.y;e.preventDefault();e.stopImmediatePropagation()}
+ }
+ if(e.key==="r"||e.key==="R"){if(placeFurniture420()){e.preventDefault();e.stopImmediatePropagation()}}
+},true);
+
+/* ---------- DUNGEON: realne komnaty ---------- */
+const D={on:false,w:"dungeon420",room:1,rooms:5,mobs:[],ret:null,reward:0,hard:false};
+function ensureD420(){worlds[D.w]??={name:"Losowy Dungeon",width:1500,height:900,bg:"#171513",ground:"#28231e"}}
+function spawnRoom420(){
+ D.mobs=[];let boss=D.room===D.rooms,n=boss?1:Math.min(3+D.room,7);
+ for(let i=0;i<n;i++){let hp=(boss?650:150)+D.room*(boss?110:35)+(currentUser.level||1)*10;D.mobs.push({x:600+(i%4)*150,y:300+Math.floor(i/4)*180,hp,maxHp:hp,boss,alive:true,last:0})}
+}
+function dungeonMenu420(hard=false){
+ let z=S();open420(hard?"💀 HARDCORE DUNGEON":"🌀 PROCEDURALNY DUNGEON",`<div class=card420>Klucze: <b>${z.keys}</b><br>Wyprawa tworzy 5–8 prawdziwych komnat. W każdej musisz pokonać przeciwników, a w ostatniej bossa.</div>`);
+ b420("ROZPOCZNIJ",()=>{if(z.keys<1)return msg420("🔑 Potrzebujesz klucza.");z.keys--;D.hard=hard;D.rooms=5+Math.floor(Math.random()*4);D.room=1;D.reward=(hard?12000:5000)+D.rooms*900;D.ret={w:currentWorld,x:player.x,y:player.y};D.on=true;ensureD420();spawnRoom420();UI.classList.remove("on");currentWorld=D.w;player.x=150;player.y=450;save420();msg420("🏰 "+D.rooms+" komnat — zaczynamy!")})
+}
+window.dungeon400=dungeonMenu420;
+function nearDMob420(r=130){let a=D.mobs.filter(x=>x.alive).sort((a,b)=>Math.hypot(player.x-a.x,player.y-a.y)-Math.hypot(player.x-b.x,player.y-b.y));return a[0]&&Math.hypot(player.x-a[0].x,player.y-a[0].y)<r?a[0]:null}
+function hitD420(){let m=nearDMob420();if(!m)return false;let dmg=25+(currentUser.level||1)*3+(S().skills.power||0)*5;m.hp=Math.max(0,m.hp-dmg);if(!m.hp){m.alive=false;if(!D.mobs.some(x=>x.alive))msg420(D.room===D.rooms?"👑 Boss pokonany! Idź do wyjścia po prawej.":"🚪 Komnata czysta! Idź do drzwi po prawej.")}return true}
+document.addEventListener("keydown",e=>{
+ if(!D.on||currentWorld!==D.w||e.repeat)return;
+ if(e.code==="Space"||e.key==="f"||e.key==="F"){if(hitD420()){e.preventDefault();e.stopImmediatePropagation()}}
+ if(e.key==="e"||e.key==="E"){
+  if(player.x>1320&&!D.mobs.some(x=>x.alive)){
+   if(D.room<D.rooms){D.room++;spawnRoom420();player.x=150;player.y=450;msg420("🚪 Komnata "+D.room+"/"+D.rooms)}
+   else{currentUser.zeni+=D.reward;currentUser.exp=(currentUser.exp||0)+D.rooms*120;S().keys+=Math.random()<.35?1:0;let r=D.ret;D.on=false;currentWorld=r.w;player.x=r.x;player.y=r.y;save420();msg420("🏆 Dungeon ukończony! +"+D.reward+" Zeni")}
+   e.preventDefault();e.stopImmediatePropagation()
+  }else if(player.x<90){let r=D.ret;D.on=false;currentWorld=r.w;player.x=r.x;player.y=r.y;msg420("↩️ Opuściłeś dungeon.");e.preventDefault();e.stopImmediatePropagation()}
+ }
+},true);
+setInterval(()=>{if(!D.on||currentWorld!==D.w)return;D.mobs.filter(m=>m.alive).forEach(m=>{let dx=player.x-m.x,dy=player.y-m.y,d=Math.hypot(dx,dy)||1;if(d<360&&d>55){let sp=m.boss?.55:.85;m.x+=dx/d*sp;m.y+=dy/d*sp}if(d<50&&Date.now()-m.last>900){m.last=Date.now();currentUser.hp=Math.max(1,(currentUser.hp||100)-(m.boss?12:5))}})},50);
+
+/* ---------- POZOSTALI NPC: funkcjonalne systemy ---------- */
+function guild420(){let z=S().guild;open420("🏰 GILDIA",z.name?`<div class=card420><b>${esc420(z.name)}</b> — poziom ${z.level}<br>EXP ${z.xp} | Skarbiec ${z.bank} Zeni</div>`:"<div class=card420>Załóż własną gildię za 25 000 Zeni.</div>");if(!z.name)b420("ZAŁÓŻ",()=>{let n=prompt("Nazwa gildii:");if(!n||n.length<3||!spend420(25000))return;z.name=n.slice(0,20);save420();guild420()});else b420("WPŁAĆ 5 000",()=>{if(!spend420(5000))return;z.bank+=5000;z.xp+=100;if(z.xp>=z.level*300){z.xp=0;z.level++}save420();guild420()})}
+function skills420(){let z=S();open420("🌳 UMIEJĘTNOŚCI",`<div class=card420>Profesja: <b>${esc420(z.profession||"brak")}</b><br>Punkty: ${z.skillPoints}<br>Moc ${z.skills.power}/10 | HP ${z.skills.hp}/10 | Ki ${z.skills.ki}/10</div>`);if(!z.profession)["Wojownik","Obrońca","Mistrz Ki"].forEach(p=>b420(p,()=>{z.profession=p;z.skillPoints+=3;save420();skills420()}));["power","hp","ki"].forEach(k=>b420("+ "+k.toUpperCase(),()=>{if(z.skillPoints<1||z.skills[k]>=10)return;z.skillPoints--;z.skills[k]++;if(k==="hp"){currentUser.max_hp=(currentUser.max_hp||100)+15;currentUser.hp=(currentUser.hp||100)+15}save420();skills420()}))}
+function craft420(){let z=S();open420("🔮 RUNOMISTRZ",`<div class=card420>Runy: ${z.runes.map(esc420).join(", ")||"brak"}</div>`);b420("WYKUTĄ RUNĘ — 6000",()=>{if(!spend420(6000))return;z.runes.push(["Runa Mocy","Runa Życia","Runa Ki","Runa Szybkości"][Math.floor(Math.random()*4)]);save420();craft420()});if(z.runes.length>=3)b420("STWÓRZ LEGENDARNY ARTEFAKT",()=>{z.runes.splice(0,3);(currentUser.inventory??=[]).push("Legendarny Artefakt");save420();craft420()})}
+function bank420(){let z=S();open420("🏦 BANK",`<div class=card420>Przedmioty w banku: ${z.bank.length}</div>`+z.bank.map((x,i)=>`<div class=card420>${esc420(x)} <button onclick="window.takeBank420(${i})">WYJMIJ</button></div>`).join(""));(currentUser.inventory||[]).slice(0,10).forEach(x=>b420("SCHOWAJ "+x,()=>{let i=currentUser.inventory.indexOf(x);if(i>=0){currentUser.inventory.splice(i,1);z.bank.push(x);save420();bank420()}}))}
+window.takeBank420=i=>{let z=S(),x=z.bank.splice(i,1)[0];if(x)(currentUser.inventory??=[]).push(x);save420();bank420()};
+function mail420(){let z=S();open420("📬 POCZTA",z.mail.map(x=>`<div class=card420><b>${esc420(x.from)}</b><br>${esc420(x.text)}</div>`).join("")||"<div class=card420>Brak wiadomości.</div>");b420("ODBIERZ PACZKĘ DZIENNĄ",()=>{let d=new Date().toISOString().slice(0,10);if(z.lastMail===d)return msg420("Już odebrane.");z.lastMail=d;currentUser.zeni+=1000;z.mail.unshift({from:"System",text:"Odebrano dzienną paczkę: 1000 Zeni."});save420();mail420()})}
+function explore420(){let z=S();open420("🗺️ KARTOGRAF",`<div class=card420>Sekrety: ${z.secrets.length} | Lore: ${z.lore.length}<br>Klucze: ${z.keys}<br>Mount: ${esc420(z.mount||"brak")}</div>`);b420("WYPRAWA BADAWCZA — 500",()=>{if(!spend420(500))return;if(Math.random()<.65){z.secrets.push("Sekret #"+(z.secrets.length+1));z.lore.push("Fragment kroniki #"+(z.lore.length+1));if(Math.random()<.45)z.keys++;msg420("🗝️ Coś odkryłeś!")}else msg420("Nic tym razem.");save420();explore420()});if(!z.mount)b420("OSWAJAJ MOUNTA — 8000",()=>{if(!spend420(8000))return;z.mount=["Chmura Ki","Duchowy Wilk","Mini Smok"][Math.floor(Math.random()*3)];save420();explore420()})}
+function events420(){let z=S(),d=new Date().toISOString().slice(0,10);if(z.daily.day!==d)z.daily={day:d,kills:0,claimed:false};open420("📣 WYDARZENIA",`<div class=card420>Dzienny cel: pokonaj 20 przeciwników.<br>Postęp: ${z.daily.kills}/20</div>`);if(z.daily.kills>=20&&!z.daily.claimed)b420("ODBIERZ 5 000 ZENI",()=>{z.daily.claimed=true;currentUser.zeni+=5000;save420();events420()})}
+function pvp420(){let z=S().tournament;open420("🏆 TURNIEJ",`<div class=card420>Wygrane: ${z.wins} | Porażki: ${z.losses}<br>Punkty sezonu: ${z.seasonPoints}</div><div class=card420>Tryb treningowy z losowym przeciwnikiem NPC.</div>`);b420("WALCZ",()=>{let win=Math.random()<(0.45+Math.min(.25,(currentUser.level||1)/200));if(win){z.wins++;z.seasonPoints+=25;currentUser.zeni+=1500;msg420("🏆 Wygrana! +1500 Zeni")}else{z.losses++;msg420("💥 Porażka.")}save420();pvp420()})}
+function trade420(){let rp=(window.remotePlayers072||[]).filter(r=>r.world===currentWorld).map(r=>({r,d:Math.hypot(player.x-r.x,player.y-r.y)})).sort((a,b)=>a.d-b.d)[0];open420("🎁 HANDEL",rp&&rp.d<180?`<div class=card420>W pobliżu: <b>${esc420(rp.r.username)}</b><br>Bezpieczna wymiana online wymaga serwerowego potwierdzenia obu graczy.</div>`:"<div class=card420>Podejdź do innego gracza.</div>")}
+function pets420(){if(typeof window.openPets409==="function"){UI.classList.remove("on");window.openPets409()}}
+
+/* Podmieniamy role NPC na nowe, działające handlery. */
+const H={guild:guild420,explore:explore420,home:homeMenu420,skills:skills420,craft:craft420,bank:bank420,dungeon:()=>dungeonMenu420(false),pets:pets420,mail:mail420,events:events420,pvp:pvp420,trade:trade420};
+document.addEventListener("keydown",e=>{
+ if(e.repeat||!(e.key==="e"||e.key==="E")||UI.classList.contains("on")||typeof npcs==="undefined")return;
+ let n=npcs.find(n=>n.role400&&n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<105);
+ if(n&&H[n.role400]){e.preventDefault();e.stopImmediatePropagation();H[n.role400]()}
+},true);
+
+/* Kill counter dla Herolda. */
+if(typeof registerKill==="function"){
+ const rk420=registerKill;registerKill=function(e){let r=rk420.apply(this,arguments);if(currentUser){let z=S(),d=new Date().toISOString().slice(0,10);if(z.daily.day!==d)z.daily={day:d,kills:0,claimed:false};z.daily.kills++;if(Math.random()<.035)z.keys++;save420()}return r}
+}
+
+/* ---------- RYSOWANIE DOMU / DUNGEONU / MEBLI ---------- */
+const dp420=drawPlayer;
+drawPlayer=function(){
+ let r=dp420.apply(this,arguments),c=arguments[0]||window.camera||{x:0,y:0};
+ if(currentWorld===HOME){
+  let z=S().home;ctx.save();
+  ctx.fillStyle="#7b6045";ctx.fillRect(80-c.x,80-c.y,1040,640);
+  ctx.fillStyle="#3a2c22";ctx.fillRect(90-c.x,90-c.y,1020,620);
+  ctx.fillStyle="#d0b07b";ctx.font="bold 14px Arial";ctx.textAlign="left";ctx.fillText("E przy lewej ścianie — wyjście | R — ustaw następny mebel",110-c.x,120-c.y);
+  z.placed.forEach(f=>{let x=f.x-c.x,y=f.y-c.y;ctx.fillStyle="#8c6948";ctx.fillRect(x-18,y-12,36,24);ctx.fillStyle="#fff";ctx.font="10px Arial";ctx.textAlign="center";ctx.fillText(f.name,x,y-18)});
+  ctx.restore()
+ }
+ if(D.on&&currentWorld===D.w){
+  ctx.save();ctx.fillStyle="#fff";ctx.font="bold 14px Arial";ctx.textAlign="center";ctx.fillText("Komnata "+D.room+" / "+D.rooms,canvas.width/2,30);
+  ctx.fillStyle="#6b4a2b";ctx.fillRect(1360-c.x,370-c.y,70,150);ctx.fillStyle="#fff";ctx.fillText(D.room===D.rooms?"SKRZYNIA":"DALEJ",1395-c.x,350-c.y);
+  D.mobs.filter(m=>m.alive).forEach(m=>{let x=m.x-c.x,y=m.y-c.y;ctx.fillStyle=m.boss?"#8b2929":"#4b3d55";ctx.fillRect(x-18,y-25,36,48);ctx.fillStyle="#111";ctx.fillRect(x-24,y-38,48,6);ctx.fillStyle="#ddd";ctx.fillRect(x-24,y-38,48*m.hp/m.maxHp,6);ctx.fillStyle="#fff";ctx.font="10px Arial";ctx.fillText(m.boss?"BOSS":"Cień",x,y-45)});
+  ctx.restore()
+ }
+ return r
+};
+
+/* Eksporty zgodne ze starym kodem */
+Object.assign(window,{home420:homeMenu420,dungeon420:dungeonMenu420,guild420,skills420,craft420,bank420,mail420,explore420,events420,pvp420,trade420});
 })();
 </script>
 
