@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.0 — WIELKI UPDATE SYSTEMÓW</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.1 — ZIELONA DOLINA REWORK</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4704,6 +4704,181 @@ document.addEventListener("keydown",e=>{if(!currentUser)return;if(e.key.toLowerC
 
 // public hooks
 Object.assign(window,{guild400,dungeon400,worldBoss400,events400,board400,home400,pets400,exploration400,skills400,crafting400,pvpSeason400,bank400,mail400,trade400});
+})();
+</script>
+
+
+
+<script>
+(function(){
+/* 4.0.1 — Zielona Dolina = bezpieczny hub, trening i uporządkowane NPC */
+
+// 1. Usuń bandytów i starego bossa z pierwszego świata.
+for(let i=enemies.length-1;i>=0;i--){
+  if(enemies[i].world==="valley") enemies.splice(i,1);
+}
+
+// 2. Manekiny treningowe: nie atakują i szybko się odnawiają.
+const dummies401=[
+ [430,520],[620,520],[430,700],[620,700],[525,610]
+];
+dummies401.forEach((p,i)=>{
+ enemies.push({
+   world:"valley",name:"Manekin treningowy",level:1,x:p[0],y:p[1],
+   maxHp:180,hp:180,alive:true,respawn:0,
+   rewardZeni:0,rewardExp:35,trainingDummy401:true,
+   noAttack401:true
+ });
+});
+
+// Dodatkowe zabezpieczenie: manekin nigdy nie może być traktowany jako agresywny mob.
+const oldMineMove401=window.updateMineMobs330;
+enemies.filter(e=>e.trainingDummy401).forEach(e=>{e.move330=false;e.vx330=0;e.vy330=0});
+
+// 3. Czytelny układ centrum.
+// Plac główny
+const positions401={
+ "Handlarz":[1060,900],
+ "Wróżka":[1240,900],
+ "Dzienny":[1420,900],
+ "Łowca":[1600,900],
+ "Rekruter":[1060,1090],
+ "Zleceniodawca Doliny":[1240,1090],
+ "Badacz Bestiariusza":[1420,1090],
+ "Zarządca Gildii":[1600,1090],
+ "Kartograf":[1060,1280],
+ "Zarządca Domów":[1240,1280],
+ "Bankier":[1420,1280],
+ "Listonosz":[1600,1280],
+ "Opiekun Zwierząt":[1780,1280],
+ "Herold Wydarzeń":[1780,1090],
+ "Kupiec Bezpośredni":[1780,900]
+};
+
+// Dom Mistrzów — prawa/górna część miasta.
+Object.assign(positions401,{
+ "Mistrz":[1810,560],
+ "Mistrz Mocy":[1950,560],
+ "Trener":[1950,560],
+ "Mistrz Form":[2090,560],
+ "Mistrz Umiejętności":[1810,700],
+ "Mistrz Wypraw":[1950,700],
+ "Mistrz Turnieju":[2090,700],
+ "Mistrz PvP":[2090,820]
+});
+
+// Kowal ma własny domek/warsztat.
+positions401["Kowal"]=[780,1110];
+positions401["Runomistrz"]=[780,1260];
+
+npcs.filter(n=>n.world==="valley").forEach(n=>{
+ let p=positions401[n.name];if(p){n.x=p[0];n.y=p[1]}
+});
+
+// Usuń duplikaty NPC o tej samej nazwie/roli w Dolinie.
+let seen401=new Set();
+for(let i=npcs.length-1;i>=0;i--){
+ let n=npcs[i]; if(n.world!=="valley")continue;
+ let key=n.name+"|"+(n.role300||n.role310||n.role320||n.role321||n.role400||"");
+ if(seen401.has(key))npcs.splice(i,1); else seen401.add(key);
+}
+
+// 4. Przesuń skrzynie i obiekty automatyczne z centrum NPC.
+// Obsługuje kilka nazw używanych w starszych wersjach.
+["chests08","chests","worldChests","treasureChests"].forEach(k=>{
+ let a=window[k];
+ if(Array.isArray(a))a.filter(x=>x.world==="valley").forEach((x,i)=>{x.x=720+(i%3)*150;x.y=1460+Math.floor(i/3)*80});
+});
+
+// 5. Rysowanie miasta: Dom Mistrzów + Kuźnia + plac + strefa treningowa.
+const oldScenery401=drawScenery;
+drawScenery=function(c){
+ oldScenery401(c);
+ if(currentWorld!=="valley")return;
+ const X=x=>x-c.x,Y=y=>y-c.y;
+ ctx.save();
+
+ // plac miejski
+ ctx.fillStyle="rgba(190,166,112,.20)";
+ ctx.fillRect(X(960),Y(820),900,570);
+
+ // ścieżki
+ ctx.fillStyle="rgba(151,126,79,.34)";
+ ctx.fillRect(X(900),Y(970),1050,80);
+ ctx.fillRect(X(1280),Y(780),80,650);
+
+ // Kuźnia
+ ctx.fillStyle="#5a4431";ctx.fillRect(X(680),Y(980),220,230);
+ ctx.fillStyle="#38291f";ctx.beginPath();ctx.moveTo(X(655),Y(990));ctx.lineTo(X(790),Y(900));ctx.lineTo(X(925),Y(990));ctx.fill();
+ ctx.fillStyle="#27211c";ctx.fillRect(X(755),Y(1080),65,130);
+ ctx.fillStyle="#d26b2e";ctx.fillRect(X(845),Y(1040),24,35);
+ ctx.fillStyle="#f0c15d";ctx.font="bold 13px Arial";ctx.fillText("⚒ KUŹNIA",X(735),Y(955));
+
+ // Dom Mistrzów
+ ctx.fillStyle="#544a3b";ctx.fillRect(X(1710),Y(440),500,430);
+ ctx.fillStyle="#302b27";ctx.beginPath();ctx.moveTo(X(1670),Y(455));ctx.lineTo(X(1960),Y(300));ctx.lineTo(X(2250),Y(455));ctx.fill();
+ ctx.fillStyle="#332b23";ctx.fillRect(X(1915),Y(735),90,135);
+ ctx.fillStyle="#d7b85e";ctx.fillRect(X(1760),Y(510),55,45);ctx.fillRect(X(2100),Y(510),55,45);
+ ctx.fillStyle="#f2d57d";ctx.font="bold 14px Arial";ctx.fillText("🏯 DOM MISTRZÓW",X(1850),Y(410));
+
+ // strefa treningowa
+ ctx.strokeStyle="#9c8355";ctx.lineWidth=4;ctx.strokeRect(X(330),Y(410),420,410);
+ ctx.fillStyle="rgba(120,92,55,.18)";ctx.fillRect(X(334),Y(414),412,402);
+ ctx.fillStyle="#ead391";ctx.font="bold 13px Arial";ctx.fillText("🥋 STREFA TRENINGOWA",X(420),Y(390));
+
+ ctx.restore();
+};
+
+// 6. Specjalny wygląd manekina.
+const oldEnemy401=drawEnemy;
+drawEnemy=function(e,c){
+ if(!e?.trainingDummy401)return oldEnemy401(e,c);
+ let x=e.x-c.x,y=e.y-c.y;
+ ctx.save();
+ ctx.fillStyle="#6c4a2d";ctx.fillRect(x-3,y-2,6,32);
+ ctx.fillStyle="#a87543";ctx.fillRect(x-15,y+4,30,8);
+ ctx.fillStyle="#b78a54";ctx.beginPath();ctx.arc(x,y-10,10,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#4c3422";ctx.lineWidth=2;ctx.strokeRect(x-17,y-18,34,53);
+ ctx.fillStyle="#fff";ctx.font="10px Arial";ctx.textAlign="center";ctx.fillText("TRENING",x,y-25);
+ ctx.restore();
+};
+
+// 7. Jeżeli stare AI próbuje uderzyć manekinem — trzymaj go nieruchomo.
+setInterval(()=>{
+ enemies.filter(e=>e.trainingDummy401).forEach(e=>{
+   e.move330=false;e.vx330=0;e.vy330=0;
+   // szybki respawn bez tworzenia kolejnych obiektów
+   if(e.alive===false){
+     e._dummyDead401=(e._dummyDead401||Date.now());
+     if(Date.now()-e._dummyDead401>1800){e.alive=true;e.hp=e.maxHp;e.respawn=0;e._dummyDead401=0}
+   }
+ });
+},250);
+
+// 8. Minimapka: zaznacz strefę treningową, Kuźnię i Dom Mistrzów.
+function overlayMini401(){
+ if(!currentUser||currentWorld!=="valley")return;
+ let mc=document.querySelector("#miniMap08,#minimap08,#miniMap,#minimap,canvas[id*='mini' i]");
+ if(!mc?.getContext)return;
+ let m=mc.getContext("2d"),W=mc.width,H=mc.height,sx=W/2400,sy=H/1700;
+ m.save();
+ m.strokeStyle="rgba(235,210,140,.7)";m.lineWidth=1;
+ m.strokeRect(330*sx,410*sy,420*sx,410*sy);
+ m.fillStyle="rgba(90,68,49,.65)";m.fillRect(680*sx,980*sy,220*sx,230*sy);
+ m.fillStyle="rgba(84,74,59,.7)";m.fillRect(1710*sx,440*sy,500*sx,430*sy);
+ m.restore();
+}
+setInterval(overlayMini401,200);
+
+// 9. Uporządkowanie hintu treningowego.
+const oldHint401=updateHint;
+updateHint=function(){
+ oldHint401();
+ if(currentUser&&currentWorld==="valley"){
+   let d=enemies.find(e=>e.trainingDummy401&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);
+   if(d){hint.textContent="🥋 MANEKIN TRENINGOWY — bij go, żeby zdobyć trochę EXP";hint.style.display="block"}
+ }
+};
 })();
 </script>
 
