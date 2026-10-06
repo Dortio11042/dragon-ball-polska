@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 2.1.0 — PRESTIGE NPC FUNKCJE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.0.0 — FULL SYSTEMS + NPC UI</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3510,6 +3510,156 @@ document.addEventListener("pointerdown",e=>{
    }
    ctx.restore();
  };
+})();
+</script>
+
+
+
+<style>
+/* 3.0 — mniej przycisków, systemy świata przeniesione do NPC */
+#fullPanel300{position:fixed;inset:0;background:rgba(3,7,8,.78);display:none;align-items:center;justify-content:center;z-index:12000}
+#fullPanel300 .box{width:min(720px,94vw);max-height:84vh;overflow:auto;background:#141917;border:3px solid #89754d;border-radius:9px;padding:18px;box-shadow:0 16px 55px #000}
+#fullPanel300 h2{margin:0 0 10px;color:#f1d27b}.fullRow300{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#fullPanel300 button{padding:10px 13px;background:#302a20;color:#fff;border:1px solid #8b7650;border-radius:5px;cursor:pointer}
+.card300{background:#202720;border:1px solid #465244;padding:10px;margin:7px 0;border-radius:5px}
+#questTracker300{position:fixed;right:14px;top:155px;z-index:2200;width:220px;background:rgba(12,18,15,.88);border:1px solid #786846;border-radius:7px;padding:9px;color:#eee;font:12px Arial;pointer-events:none}
+</style>
+<div id="fullPanel300"><div class="box"><h2 id="fullTitle300"></h2><div id="fullBody300"></div><div id="fullButtons300" class="fullRow300"></div></div></div>
+<div id="questTracker300">📖 <b>PRZYGODA</b><br><span id="questTrackText300">Podejdź do Mistrza w Zielonej Dolinie.</span></div>
+<script>
+/* 3.0.0 — porządek UI + pełniejsze systemy RPG */
+(function(){
+ const P=document.getElementById("fullPanel300"),T=document.getElementById("fullTitle300"),B=document.getElementById("fullBody300"),BT=document.getElementById("fullButtons300");
+ function close300(){P.style.display="none"}
+ function open300(t,h){T.textContent=t;B.innerHTML=h;BT.innerHTML="";P.style.display="flex";button300("ZAMKNIJ",close300)}
+ function button300(t,fn){let b=document.createElement("button");b.textContent=t;b.onclick=fn;BT.appendChild(b)}
+ P.onclick=e=>{if(e.target===P)close300()};
+
+ function st300(){
+   currentUser.full300??={story:0,trainer:0,forge:0,form:0,bestiary:{},ach:[],daily:0,weekly:0};
+   return currentUser.full300;
+ }
+ function has300(id){currentUser.inventory??=[];return currentUser.inventory.includes(id)}
+ function add300(id){currentUser.inventory??=[];if(!currentUser.inventory.includes(id))currentUser.inventory.push(id)}
+ function persist300(){savePlayer();updateHUD()}
+
+ // USUWAMY ZBĘDNE PRZYCISKI. Funkcje zostają dostępne przez NPC.
+ function cleanButtons300(){
+   const words=["KUŹNIA","KUŹNIA","FABUŁA","FABULA","FORMY","TRENER","SMOCZE KULE","KULE"];
+   document.querySelectorAll("button").forEach(b=>{
+     let t=(b.textContent||"").trim().toUpperCase();
+     if(words.some(w=>t===w||t.includes("⚒️ "+w)||t.includes("📖 "+w)||t.includes("🐉 "+w)))b.style.display="none";
+   });
+ }
+ setInterval(cleanButtons300,1200);cleanButtons300();
+
+ // Zielona Dolina: każdy ważny system ma swojego NPC.
+ function ensureNpc300(name,x,y,role,text){
+   let n=npcs.find(n=>n.world==="valley"&&n.name===name);
+   if(!n){n={world:"valley",x,y,name,text};npcs.push(n)}
+   n.role300=role;
+ }
+ let smith=npcs.find(n=>n.world==="valley"&&n.name==="Kowal");if(smith)smith.role300="forge";
+ let master=npcs.find(n=>n.world==="valley"&&n.name==="Mistrz");if(master)master.role300="story";
+ let trainer=npcs.find(n=>n.world==="valley"&&(n.name==="Mistrz Mocy"||n.name==="Trener"));if(trainer)trainer.role300="trainer";
+ let fairy=npcs.find(n=>n.world==="valley"&&n.name==="Wróżka");if(fairy)fairy.role300="balls";
+ ensureNpc300("Mistrz Form",1510,990,"forms","Pomagam wojownikom opanować nowe formy.");
+
+ function forge300(){
+   let st=st300(),cost=2500+(st.forge*1750);
+   open300("⚒️ Kowal — Kuźnia",`<div class="card300">Poziom kuźni: <b>${st.forge}/10</b><br>Ulepszenie następnego elementu kosztuje <b>${cost.toLocaleString()} Zeni</b>.</div>
+   <div class="card300">Każde ulepszenie daje stałe +5 obrażeń w systemie Kuźni.</div>`);
+   button300("ULEPSZ — "+cost.toLocaleString()+" Z",()=>{if(st.forge>=10)return toast("Maksymalny poziom Kuźni.");if(currentUser.zeni<cost)return toast("Za mało Zeni.");currentUser.zeni-=cost;st.forge++;persist300();toast("⚒️ Kuźnia +1");forge300()})
+ }
+ function story300(){
+   let st=st300(),chapters=[
+    ["Początek wojownika","Pokonuj przeciwników Zielonej Doliny i przygotuj się do podróży."],
+    ["Droga przez światy","Odwiedzaj kolejne krainy, wykonuj zadania i pokonuj bossów."],
+    ["Siedem Kul","Odnajdź wszystkie Smocze Kule."],
+    ["Próba Mistrzów","Dotrzyj do Krainy Mistrzów."],
+    ["Odrodzenie","Osiągnij LVL 100 i wykonaj Prestige."],
+    ["Nowy świat","Wejdź do Krainy Odrodzenia."]
+   ],i=Math.min(st.story,chapters.length-1);
+   open300("📖 Mistrz — Główna Fabuła",`<div class="card300"><b>Rozdział ${i+1}: ${chapters[i][0]}</b><br>${chapters[i][1]}</div><p>Postęp fabularny jest powiązany z rozwojem postaci i światami.</p>`);
+   let ok=i===0?(currentUser.level>=5):i===1?(currentUser.level>=30):i===2?((currentUser.dragonBalls||0)>=7||(currentUser.dragonBallsOwned||[]).filter(Boolean).length>=7):i===3?(currentUser.level>=50):i===4?(Number(currentUser.prestige||0)>=1):currentUser.world==="prestige";
+   if(ok&&st.story<chapters.length)button300("UKOŃCZ ROZDZIAŁ",()=>{st.story++;currentUser.zeni+=3000+i*2500;persist300();toast("📖 Rozdział ukończony!");story300()})
+ }
+ function trainer300(){
+   let st=st300(),cost=3000+st.trainer*2500;
+   open300("🥋 Trener — Rozwój Wojownika",`<div class="card300">Trening: <b>${st.trainer}/12</b><br>Koszt: <b>${cost.toLocaleString()} Zeni</b><br>Nagroda: +15 Max HP.</div>`);
+   button300("TRENUJ",()=>{if(st.trainer>=12)return toast("Limit treningu osiągnięty.");if(currentUser.zeni<cost)return toast("Za mało Zeni.");currentUser.zeni-=cost;st.trainer++;currentUser.maxHp=(currentUser.maxHp||100)+15;currentUser.hp=currentUser.maxHp;persist300();toast("🥋 +15 Max HP");trainer300()})
+ }
+ function forms300(){
+   let st=st300(),forms=[["Skupienie Ki",10],["Wzmocniona Aura",25],["Forma Wojownika",45],["Forma Mistrza",70],["Forma Odrodzenia",100]];
+   open300("✨ Mistrz Form",`<p>Formy odblokowujesz rozwojem postaci. Aktywna forma: <b>${st.form||0}</b>.</p>`+forms.map((f,i)=>`<div class="card300">${i+1}. ${f[0]} — LVL ${f[1]} ${currentUser.level>=f[1]?"✅":"🔒"}</div>`).join(""));
+   forms.forEach((f,i)=>{if(currentUser.level>=f[1])button300("AKTYWUJ: "+f[0],()=>{st.form=i+1;currentUser.transformation=i+1;persist300();toast("✨ Aktywowano "+f[0]);close300()})})
+ }
+ function balls300(){
+   let owned=Array.isArray(currentUser.dragonBallsOwned)?currentUser.dragonBallsOwned.filter(Boolean).length:Number(currentUser.dragonBalls||0);
+   open300("🔮 Wróżka — Smocze Kule",`<div class="card300">Odnalezione Smocze Kule: <b>${owned}/7</b></div><p>Wróżka śledzi twoje postępy. Kule zdobywasz przez zadania, bossów i eksplorację.</p>`);
+   if(owned>=7)button300("🐉 PRZYWOŁAJ SMOKA",()=>{if(typeof openWish==="function")openWish();else if(typeof summonDragon==="function")summonDragon();else toast("🐉 Wszystkie Kule reagują na twoją energię!");close300()})
+ }
+
+ // Bestiariusz: automatycznie zapamiętuje zabite typy.
+ function bestiary300(){
+   let d=st300().bestiary,rows=Object.entries(d);
+   open300("📚 Bestiariusz",rows.length?rows.sort((a,b)=>b[1]-a[1]).map(([n,k])=>`<div class="card300">👾 ${n} — pokonano <b>${k}</b></div>`).join(""):"<p>Nie odkryłeś jeszcze żadnego potwora.</p>")
+ }
+
+ // Kill wrapper: bestiariusz + dodatkowe nagrody za eksplorację.
+ if(typeof registerKill==="function"){
+   const oldKill300=registerKill;
+   registerKill=function(e){
+     let r=oldKill300.apply(this,arguments);
+     if(e&&currentUser){let st=st300();st.bestiary[e.name]=(st.bestiary[e.name]||0)+1;persist300()}
+     return r;
+   }
+ }
+
+ // Bonusy z Kuźni / form.
+ if(typeof damageBonus==="function"){
+   const od=damageBonus;damageBonus=function(){return od.apply(this,arguments)+(st300().forge*5)+(st300().form*3)}
+ }else if(typeof damageBonus05==="function"){
+   const od=damageBonus05;damageBonus05=function(){return od.apply(this,arguments)+(st300().forge*5)+(st300().form*3)}
+ }
+
+ // Interakcje NPC przed starym systemem.
+ const oldInteract300=interact;
+ interact=function(){
+   if(currentUser&&currentWorld==="valley"){
+     let n=npcs.find(n=>n.world==="valley"&&n.role300&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+     if(n){
+       if(n.role300==="forge")forge300();
+       else if(n.role300==="story")story300();
+       else if(n.role300==="trainer")trainer300();
+       else if(n.role300==="forms")forms300();
+       else if(n.role300==="balls")balls300();
+       return;
+     }
+   }
+   return oldInteract300();
+ };
+
+ const oldHint300=updateHint;
+ updateHint=function(){
+   oldHint300();
+   if(!currentUser||currentWorld!=="valley")return;
+   let n=npcs.find(n=>n.world==="valley"&&n.role300&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+   if(!n)return;
+   let a={forge:"⚒️ KUŹNIA",story:"📖 FABUŁA",trainer:"🥋 TRENING",forms:"✨ FORMY",balls:"🔮 SMOCZE KULE"};
+   hint.textContent="E — "+a[n.role300];hint.style.display="block";
+ };
+
+ // Tracker głównej historii.
+ setInterval(()=>{
+   if(!currentUser)return;
+   let i=st300().story,n=["Osiągnij LVL 5","Osiągnij LVL 30","Zdobądź 7 Smoczych Kul","Osiągnij LVL 50","Osiągnij Prestige 1","Wejdź do Krainy Odrodzenia","Fabuła ukończona"];
+   document.getElementById("questTrackText300").textContent=n[Math.min(i,n.length-1)];
+ },900);
+
+ // Przycisk Bestiariusza zostaje, bo nie jest usługą NPC.
+ let best=document.createElement("button");best.textContent="📚 BESTIARIUSZ";best.style.cssText="position:fixed;left:12px;bottom:12px;z-index:3500;padding:9px 12px";
+ best.onclick=bestiary300;document.body.appendChild(best);
 })();
 </script>
 
