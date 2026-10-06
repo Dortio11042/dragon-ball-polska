@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.3.0 — KOPALNIA W ŚWIECIE + EKWIPUNEK VISUAL + FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.3.1 — LOGIN CHAT MINIMAPA DOLINA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4387,6 +4387,179 @@ const oldEquip330=window.equipItem05;
 window.equipItem05=function(id){try{oldEquip330(id);currentUser.hp=Math.min(Number(currentUser.hp||1),Number(maxHp05()||100));savePlayer();updateHUD()}catch(e){console.error("equip",e);toast("❌ Nie udało się zmienić wyposażenia.")}};
 // nie pozwalaj na ujemne Zeni/NaN po starych systemach
 setInterval(()=>{if(!currentUser)return;if(!Number.isFinite(Number(currentUser.zeni)))currentUser.zeni=0;currentUser.zeni=Math.max(0,Math.floor(Number(currentUser.zeni||0)));if(!Number.isFinite(Number(currentUser.hp)))currentUser.hp=1},1500);
+})();
+</script>
+
+
+
+<style>
+/* 3.3.1 — HUD absolutnie niewidoczny przed zalogowaniem */
+body:not(.dbpLogged331) #rpgDock321,
+body:not(.dbpLogged331) #liveChat320,
+body:not(.dbpLogged331) #miniLegend321,
+body:not(.dbpLogged331) #activity320,
+body:not(.dbpLogged331) #questTracker300,
+body:not(.dbpLogged331) #megaMenu,
+body:not(.dbpLogged331) #quickActions100{display:none!important}
+
+/* Czat: czytelny, bez zasłaniania świata */
+#liveChat320{width:min(360px,36vw)!important;max-height:210px!important}
+#liveChatLines320{max-height:160px!important;overflow-y:auto!important;scrollbar-width:thin}
+#miniLegend321{font-size:9px!important;opacity:.92}
+</style>
+<script>
+(function(){
+/* ===== 3.3.1: login/HUD, chat, minimapa-terenu, porządek Doliny ===== */
+
+// --- 1. stan logowania steruje całym HUD-em ---
+function syncLoginHud331(){
+ const logged=!!window.currentUser;
+ document.body.classList.toggle("dbpLogged331",logged);
+ // Usuń stare "budki", nawet jeśli któryś starszy addon spróbuje je odtworzyć.
+ document.getElementById("activity320")?.remove();
+ document.getElementById("questTracker300")?.remove();
+ // Dock/chat/minimapa nie mogą być widoczne na ekranie logowania.
+ ["rpgDock321","liveChat320","miniLegend321"].forEach(id=>{
+   let el=document.getElementById(id);
+   if(el) el.style.visibility=logged?"visible":"hidden";
+ });
+}
+syncLoginHud331();setInterval(syncLoginHud331,250);
+
+// --- 2. naprawiony chat: użyj faktycznego klienta Supabase dostępnego w grze ---
+function getSB331(){
+ return window.dbpSupabase||window.supabaseClient||window.sb||null;
+}
+let lastChatSig331="";
+async function refreshChat331(){
+ if(!window.currentUser)return;
+ let sb=getSB331(),box=document.getElementById("liveChatLines320"); if(!sb||!box)return;
+ try{
+   let q=await sb.from("chat_messages").select("username,message,created_at").order("created_at",{ascending:false}).limit(12);
+   if(q.error)return;
+   let rows=(q.data||[]).reverse(),sig=rows.map(x=>x.created_at+"|"+x.username+"|"+x.message).join(";");
+   if(sig===lastChatSig331)return;lastChatSig331=sig;
+   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+   box.innerHTML=rows.length?rows.map(x=>`<div class="chatLine320"><span class="chatName320">${esc(x.username)}:</span> ${esc(x.message)}</div>`).join(""):"Brak wiadomości.";
+   box.scrollTop=box.scrollHeight;
+ }catch(e){}
+}
+setInterval(refreshChat331,1400);setTimeout(refreshChat331,500);
+
+// --- 3. NPC w Zielonej Dolinie: małe "miasteczko", bez stania na sobie ---
+const npcPos331={
+ "Mistrz":[930,820],
+ "Handlarz":[1110,820],
+ "Wróżka":[1290,820],
+ "Dzienny":[1470,820],
+ "Łowca":[930,1030],
+ "Rekruter":[1110,1030],
+ "Kowal":[1290,1030],
+ "Mistrz Form":[1470,1030],
+ "Mistrz Mocy":[930,1240],
+ "Trener":[930,1240],
+ "Badacz Bestiariusza":[1110,1240],
+ "Zleceniodawca Doliny":[1290,1240],
+ "Mistrz PvP":[1470,1240]
+};
+npcs.filter(n=>n.world==="valley").forEach(n=>{
+ let p=npcPos331[n.name];if(p){n.x=p[0];n.y=p[1]}
+});
+// jeśli dwa NPC mimo wszystko wylądowały prawie w tym samym miejscu, rozsuń.
+let valley331=npcs.filter(n=>n.world==="valley");
+for(let i=0;i<valley331.length;i++)for(let j=i+1;j<valley331.length;j++){
+ let a=valley331[i],b=valley331[j];
+ if(Math.hypot(a.x-b.x,a.y-b.y)<85){b.x+=95;b.y+=45}
+}
+
+// Bandyci dalej od centrum NPC.
+enemies.filter(e=>e.world==="valley"&&!e.boss).forEach((e,i)=>{
+ if(e.x>760&&e.x<1700&&e.y>650&&e.y<1370){
+   e.x=250+(i*173)%480;
+   e.y=260+(i*239)%1080;
+ }
+});
+let valleyBoss331=enemies.find(e=>e.world==="valley"&&e.boss);
+if(valleyBoss331){valleyBoss331.x=2020;valleyBoss331.y=360}
+
+// --- 4. minimapa 2.0: uproszczona miniatura PRAWDZIWEGO świata ---
+function findMini331(){
+ return document.querySelector("#miniMap08,#minimap08,#miniMap,#minimap,canvas[id*='mini' i]");
+}
+function mapDot331(m,x,y,W,H,size,color){
+ m.fillStyle=color;m.fillRect(x/2400*W-size/2,y/1700*H-size/2,size,size);
+}
+function drawTerrainMini331(m,W,H){
+ let w=currentWorld||"valley";
+ // tło świata
+ const bg=(worlds[w]&&worlds[w].bg)||"#355c38";
+ m.fillStyle=bg;m.fillRect(0,0,W,H);
+ // główne drogi / korytarze
+ m.fillStyle=(worlds[w]&&worlds[w].road)||"#8a744e";
+ m.fillRect(0,H*.45,W,H*.10);m.fillRect(W*.43,0,W*.12,H);
+ // woda / lawa zależnie od mapy
+ if(w==="prestige"){m.fillStyle="#315e72";m.fillRect(W*.78,0,W*.11,H)}
+ if(w==="ice"){m.fillStyle="#8dc4d1";m.fillRect(W*.08,H*.15,W*.16,H*.7)}
+ if(w==="volcano"||w==="crimsonWastes"){m.fillStyle="#8d3e27";m.fillRect(W*.75,H*.12,W*.08,H*.72)}
+ // dekoracje odpowiadające stylowi mapy: drzewa, skały, kryształy itd.
+ for(let i=0;i<42;i++){
+   let x=100+(i*397)%2180,y=90+(i*281)%1510;
+   if(Math.abs(y-850)<110||Math.abs(x-1160)<115)continue;
+   let px=x/2400*W,py=y/1700*H;
+   if(["valley","forest","prestige","rebirthWilds"].includes(w)){
+     m.fillStyle="#183f28";m.fillRect(px-2,py-3,5,6);m.fillStyle="#4b3421";m.fillRect(px,py+2,1,3);
+   }else if(["ice","spiritCaves"].includes(w)){
+     m.fillStyle=w==="ice"?"#b8e3ea":"#7489a3";m.beginPath();m.moveTo(px,py-3);m.lineTo(px+3,py+3);m.lineTo(px-3,py+3);m.fill();
+   }else{
+     m.fillStyle="#514941";m.fillRect(px-2,py-2,5,5);
+   }
+ }
+ // zabudowania Zielonej Doliny
+ if(w==="valley"){
+   m.fillStyle="#745337";
+   [[850,720],[1050,720],[1250,720],[1450,720],[850,1130],[1050,1130],[1250,1130],[1450,1130]].forEach(([x,y])=>{
+     m.fillRect(x/2400*W-4,y/1700*H-3,8,6);
+   });
+ }
+}
+function paintMini331(){
+ if(!window.currentUser)return;
+ let mc=findMini331();if(!mc||!mc.getContext)return;
+ let m=mc.getContext("2d"),W=mc.width,H=mc.height;if(!W||!H)return;
+ m.save();
+ drawTerrainMini331(m,W,H);
+ // portale
+ (window.portals||[]).filter(p=>p.world===currentWorld).forEach(p=>mapDot331(m,p.x,p.y,W,H,5,"#bd6cff"));
+ // NPC
+ (window.npcs||[]).filter(n=>n.world===currentWorld).forEach(n=>{m.fillStyle="#ffd65c";m.beginPath();m.arc(n.x/2400*W,n.y/1700*H,2.3,0,Math.PI*2);m.fill()});
+ // przeciwnicy/bossowie
+ (window.enemies||[]).filter(e=>e.world===currentWorld&&e.alive!==false).forEach(e=>{
+   m.fillStyle=e.boss?"#ff9d38":"#df5050";m.beginPath();m.arc(e.x/2400*W,e.y/1700*H,e.boss?3.3:1.8,0,Math.PI*2);m.fill()
+ });
+ // inni gracze
+ (window.remotePlayers072||[]).filter(r=>r.world===currentWorld).forEach(r=>{m.fillStyle="#58bfff";m.beginPath();m.arc(Number(r.x)/2400*W,Number(r.y)/1700*H,2.2,0,Math.PI*2);m.fill()});
+ // gracz
+ if(window.player){m.fillStyle="#55ff83";m.beginPath();m.arc(player.x/2400*W,player.y/1700*H,4,0,Math.PI*2);m.fill()}
+ // ramka
+ m.strokeStyle="rgba(245,225,170,.9)";m.lineWidth=2;m.strokeRect(1,1,W-2,H-2);
+ m.restore();
+}
+setInterval(paintMini331,180);
+
+// Legenda rozszerzona o teren.
+let leg=document.getElementById("miniLegend321");
+if(leg)leg.innerHTML="🟢 Ty　🔵 Gracz　🟡 NPC　🔴 Wróg　🟠 Boss　🟣 Portal";
+
+// --- 5. ukrywanie każdego starego komunikatu/tabelki „Aktualne questy” ---
+function purgeQuestHud331(){
+ document.querySelectorAll("body *").forEach(el=>{
+   if(el.children.length>5)return;
+   let t=(el.textContent||"").trim().toLowerCase();
+   if((t==="aktualne questy"||t==="aktualne zadania"||t.startsWith("aktualne questy\n")) &&
+      !el.closest("#fullPanel300,#questNpc310")) el.style.display="none";
+ });
+}
+setInterval(purgeQuestHud331,900);purgeQuestHud331();
 })();
 </script>
 
