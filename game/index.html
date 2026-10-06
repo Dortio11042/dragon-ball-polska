@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.2.0 — RPG UI CHAT OSIĄGNIĘCIA NPC</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.2.1 — HUD NPC BESTIARIUSZ MINIMAPA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4082,6 +4082,145 @@ document.addEventListener("pointerdown",e=>{
  addQuestNpc320("rebirthWilds","Łowca Dziczy",760,1250);
  addQuestNpc320("spiritCaves","Badacz Grot",760,1250);
  addQuestNpc320("crimsonWastes","Łowca Pustkowi",760,1250);
+})();
+</script>
+
+
+
+<style>
+/* 3.2.1 — jeden stabilny panel przycisków po prawej */
+#rpgDock321{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:6500;width:148px;
+ background:rgba(10,14,13,.92);border:2px solid #6f644b;border-radius:9px;padding:7px;
+ box-shadow:0 7px 28px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:5px}
+#rpgDock321 button{position:static!important;inset:auto!important;transform:none!important;width:134px!important;height:34px!important;
+ margin:0!important;padding:5px 7px!important;font-size:10px!important;display:block}
+#activity320,#questTracker300{display:none!important}
+#miniMap08,#minimap08,#miniMap,#minimap{border:2px solid #9b895f!important;border-radius:8px!important;
+ box-shadow:0 5px 22px rgba(0,0,0,.55)!important;background:rgba(8,13,11,.92)!important}
+#miniLegend321{position:fixed;z-index:6400;font:10px Arial;color:#eee;background:rgba(7,11,10,.82);
+ border:1px solid #5e6659;border-radius:5px;padding:4px 6px;pointer-events:none}
+</style>
+<div id="rpgDock321"></div>
+<div id="miniLegend321">🟢 Ty &nbsp; 🟡 NPC &nbsp; 🔴 Wróg &nbsp; 🟣 Portal</div>
+<script>
+/* 3.2.1 — naprawa HUD bez klonowania eventów */
+(function(){
+ const dock=document.getElementById("rpgDock321");
+ document.getElementById("activity320")?.remove();
+ document.getElementById("questTracker300")?.remove();
+
+ // Wyłączamy poprzedni mechanizm 3.2, który co sekundę zmieniał position/bottom przycisków.
+ // Zamiast kopiować przyciski (co psułoby listenery), PRZENOSIMY oryginalne elementy DOM.
+ function forbidden321(b){
+   if(!b||b.closest("#fullPanel300,#prestigeNpc210,#questNpc310,#liveChat320,#rpgDock321"))return true;
+   let t=(b.textContent||"").replace(/\s+/g," ").trim().toUpperCase();
+   return ["KUŹNIA","KUŹNIA","FORMY","FABUŁA","TRENER","PVP","BESTIARIUSZ"].some(w=>t===w||t.includes(" "+w)||t.startsWith(w+" "));
+ }
+ function useful321(b){
+   if(forbidden321(b))return false;
+   let t=(b.textContent||"").toLowerCase();
+   return ["ekwipun","moce","topka","profil","ustaw","osiąg","osiag","party","drop","rynek","muzyk","map"].some(x=>t.includes(x));
+ }
+ function buildDock321(){
+   [...document.querySelectorAll("button")].filter(useful321).forEach(b=>{
+     if(b.parentElement!==dock)dock.appendChild(b); // zachowuje onclick/listenery
+     b.style.display="block";
+   });
+   // usuń puste stare kontenery, ale nie ich funkcje.
+   ["megaMenu","quickActions100"].forEach(id=>{
+     let el=document.getElementById(id);
+     if(el && !el.querySelector("button:not([style*='display: none'])"))el.style.display="none";
+   });
+ }
+ setTimeout(buildDock321,300);setInterval(buildDock321,1500);
+
+ // Dolne przyciski: cofamy style nadane przez rightButtons320 dla wszystkiego,
+ // co nie zostało świadomie przeniesione do docka.
+ function repairBottom321(){
+   document.querySelectorAll("body > button").forEach(b=>{
+     if(b.parentElement===dock)return;
+     if((b.textContent||"").toUpperCase().includes("BESTIARIUSZ")){b.remove();return}
+     // Nie ruszamy przycisku Prestige — ma własny prawidłowy layout.
+     if(b.id==="prestigeButton182")return;
+     if(b.style.right==="158px"){
+       b.style.right="";b.style.left="";b.style.bottom="";b.style.position="";
+       b.style.transform="";
+     }
+   });
+ }
+ setTimeout(repairBottom321,400);setInterval(repairBottom321,1700);
+
+ // BESTIARIUSZ = NPC w Zielonej Dolinie.
+ let archiv=npcs.find(n=>n.world==="valley"&&n.name==="Badacz Bestiariusza");
+ if(!archiv){archiv={world:"valley",x:1210,y:1110,name:"Badacz Bestiariusza",text:"",role321:"bestiary"};npcs.push(archiv)}
+ else archiv.role321="bestiary";
+
+ function bestiaryNpc321(){
+   let d=currentUser?.full300?.bestiary||{};
+   let rows=Object.entries(d).sort((a,b)=>b[1]-a[1]);
+   if(typeof open300!=="function")return;
+   open300("📚 Badacz Bestiariusza",
+     rows.length
+      ? `<div class="card300">Odkryte gatunki: <b>${rows.length}</b></div>`+
+        rows.map(([n,k])=>`<div class="card300">👾 ${String(n).replace(/[<>&]/g,"")} — pokonano <b>${k}</b></div>`).join("")
+      : `<div class="card300">Nie odkryłeś jeszcze żadnego potwora. Pokonuj różne stworzenia, a Badacz zapisze je w księdze.</div>`
+   );
+ }
+ const oldInteract321=interact;
+ interact=function(){
+   if(currentUser&&currentWorld==="valley"&&Math.hypot(player.x-archiv.x,player.y-archiv.y)<105){bestiaryNpc321();return}
+   return oldInteract321();
+ };
+ const oldHint321=updateHint;
+ updateHint=function(){
+   oldHint321();
+   if(currentUser&&currentWorld==="valley"&&Math.hypot(player.x-archiv.x,player.y-archiv.y)<105){
+     hint.textContent="E — 📚 BESTIARIUSZ";hint.style.display="block";
+   }
+ };
+
+ // Ulepszona minimapa: większa czytelność, NPC/moby/bossowie/portale + ramka.
+ // Nakładka jest rysowana po starej minimapie, więc nie narusza jej logiki.
+ const oldMini321=typeof drawMiniMap08==="function"?drawMiniMap08:null;
+ if(oldMini321){
+   drawMiniMap08=function(){
+     oldMini321.apply(this,arguments);
+     // Znajdź canvas minimapy po rozmiarze/ID.
+     let mc=document.querySelector("#miniMap08,#minimap08,#miniMap,#minimap");
+     if(!mc||!mc.getContext)return;
+     let m=mc.getContext("2d"),W=mc.width,H=mc.height;
+     if(!W||!H)return;
+     const worldW=2400,worldH=1700,sx=W/worldW,sy=H/worldH;
+     m.save();
+     // delikatna siatka
+     m.strokeStyle="rgba(255,255,255,.08)";m.lineWidth=1;
+     for(let x=0;x<W;x+=W/6){m.beginPath();m.moveTo(x,0);m.lineTo(x,H);m.stroke()}
+     for(let y=0;y<H;y+=H/5){m.beginPath();m.moveTo(0,y);m.lineTo(W,y);m.stroke()}
+     // portale
+     m.fillStyle="#b86cff";portals.filter(p=>p.world===currentWorld).forEach(p=>m.fillRect(p.x*sx-2,p.y*sy-2,5,5));
+     // NPC
+     m.fillStyle="#ffd35a";npcs.filter(n=>n.world===currentWorld).forEach(n=>{m.beginPath();m.arc(n.x*sx,n.y*sy,2.5,0,Math.PI*2);m.fill()});
+     // moby / bossowie
+     enemies.filter(e=>e.world===currentWorld&&e.alive!==false).forEach(e=>{m.fillStyle=e.boss?"#ff9b32":"#e64d4d";m.beginPath();m.arc(e.x*sx,e.y*sy,e.boss?3.5:2,0,Math.PI*2);m.fill()});
+     // gracz na wierzchu
+     m.fillStyle="#54ff82";m.beginPath();m.arc(player.x*sx,player.y*sy,4,0,Math.PI*2);m.fill();
+     m.restore();
+
+     const r=mc.getBoundingClientRect(),leg=document.getElementById("miniLegend321");
+     leg.style.left=Math.max(8,r.left)+"px";leg.style.top=Math.max(8,r.bottom+4)+"px";
+   };
+ }
+
+ // Ukryj każdy późno utworzony przycisk Bestiariusza i budki.
+ const observer321=new MutationObserver(()=>{cleanLate321()});
+ function cleanLate321(){
+   document.querySelectorAll("button").forEach(b=>{
+     if((b.textContent||"").toUpperCase().includes("BESTIARIUSZ")&&!b.closest("#fullPanel300"))b.style.display="none";
+   });
+   document.getElementById("activity320")?.remove();
+   document.getElementById("questTracker300")?.remove();
+ }
+ observer321.observe(document.body,{childList:true,subtree:true});cleanLate321();
 })();
 </script>
 
