@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.3 — PRESTIŻ RESET + PORTAL</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.3b — PORTAL + TYTUŁ FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1339,12 +1339,12 @@ function renderProfile08(){
 }
 function transform08(){if(currentUser.level<30)return toast("Transformacja od LVL 30");currentUser.transformation=currentUser.transformation==="Base"?"Wzmocniona Aura":"Base";toast("⚡ Forma: "+currentUser.transformation);savePlayer();renderProfile08()}
 function prestige08(){if(currentUser.level<100)return toast("Prestige wymaga LVL 100");currentUser.prestige=(currentUser.prestige||0)+1;currentUser.level=1;currentUser.exp=0;currentUser.zeni=10000;
-
-    // 1.8.3: po Prestige Smocze Kule i postęp zadań zaczynają się od nowa.
     currentUser.dragonBalls=0;
     currentUser.dragon_balls=0;
     currentUser.questIndex=0;
     currentUser.questProgress=0;
+    currentUser.questKills=0;
+    currentUser.questClaimed=false;
     currentUser.totalKills=0;
     currentUser.dailyKills=0;
     currentUser.dailyClaimed=false;
@@ -2404,12 +2404,12 @@ let fp=document.createElement("div");fp.id="fishingPanel130";document.body.appen
        buty, pas, włosy i wyraźniejsze warianty prestiżu. */
  function palette131(p){
    const a=[
-    {title:"Wojownik Doliny",skin:"#efb17f",hair:"#151515",gi:"#ef7d22",under:"#183f83",pants:"#e97b21",boots:"#203d72",aura:null,ear:"#efb17f"},
-    {title:"Książę Wojowników",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
-    {title:"Namekijski Strażnik",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
-    {title:"Złoty Mistrz",skin:"#efb17d",hair:"#f3d642",gi:"#ee7c22",under:"#19468c",pants:"#e97820",boots:"#22467e",aura:"#ffe96a",ear:"#efb17d"},
-    {title:"Boski Wojownik",skin:"#efb27e",hair:"#5bd5ff",gi:"#24489b",under:"#161d34",pants:"#243f84",boots:"#f2f4ff",aura:"#5de8ff",ear:"#efb27e"},
-    {title:"Legendarny Wojownik",skin:"#efb17c",hair:"#9bec69",gi:"#313842",under:"#6d2c34",pants:"#24282f",boots:"#7b5a37",aura:"#9dff78",ear:"#efb17c"}
+    {title:"Goku",skin:"#efb17f",hair:"#151515",gi:"#ef7d22",under:"#183f83",pants:"#e97b21",boots:"#203d72",aura:null,ear:"#efb17f"},
+    {title:"Vegeta",skin:"#edaf7c",hair:"#11151d",gi:"#234ca5",under:"#eef4ff",pants:"#244a98",boots:"#eef4ff",aura:"#ffe45c",ear:"#edaf7c"},
+    {title:"Piccolo",skin:"#63bd55",hair:null,gi:"#6b45a1",under:"#263b80",pants:"#f1eee8",boots:"#6d4b2d",aura:"#82ff72",ear:"#4a9d42"},
+    {title:"Gohan",skin:"#efb17d",hair:"#f3d642",gi:"#ee7c22",under:"#19468c",pants:"#e97820",boots:"#22467e",aura:"#ffe96a",ear:"#efb17d"},
+    {title:"Trunks",skin:"#efb27e",hair:"#5bd5ff",gi:"#24489b",under:"#161d34",pants:"#243f84",boots:"#f2f4ff",aura:"#5de8ff",ear:"#efb27e"},
+    {title:"Wojownik Prestige",skin:"#efb17c",hair:"#9bec69",gi:"#313842",under:"#6d2c34",pants:"#24282f",boots:"#7b5a37",aura:"#9dff78",ear:"#efb17c"}
    ];return a[Math.min(Math.max(0,p),a.length-1)];
  }
  function drawFighter131(c,px,py,name,prestige=0,scale=1){
@@ -2977,87 +2977,58 @@ document.addEventListener("pointerdown",e=>{
 
 
 
-<style>
-#prestigePortal183{
- position:fixed;left:50%;top:92px;transform:translateX(-50%);z-index:2400;
- display:none;pointer-events:none;padding:8px 13px;border:2px solid #70ff9d;
- border-radius:10px;background:rgba(7,35,20,.92);color:#d9ffe5;
- font:bold 12px Arial;box-shadow:0 0 18px rgba(90,255,145,.25)
-}
-</style>
 <script>
-/* 1.8.3 — tylko reset Prestige, nazwy postaci i NIEAKTYWNY portal */
+/* 1.8.3b — portal Prestige jako prawdziwy obiekt mapy, bez teleportu */
 (function(){
-  window.prestigeCharacter181=function(p){
-    p=Number(p)||0;
-    if(p===0)return "Goku";
-    if(p===1)return "Vegeta";
-    if(p===2)return "Piccolo";
-    if(p===3)return "Gohan";
-    if(p===4)return "Trunks";
-    return "Postać Prestige "+p;
+  const prestigePortal183b={
+    world:"valley",x:1380,y:800,w:92,h:118,
+    name:"⭐ Portal Prestige",to:"__prestige_locked__",min:1,prestigeRequired:1
   };
 
-  // Zmieniamy stare tytuły postaci na samą nazwę postaci.
-  function titles183(){
-    const p=(()=>{try{return Number(currentUser?.prestige)||0}catch(e){return 0}})();
-    const name=window.prestigeCharacter181(p);
-    const replacements={
-      "Książę Wojowników":"Vegeta",
-      "Książę Saiyan":"Vegeta",
-      "Namekijski Strażnik":"Piccolo",
-      "Namekijski Wojownik":"Piccolo",
-      "Mistrz Energii":"Gohan",
-      "Boski Wojownik":"Trunks"
-    };
-    document.querySelectorAll("body *").forEach(el=>{
-      if(el.children.length===0 && el.textContent){
-        let t=el.textContent,n=t;
-        Object.entries(replacements).forEach(([a,b])=>n=n.split(a).join(b));
-        if(n!==t)el.textContent=n;
-      }
-    });
-    return name;
+  function addPortal183b(){
+    if(typeof portals==="undefined")return;
+    if(!portals.some(p=>p && p.prestigePortal183b)){
+      prestigePortal183b.prestigePortal183b=true;
+      portals.push(prestigePortal183b);
+    }
   }
-  setInterval(titles183,900);
+  addPortal183b();
 
-  // Portal Prestige jest celowo NIEAKTYWNY w tej aktualizacji.
-  // Jest tylko widoczny w Zielonej Dolinie i wymaga 1 Prestige.
-  const P={x:1260,y:1330,w:105,h:115};
-  const oldDraw183=window.draw;
-  if(typeof oldDraw183==="function"){
-    window.draw=function(){
-      oldDraw183.apply(this,arguments);
-      try{
-        if(!currentUser || currentUser.world!=="valley")return;
-        const cam=(typeof camera!=="undefined"&&camera)?camera:{x:0,y:0};
-        const x=P.x-(Number(cam.x)||0),y=P.y-(Number(cam.y)||0);
-        ctx.save();
-        ctx.shadowBlur=18;ctx.shadowColor="#55ff92";
-        ctx.fillStyle="rgba(13,70,39,.72)";ctx.fillRect(x,y,P.w,P.h);
-        ctx.strokeStyle="#74ffa4";ctx.lineWidth=4;ctx.strokeRect(x,y,P.w,P.h);
-        ctx.shadowBlur=0;ctx.textAlign="center";ctx.fillStyle="#e3ffeb";
-        ctx.font="bold 12px Arial";ctx.fillText("PORTAL PRESTIGE",x+P.w/2,y-10);
-        ctx.font="11px Arial";ctx.fillText("Wymaga 1 Prestige",x+P.w/2,y+P.h+16);
-        ctx.restore();
-      }catch(e){}
-    };
-  }
-
-  // E przy portalu pokazuje tylko informację. Nie teleportuje i nie tworzy mapy.
+  // Portal jest obok startu Zielonej Doliny: spawn 1050,800 -> portal 1380,800.
+  // Przechwytujemy E tylko w jego pobliżu. Nigdzie nie przenosi.
   document.addEventListener("keydown",function(e){
     if(e.key!=="e"&&e.key!=="E")return;
     try{
       if(!currentUser||currentUser.world!=="valley")return;
-      const d=Math.hypot((Number(currentUser.x)||0)-(P.x+P.w/2),(Number(currentUser.y)||0)-(P.y+P.h/2));
-      if(d>145)return;
-      if(Number(currentUser.prestige||0)<1){
-        if(typeof toast==="function")toast("🔒 Portal wymaga 1 Prestige.");
-      }else{
-        if(typeof toast==="function")toast("🌿 Portal Prestige — otwarcie w kolejnej aktualizacji!");
-      }
+      const cx=prestigePortal183b.x+prestigePortal183b.w/2;
+      const cy=prestigePortal183b.y+prestigePortal183b.h/2;
+      if(Math.hypot(player.x-cx,player.y-cy)>130)return;
+      e.stopImmediatePropagation();
+      if(Number(currentUser.prestige||0)<1) toast("🔒 Portal wymaga 1 Prestige.");
+      else toast("⭐ Portal Prestige — nowa mapa pojawi się w kolejnej aktualizacji!");
     }catch(err){}
   },true);
+
+  // Czytelna etykieta lokalizacji na ekranie, gdy jesteś blisko portalu.
+  const oldDraw183b=window.draw;
+  if(typeof oldDraw183b==="function"){
+    window.draw=function(){
+      oldDraw183b.apply(this,arguments);
+      try{
+        if(currentWorld!=="valley")return;
+        const c=camera(),x=prestigePortal183b.x-c.x,y=prestigePortal183b.y-c.y;
+        ctx.save();
+        ctx.textAlign="center";
+        ctx.font="bold 12px Arial";
+        ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.85)";
+        ctx.strokeText("⭐ PORTAL PRESTIGE",x+46,y-12);
+        ctx.fillStyle="#b8ffcf";ctx.fillText("⭐ PORTAL PRESTIGE",x+46,y-12);
+        ctx.font="10px Arial";ctx.fillStyle="#fff";
+        ctx.fillText("1 PRESTIGE",x+46,y+132);
+        ctx.restore();
+      }catch(err){}
+    };
+  }
 })();
 </script>
 
