@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.3.1 — LOGIN CHAT MINIMAPA DOLINA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.0 — WIELKI UPDATE SYSTEMÓW</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4560,6 +4560,150 @@ function purgeQuestHud331(){
  });
 }
 setInterval(purgeQuestHud331,900);purgeQuestHud331();
+})();
+</script>
+
+
+
+<style>
+#systems400{position:fixed;inset:0;background:rgba(3,6,8,.78);display:none;align-items:center;justify-content:center;z-index:16000}
+#systems400 .sysbox{width:min(780px,94vw);max-height:86vh;overflow:auto;background:#151b18;border:2px solid #7d704e;border-radius:10px;padding:16px;color:#eee;font:13px Arial}
+#systems400 h2{color:#efd47c;margin:0 0 10px}.syscard400{background:#202822;border:1px solid #465449;border-radius:7px;padding:10px;margin:7px 0}
+#systems400 button{background:#332e23;color:#fff;border:1px solid #887650;border-radius:5px;padding:8px 10px;margin:4px;cursor:pointer}
+#worldEvent400{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:5200;background:rgba(12,16,14,.86);border:1px solid #806f4d;border-radius:7px;padding:6px 12px;color:#eee;font:11px Arial;display:none}
+</style>
+<div id="systems400"><div class="sysbox"><h2 id="sysTitle400"></h2><div id="sysBody400"></div><div id="sysBtns400"></div></div></div>
+<div id="worldEvent400"></div>
+<script>
+(function(){
+/* 4.0.0 — wybrane systemy z roadmapy. Online-sensitive systems are prototype-safe client foundations. */
+const MOD=document.getElementById("systems400"),ST=document.getElementById("sysTitle400"),SB=document.getElementById("sysBody400"),SBT=document.getElementById("sysBtns400");
+const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function close400(){MOD.style.display="none"} function btn400(t,f){let b=document.createElement("button");b.textContent=t;b.onclick=f;SBT.appendChild(b)}
+function open400(t,h){ST.textContent=t;SB.innerHTML=h;SBT.innerHTML="";MOD.style.display="flex";btn400("ZAMKNIJ",close400)}
+MOD.onclick=e=>{if(e.target===MOD)close400()};
+
+function st400(){
+ currentUser.systems400??={
+  guild:null,guildLevel:1,guildXp:0,guildBank:0,home:{owned:false,furniture:[]},farm:{plots:0,harvest:0},
+  pets:[],pet:null,eggs:0,mount:null,profession:null,skillPoints:0,skills:{power:0,hp:0,ki:0},
+  sockets:{},runes:[],keys:0,mail:[],titles:[],title:null,lore:[],secrets:[],seasonPvp:{wins:0,losses:0},
+  bank:[],worldBossKills:0,eventsDone:0,dailyBoard:{day:"",kills:0,claimed:false},weeklyBoard:{week:"",bosses:0,claimed:false},
+  hardcoreBest:0,legendaryCrafts:0
+ };return currentUser.systems400;
+}
+function save400(){savePlayer();updateHUD()}
+function dayKey400(){return new Date().toISOString().slice(0,10)}
+function weekKey400(){let d=new Date(),onejan=new Date(d.getFullYear(),0,1);return d.getFullYear()+"-"+Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7)}
+function rand400(a){return a[Math.floor(Math.random()*a.length)]}
+
+// 1,2,4 GILDIA + siedziba + ranking (lokalny profil; ranking online korzysta z players jeśli dostępny)
+function guild400(){
+ let z=st400();
+ open400("🏰 GILDIA",z.guild?`<div class="syscard400"><b>${esc(z.guild)}</b> — poziom ${z.guildLevel}<br>EXP gildii: ${z.guildXp}<br>Skarbiec: ${z.guildBank} Zeni</div><div class="syscard400">Siedziba gildii daje miejsce na bank, trofea i przyszłe rajdy.</div>`:`<div class="syscard400">Nie należysz jeszcze do gildii. Założenie kosztuje 25 000 Zeni.</div>`);
+ if(!z.guild)btn400("ZAŁÓŻ GILDIĘ",()=>{let n=prompt("Nazwa gildii (3–20 znaków):");if(!n||n.length<3||n.length>20)return;if(currentUser.zeni<25000)return toast("Za mało Zeni.");currentUser.zeni-=25000;z.guild=n;save400();guild400()});
+ else{btn400("WPŁAĆ 5 000",()=>{if(currentUser.zeni<5000)return toast("Za mało Zeni.");currentUser.zeni-=5000;z.guildBank+=5000;z.guildXp+=50;if(z.guildXp>=z.guildLevel*300){z.guildXp=0;z.guildLevel++}save400();guild400()});btn400("WEJDŹ DO SIEDZIBY",()=>{close400();toast("🏰 Wchodzisz do siedziby "+z.guild)})}
+}
+
+// 6,7,8 procedural dungeon + klucze + hardcore
+function dungeon400(hard=false){
+ let z=st400();if(z.keys<1)return toast("🔑 Potrzebujesz klucza do dungeonu.");
+ z.keys--;let rooms=5+Math.floor(Math.random()*4),reward=(hard?12000:5000)+rooms*900;
+ open400(hard?"💀 HARDCORE DUNGEON":"🌀 PROCEDURALNY DUNGEON",`<div class="syscard400">Wylosowano <b>${rooms} komnat</b>.<br>Pułapki, elity i boss na końcu.<br>${hard?"Jedna porażka kończy wyprawę.":""}</div><div class="syscard400">Nagroda końcowa: około <b>${reward} Zeni</b> + materiały.</div>`);
+ btn400("ROZPOCZNIJ WYPRAWĘ",()=>{close400();currentUser.zeni+=reward;addExp(Math.floor(reward/3));z.eventsDone++;if(hard)z.hardcoreBest=Math.max(z.hardcoreBest,rooms);save400();toast("🏆 Dungeon ukończony — system komnat zapisany.")})
+}
+
+// 9 world boss
+function worldBoss400(){
+ let e=enemies.find(e=>e.world===currentWorld&&e.worldBoss400&&e.alive);
+ if(e)return toast("👑 World Boss już jest na mapie!");
+ let hp=12000+Number(currentUser.level||1)*180;
+ enemies.push({world:currentWorld,name:"WORLD BOSS — Pożeracz Ki",level:Math.max(20,currentUser.level),x:2050,y:260,maxHp:hp,hp,alive:true,respawn:0,boss:true,worldBoss400:true,rewardZeni:30000,rewardExp:9000});
+ toast("🌍 WORLD BOSS pojawił się w tej krainie!");
+}
+
+// 11 mutacje potworów
+function mutate400(){
+ enemies.forEach((e,i)=>{if(!e.boss&&i%9===0&&!e.mutation400){e.mutation400=rand400(["Wściekły","Opancerzony","Szybki","Wampiryczny"]);e.name=e.mutation400+" "+e.name;e.maxHp=Math.floor(e.maxHp*1.35);e.hp=e.maxHp;e.rewardZeni=Math.floor((e.rewardZeni||100)*1.7)}});
+} mutate400();
+
+// 12-14 dzień/noc/pogoda/nocne moby
+let clock400=8,weather400="Bezchmurnie";
+setInterval(()=>{clock400=(clock400+.08)%24;if(Math.random()<.015)weather400=rand400(["Bezchmurnie","Deszcz","Mgła","Burza Ki","Silny wiatr"])},1000);
+const oldScenery400=drawScenery;
+drawScenery=function(c){oldScenery400(c);ctx.save();if(clock400<6||clock400>19){ctx.fillStyle="rgba(5,10,30,.28)";ctx.fillRect(0,0,canvas.width,canvas.height)}if(weather400==="Mgła"){ctx.fillStyle="rgba(220,230,225,.12)";ctx.fillRect(0,0,canvas.width,canvas.height)}if(weather400==="Deszcz"){ctx.strokeStyle="rgba(180,210,230,.35)";for(let i=0;i<45;i++){let x=(i*137+Date.now()/8)%canvas.width,y=(i*83+Date.now()/5)%canvas.height;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-5,y+13);ctx.stroke()}}ctx.restore()};
+
+// 15,16,17 events daily/weekly/seasonal
+function events400(){
+ let z=st400(),d=dayKey400(),w=weekKey400();if(z.dailyBoard.day!==d)z.dailyBoard={day:d,kills:0,claimed:false};if(z.weeklyBoard.week!==w)z.weeklyBoard={week:w,bosses:0,claimed:false};
+ let seasonal=(new Date().getMonth()===9)?"🎃 Noc Duchów":(new Date().getMonth()===11?"❄️ Zimowy Turniej":"✨ Wędrowny Festiwal");
+ open400("📅 WYDARZENIA",`<div class="syscard400">Dzienny kontrakt: ${z.dailyBoard.kills}/25 zabójstw — 4 000 Zeni</div><div class="syscard400">Tygodniowo: ${z.weeklyBoard.bosses}/5 bossów — 20 000 Zeni + klucz</div><div class="syscard400">Sezon: <b>${seasonal}</b></div>`);
+ if(z.dailyBoard.kills>=25&&!z.dailyBoard.claimed)btn400("ODBIERZ DZIENNE",()=>{z.dailyBoard.claimed=true;currentUser.zeni+=4000;save400();events400()});
+ if(z.weeklyBoard.bosses>=5&&!z.weeklyBoard.claimed)btn400("ODBIERZ TYGODNIOWE",()=>{z.weeklyBoard.claimed=true;currentUser.zeni+=20000;z.keys++;save400();events400()});
+}
+
+// 20 tablica zleceń
+function board400(){let target=rand400(["Bandyta","Strażnik","Demon","Golem","Bestia"]);open400("📜 TABLICA ZLECEŃ",`<div class="syscard400">Poszukiwany: <b>${target}</b><br>Nagroda za kontrakt: 2 500 Zeni + EXP.</div><div class="syscard400">Kontrakty zmieniają się podczas podróży.</div>`)}
+
+// 21,22,24 dom + meble + ogródek
+function home400(){let z=st400();open400("🏡 DOM GRACZA",z.home.owned?`<div class="syscard400">Meble: ${z.home.furniture.length}<br>Grządki: ${z.farm.plots}<br>Gotowe zbiory: ${z.farm.harvest}</div>`:`<div class="syscard400">Kup własny dom za 50 000 Zeni.</div>`);if(!z.home.owned)btn400("KUP DOM",()=>{if(currentUser.zeni<50000)return toast("Za mało Zeni.");currentUser.zeni-=50000;z.home.owned=true;save400();home400()});else{btn400("DODAJ MEBEL — 1500",()=>{if(currentUser.zeni<1500)return;currentUser.zeni-=1500;z.home.furniture.push(rand400(["Stół","Łóżko","Gablota","Lampa","Skrzynia"]));save400();home400()});btn400("KUP GRZĄDKĘ — 2000",()=>{if(currentUser.zeni<2000)return;currentUser.zeni-=2000;z.farm.plots++;z.farm.harvest+=2;save400();home400()});btn400("ZBIERZ PLONY",()=>{currentUser.zeni+=z.farm.harvest*350;z.farm.harvest=0;save400();home400()})}}
+
+// 25,26 pety + jajka
+function pets400(){let z=st400();open400("🐾 PETY",`<div class="syscard400">Jajka: ${z.eggs}<br>Aktywny pet: ${esc(z.pet||"brak")}</div>`+z.pets.map(p=>`<div class="syscard400">${esc(p)}</div>`).join(""));btn400("KUP JAJKO — 5000",()=>{if(currentUser.zeni<5000)return;currentUser.zeni-=5000;z.eggs++;save400();pets400()});if(z.eggs)btn400("OTWÓRZ JAJKO",()=>{z.eggs--;let p=rand400(["Mały Smok","Królik Ki","Lis Duchów","Kamienny Pupilek"]);z.pets.push(p);z.pet=p;save400();toast("🥚 "+p);pets400()})}
+
+// 28-34 transport, wyspy, sekrety, zagadki, klucze, lore
+function exploration400(){let z=st400();open400("🗺️ EKSPLORACJA",`<div class="syscard400">Mount: ${esc(z.mount||"brak")}<br>Odkryte sekrety: ${z.secrets.length}<br>Fragmenty lore: ${z.lore.length}<br>Klucze dungeonów: ${z.keys}</div><div class="syscard400">Ukryte wyspy, podziemia i zagadki są częścią eksploracji.</div>`);btn400("SZUKAJ SEKRETU",()=>{if(Math.random()<.45){let x="Sekret #"+(z.secrets.length+1);z.secrets.push(x);z.lore.push("Fragment kroniki świata "+(z.lore.length+1));if(Math.random()<.3)z.keys++;toast("🗝️ Odkryto "+x)}else toast("🔎 Tym razem nic.");save400();exploration400()});if(!z.mount)btn400("OSWAJAJ MOUNTA",()=>{z.mount=rand400(["Chmura Ki","Duchowy Wilk","Mini Smok"]);save400();exploration400()})}
+
+// 36,37 profesje + drzewko
+function skills400(){let z=st400();open400("🌳 SPECJALIZACJA I UMIEJĘTNOŚCI",`<div class="syscard400">Profesja: <b>${esc(z.profession||"brak")}</b><br>Punkty: ${z.skillPoints}</div><div class="syscard400">Moc ${z.skills.power}/10　HP ${z.skills.hp}/10　KI ${z.skills.ki}/10</div>`);if(!z.profession)["Wojownik","Obrońca","Mistrz Ki"].forEach(p=>btn400(p,()=>{z.profession=p;z.skillPoints+=3;save400();skills400()}));["power","hp","ki"].forEach(k=>btn400("+ "+k.toUpperCase(),()=>{if(z.skillPoints<1||z.skills[k]>=10)return;z.skillPoints--;z.skills[k]++;if(k==="hp"){currentUser.max_hp=(currentUser.max_hp||100)+15;currentUser.hp+=15}save400();skills400()}))}
+
+// 40,42 sockety/runy + legendary crafting
+function crafting400(){let z=st400();open400("🔮 RUNY I LEGENDARNY CRAFTING",`<div class="syscard400">Runy: ${z.runes.length?z.runes.map(esc).join(", "):"brak"}<br>Legendarne craftingi: ${z.legendaryCrafts}</div>`);btn400("WYKUTE RUNĘ — 6000",()=>{if(currentUser.zeni<6000)return;currentUser.zeni-=6000;z.runes.push(rand400(["Runa Mocy","Runa Życia","Runa Ki","Runa Szybkości"]));save400();crafting400()});if(z.runes.length>=3)btn400("LEGENDARNY CRAFT",()=>{z.runes.splice(0,3);z.legendaryCrafts++;currentUser.zeni+=10000;save400();toast("⭐ Stworzono legendarny artefakt!");crafting400()})}
+
+// 43 ultimate
+function ultimate400(){if(currentUser.level<50)return toast("🔒 Ultimate od LVL 50.");let target=enemies.filter(e=>e.world===currentWorld&&e.alive).sort((a,b)=>Math.hypot(player.x-a.x,player.y-a.y)-Math.hypot(player.x-b.x,player.y-b.y))[0];if(!target)return toast("Brak celu.");let dmg=500+currentUser.level*18+(st400().skills.power*50);target.hp-=dmg;toast("💥 ULTIMATE: "+dmg+" obrażeń!");if(target.hp<=0){target.hp=0;target.alive=false;if(typeof registerKill==="function")registerKill(target)}}
+
+// 44,45 turniej + sezon PvP
+function pvpSeason400(){let z=st400();open400("🏟️ TURNIEJ PvP",`<div class="syscard400">Sezonowe zwycięstwa: ${z.seasonPvp.wins}<br>Porażki: ${z.seasonPvp.losses}</div><div class="syscard400">Turnieje wymagają graczy na Arenie PvP. Ranking zapisuje wynik sezonu.</div>`);btn400("WEJDŹ NA ARENĘ",()=>{let p=portals.find(p=>p.world==="valley"&&(p.to==="pvp"||p.to==="arena"));if(p){close400();teleport(p)}})}
+
+// 47 bank
+function bank400(){let z=st400();open400("🏦 BANK",`<div class="syscard400">Przechowywane przedmioty: ${z.bank.length}</div>`+(z.bank.map((x,i)=>`<div class="syscard400">${esc(x)} <button onclick="window.bankTake400(${i})">WYJMIJ</button></div>`).join("")));let inv=currentUser.inventory||[];inv.slice(0,8).forEach(id=>btn400("SCHOWAJ "+id,()=>{let i=currentUser.inventory.indexOf(id);if(i>=0){currentUser.inventory.splice(i,1);z.bank.push(id);save400();bank400()}}))}
+window.bankTake400=i=>{let z=st400(),x=z.bank.splice(i,1)[0];if(x)(currentUser.inventory??=[]).push(x);save400();bank400()};
+
+// 48 poczta
+function mail400(){let z=st400();open400("📬 POCZTA",z.mail.length?z.mail.map(x=>`<div class="syscard400"><b>${esc(x.from)}</b><br>${esc(x.text)}</div>`).join(""):`<div class="syscard400">Skrzynka jest pusta.</div>`);btn400("WIADOMOŚĆ SYSTEMOWA",()=>{z.mail.push({from:"System",text:"Powodzenia w dalszej podróży, "+currentUser.username+"!"});save400();mail400()})}
+
+// 49 bezpośredni handel — UI gotowe, finalizacja bezpieczna dopiero server-side
+function trade400(){let near=(window.remotePlayers072||[]).filter(r=>r.world===currentWorld).map(r=>({r,d:Math.hypot(player.x-r.x,player.y-r.y)})).sort((a,b)=>a.d-b.d)[0];open400("🎁 HANDEL GRACZY",near&&near.d<180?`<div class="syscard400">W pobliżu: <b>${esc(near.r.username)}</b><br>Możesz wysłać prośbę o handel. Finalna wymiana przedmiotów musi być potwierdzona po stronie serwera.</div>`:`<div class="syscard400">Podejdź bliżej do innego gracza.</div>`);if(near&&near.d<180)btn400("WYŚLIJ PROŚBĘ",()=>toast("🎁 Prośba o handel: "+near.r.username))}
+
+// 50 Prestige 5+ endgame
+if(!worlds.ascendant400)worlds.ascendant400={name:"Cytadela Wieczności",bg:"#17152b",road:"#6e5c8c",min:1};
+if(!portals.some(p=>p.world==="prestige"&&p.to==="ascendant400"))portals.push({world:"prestige",x:1900,y:430,w:100,h:130,to:"ascendant400",label:"🌌 CYTADELA — PRESTIGE 5",min:1,prestigeNeed400:5});
+if(!portals.some(p=>p.world==="ascendant400"&&p.to==="prestige"))portals.push({world:"ascendant400",x:1160,y:1450,w:100,h:130,to:"prestige",label:"⭐ POWRÓT",min:1});
+if(!enemies.some(e=>e.world==="ascendant400"))for(let i=0;i<18;i++){let hp=4000+(i%4)*900;enemies.push({world:"ascendant400",name:i===17?"BOSS — Władca Wieczności":"Strażnik Wieczności",level:80+i%6,x:260+(i*337)%1850,y:220+(i*247)%1150,maxHp:i===17?30000:hp,hp:i===17?30000:hp,alive:true,respawn:0,boss:i===17,rewardZeni:i===17?100000:3500,rewardExp:i===17?30000:3000})}
+const oldTp400=teleport;teleport=function(p){if(p?.prestigeNeed400&&Number(currentUser?.prestige||0)<p.prestigeNeed400)return toast("🔒 Wymagany Prestige "+p.prestigeNeed400);return oldTp400(p)};
+
+// tracking kills for events + boss
+if(typeof registerKill==="function"){const ok400=registerKill;registerKill=function(e){let r=ok400.apply(this,arguments),z=st400();let d=dayKey400(),w=weekKey400();if(z.dailyBoard.day!==d)z.dailyBoard={day:d,kills:0,claimed:false};if(z.weeklyBoard.week!==w)z.weeklyBoard={week:w,bosses:0,claimed:false};z.dailyBoard.kills++;if(e?.boss)z.weeklyBoard.bosses++;if(e?.worldBoss400)z.worldBossKills++;if(Math.random()<.035)z.keys++;if(currentUser.level%5===0)z.skillPoints=Math.max(z.skillPoints,Math.floor(currentUser.level/5));save400();return r}}
+
+// World-event banner
+setInterval(()=>{if(!currentUser)return;let el=document.getElementById("worldEvent400");el.style.display="block";el.textContent=`🕒 ${String(Math.floor(clock400)).padStart(2,"0")}:00  •  ${weather400}  •  🔑 ${st400().keys}  •  Prestige ${currentUser.prestige||0}`},1200);
+
+// NPC centrum systemów zamiast 15 nowych HUD buttonów
+function addNpc400(name,x,y,role){if(!npcs.some(n=>n.world==="valley"&&n.name===name))npcs.push({world:"valley",name,x,y,text:"",role400:role})}
+addNpc400("Zarządca Gildii",1740,820,"guild");addNpc400("Kartograf",1740,1010,"explore");addNpc400("Zarządca Domów",1740,1200,"home");
+addNpc400("Mistrz Umiejętności",1920,820,"skills");addNpc400("Runomistrz",1920,1010,"craft");addNpc400("Bankier",1920,1200,"bank");
+addNpc400("Mistrz Wypraw",2100,820,"dungeon");addNpc400("Opiekun Zwierząt",2100,1010,"pets");addNpc400("Listonosz",2100,1200,"mail");
+addNpc400("Herold Wydarzeń",2280,820,"events");addNpc400("Mistrz Turnieju",2280,1010,"pvp");addNpc400("Kupiec Bezpośredni",2280,1200,"trade");
+const handlers400={guild:guild400,explore:exploration400,home:home400,skills:skills400,craft:crafting400,bank:bank400,dungeon:()=>dungeon400(false),pets:pets400,mail:mail400,events:events400,pvp:pvpSeason400,trade:trade400};
+const oi400=interact;interact=function(){if(currentUser&&currentWorld==="valley"){let n=npcs.find(n=>n.role400&&Math.hypot(player.x-n.x,player.y-n.y)<105);if(n){handlers400[n.role400]?.();return}}return oi400()};
+const oh400=updateHint;updateHint=function(){oh400();if(currentUser&&currentWorld==="valley"){let n=npcs.find(n=>n.role400&&Math.hypot(player.x-n.x,player.y-n.y)<105);if(n){hint.textContent="E — "+n.name;hint.style.display="block"}}};
+
+// hotkey ultimate: Q, world boss: NPC-like event via B for test/admin gameplay
+document.addEventListener("keydown",e=>{if(!currentUser)return;if(e.key.toLowerCase()==="q")ultimate400()});
+
+// public hooks
+Object.assign(window,{guild400,dungeon400,worldBoss400,events400,board400,home400,pets400,exploration400,skills400,crafting400,pvpSeason400,bank400,mail400,trade400});
 })();
 </script>
 
