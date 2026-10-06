@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.5 — CLEAN HUB + HUD FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.6 — CLEAN ZIELONA DOLINA + HUD</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4709,745 +4709,158 @@ Object.assign(window,{guild400,dungeon400,worldBoss400,events400,board400,home40
 
 
 
-<script>
-(function(){
-/* 4.0.1 — Zielona Dolina = bezpieczny hub, trening i uporządkowane NPC */
-
-// 1. Usuń bandytów i starego bossa z pierwszego świata.
-for(let i=enemies.length-1;i>=0;i--){
-  if(enemies[i].world==="valley") enemies.splice(i,1);
-}
-
-// 2. Manekiny treningowe: nie atakują i szybko się odnawiają.
-const dummies401=[
- [430,520],[620,520],[430,700],[620,700],[525,610]
-];
-dummies401.forEach((p,i)=>{
- enemies.push({
-   world:"valley",name:"Manekin treningowy",level:1,x:p[0],y:p[1],
-   maxHp:180,hp:180,alive:true,respawn:0,
-   rewardZeni:0,rewardExp:35,trainingDummy401:true,
-   noAttack401:true
- });
-});
-
-// Dodatkowe zabezpieczenie: manekin nigdy nie może być traktowany jako agresywny mob.
-const oldMineMove401=window.updateMineMobs330;
-enemies.filter(e=>e.trainingDummy401).forEach(e=>{e.move330=false;e.vx330=0;e.vy330=0});
-
-// 3. Czytelny układ centrum.
-// Plac główny
-const positions401={
- "Handlarz":[1060,900],
- "Wróżka":[1240,900],
- "Dzienny":[1420,900],
- "Łowca":[1600,900],
- "Rekruter":[1060,1090],
- "Zleceniodawca Doliny":[1240,1090],
- "Badacz Bestiariusza":[1420,1090],
- "Zarządca Gildii":[1600,1090],
- "Kartograf":[1060,1280],
- "Zarządca Domów":[1240,1280],
- "Bankier":[1420,1280],
- "Listonosz":[1600,1280],
- "Opiekun Zwierząt":[1780,1280],
- "Herold Wydarzeń":[1780,1090],
- "Kupiec Bezpośredni":[1780,900]
-};
-
-// Dom Mistrzów — prawa/górna część miasta.
-Object.assign(positions401,{
- "Mistrz":[1810,560],
- "Mistrz Mocy":[1950,560],
- "Trener":[1950,560],
- "Mistrz Form":[2090,560],
- "Mistrz Umiejętności":[1810,700],
- "Mistrz Wypraw":[1950,700],
- "Mistrz Turnieju":[2090,700],
- "Mistrz PvP":[2090,820]
-});
-
-// Kowal ma własny domek/warsztat.
-positions401["Kowal"]=[780,1110];
-positions401["Runomistrz"]=[780,1260];
-
-npcs.filter(n=>n.world==="valley").forEach(n=>{
- let p=positions401[n.name];if(p){n.x=p[0];n.y=p[1]}
-});
-
-// Usuń duplikaty NPC o tej samej nazwie/roli w Dolinie.
-let seen401=new Set();
-for(let i=npcs.length-1;i>=0;i--){
- let n=npcs[i]; if(n.world!=="valley")continue;
- let key=n.name+"|"+(n.role300||n.role310||n.role320||n.role321||n.role400||"");
- if(seen401.has(key))npcs.splice(i,1); else seen401.add(key);
-}
-
-// 4. Przesuń skrzynie i obiekty automatyczne z centrum NPC.
-// Obsługuje kilka nazw używanych w starszych wersjach.
-["chests08","chests","worldChests","treasureChests"].forEach(k=>{
- let a=window[k];
- if(Array.isArray(a))a.filter(x=>x.world==="valley").forEach((x,i)=>{x.x=720+(i%3)*150;x.y=1460+Math.floor(i/3)*80});
-});
-
-// 5. Rysowanie miasta: Dom Mistrzów + Kuźnia + plac + strefa treningowa.
-const oldScenery401=drawScenery;
-drawScenery=function(c){
- oldScenery401(c);
- if(currentWorld!=="valley")return;
- const X=x=>x-c.x,Y=y=>y-c.y;
- ctx.save();
-
- // plac miejski
- ctx.fillStyle="rgba(190,166,112,.20)";
- ctx.fillRect(X(960),Y(820),900,570);
-
- // ścieżki
- ctx.fillStyle="rgba(151,126,79,.34)";
- ctx.fillRect(X(900),Y(970),1050,80);
- ctx.fillRect(X(1280),Y(780),80,650);
-
- // Kuźnia
- ctx.fillStyle="#5a4431";ctx.fillRect(X(680),Y(980),220,230);
- ctx.fillStyle="#38291f";ctx.beginPath();ctx.moveTo(X(655),Y(990));ctx.lineTo(X(790),Y(900));ctx.lineTo(X(925),Y(990));ctx.fill();
- ctx.fillStyle="#27211c";ctx.fillRect(X(755),Y(1080),65,130);
- ctx.fillStyle="#d26b2e";ctx.fillRect(X(845),Y(1040),24,35);
- ctx.fillStyle="#f0c15d";ctx.font="bold 13px Arial";ctx.fillText("⚒ KUŹNIA",X(735),Y(955));
-
- // Dom Mistrzów
- ctx.fillStyle="#544a3b";ctx.fillRect(X(1710),Y(440),500,430);
- ctx.fillStyle="#302b27";ctx.beginPath();ctx.moveTo(X(1670),Y(455));ctx.lineTo(X(1960),Y(300));ctx.lineTo(X(2250),Y(455));ctx.fill();
- ctx.fillStyle="#332b23";ctx.fillRect(X(1915),Y(735),90,135);
- ctx.fillStyle="#d7b85e";ctx.fillRect(X(1760),Y(510),55,45);ctx.fillRect(X(2100),Y(510),55,45);
- ctx.fillStyle="#f2d57d";ctx.font="bold 14px Arial";ctx.fillText("🏯 DOM MISTRZÓW",X(1850),Y(410));
-
- // strefa treningowa
- ctx.strokeStyle="#9c8355";ctx.lineWidth=4;ctx.strokeRect(X(330),Y(410),420,410);
- ctx.fillStyle="rgba(120,92,55,.18)";ctx.fillRect(X(334),Y(414),412,402);
- ctx.fillStyle="#ead391";ctx.font="bold 13px Arial";ctx.fillText("🥋 STREFA TRENINGOWA",X(420),Y(390));
-
- ctx.restore();
-};
-
-// 6. Specjalny wygląd manekina.
-const oldEnemy401=drawEnemy;
-drawEnemy=function(e,c){
- if(!e?.trainingDummy401)return oldEnemy401(e,c);
- let x=e.x-c.x,y=e.y-c.y;
- ctx.save();
- ctx.fillStyle="#6c4a2d";ctx.fillRect(x-3,y-2,6,32);
- ctx.fillStyle="#a87543";ctx.fillRect(x-15,y+4,30,8);
- ctx.fillStyle="#b78a54";ctx.beginPath();ctx.arc(x,y-10,10,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle="#4c3422";ctx.lineWidth=2;ctx.strokeRect(x-17,y-18,34,53);
- ctx.fillStyle="#fff";ctx.font="10px Arial";ctx.textAlign="center";ctx.fillText("TRENING",x,y-25);
- ctx.restore();
-};
-
-// 7. Jeżeli stare AI próbuje uderzyć manekinem — trzymaj go nieruchomo.
-setInterval(()=>{
- enemies.filter(e=>e.trainingDummy401).forEach(e=>{
-   e.move330=false;e.vx330=0;e.vy330=0;
-   // szybki respawn bez tworzenia kolejnych obiektów
-   if(e.alive===false){
-     e._dummyDead401=(e._dummyDead401||Date.now());
-     if(Date.now()-e._dummyDead401>1800){e.alive=true;e.hp=e.maxHp;e.respawn=0;e._dummyDead401=0}
-   }
- });
-},250);
-
-// 8. Minimapka: zaznacz strefę treningową, Kuźnię i Dom Mistrzów.
-function overlayMini401(){
- if(!currentUser||currentWorld!=="valley")return;
- let mc=document.querySelector("#miniMap08,#minimap08,#miniMap,#minimap,canvas[id*='mini' i]");
- if(!mc?.getContext)return;
- let m=mc.getContext("2d"),W=mc.width,H=mc.height,sx=W/2400,sy=H/1700;
- m.save();
- m.strokeStyle="rgba(235,210,140,.7)";m.lineWidth=1;
- m.strokeRect(330*sx,410*sy,420*sx,410*sy);
- m.fillStyle="rgba(90,68,49,.65)";m.fillRect(680*sx,980*sy,220*sx,230*sy);
- m.fillStyle="rgba(84,74,59,.7)";m.fillRect(1710*sx,440*sy,500*sx,430*sy);
- m.restore();
-}
-setInterval(overlayMini401,200);
-
-// 9. Uporządkowanie hintu treningowego.
-const oldHint401=updateHint;
-updateHint=function(){
- oldHint401();
- if(currentUser&&currentWorld==="valley"){
-   let d=enemies.find(e=>e.trainingDummy401&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<90);
-   if(d){hint.textContent="🥋 MANEKIN TRENINGOWY — bij go, żeby zdobyć trochę EXP";hint.style.display="block"}
- }
-};
-})();
-</script>
-
-
-
 <style>
-/* 4.0.2 — jeden stabilny panel przycisków po zalogowaniu */
-#hudDock402{
- position:fixed;right:14px;top:50%;transform:translateY(-50%);
- z-index:14500;width:158px;padding:8px;background:rgba(14,19,16,.92);
- border:2px solid #756848;border-radius:9px;display:none;
- box-shadow:0 4px 18px rgba(0,0,0,.38)
-}
-body.dbpLogged331 #hudDock402{display:flex!important;flex-direction:column;gap:5px}
-#hudDock402 button{
- position:static!important;inset:auto!important;transform:none!important;
- display:block!important;visibility:visible!important;opacity:1!important;
- width:100%!important;margin:0!important;padding:7px 6px!important;
- background:#2b3029!important;color:#fff!important;border:1px solid #665f48!important;
- border-radius:5px!important;font:11px Arial!important;cursor:pointer!important;
- pointer-events:auto!important
-}
-#hudDock402 button:hover{background:#3a4037!important}
+/* 4.0.6 — naprawa przycisków: oryginalny dock 3.2.1 ma być widoczny WYŁĄCZNIE po zniknięciu logowania */
+body.gameStarted406 #rpgDock321,
+body.gameStarted406 #megaMenu,
+body.gameStarted406 #quickActions100{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+body.gameStarted406 #rpgDock321{z-index:25000!important}
+body.gameStarted406 #rpgDock321 button{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+body:not(.gameStarted406) #rpgDock321,
+body:not(.gameStarted406) #megaMenu,
+body:not(.gameStarted406) #quickActions100{display:none!important}
 </style>
-<div id="hudDock402"></div>
 <script>
 (function(){
-/* Naprawa regresji: starsze skanery 3.2/3.3 chowały albo przestawiały przyciski.
-   Tu przenosimy ISTNIEJĄCE elementy DOM, więc zachowują swoje click listenery. */
-const dock=document.getElementById("hudDock402");
-const wanted=[
- ["ekwipun","🎒 EKWIPUNEK"],["equipment","🎒 EKWIPUNEK"],
- ["moce","⚡ MOCE"],["powers","⚡ MOCE"],
- ["top","🏆 TOPKA"],["ranking","🏆 TOPKA"],
- ["profil","👤 PROFIL"],["profile","👤 PROFIL"],
- ["ustaw","⚙️ USTAWIENIA"],["settings","⚙️ USTAWIENIA"],
- ["osiąg","🏅 OSIĄGNIĘCIA"],["achiev","🏅 OSIĄGNIĘCIA"],
- ["party","👥 PARTY"],["druż","👥 PARTY"],
- ["drop","💎 DROP"],
- ["rynek","🛒 RYNEK"],["market","🛒 RYNEK"],
- ["map","🗺️ MAPA"],
- ["music","🎵 MUZYKA"],["muzyk","🎵 MUZYKA"]
-];
-const forbidden=["kuź","kuz","formy","fabu","trener","pvp","bestiariusz"];
-function norm(t){return (t||"").trim().toLowerCase()}
-function labelFor(t){
- let n=norm(t);for(const [key,label] of wanted)if(n.includes(key))return label;return null
-}
-function bad(t){let n=norm(t);return forbidden.some(x=>n.includes(x))}
-function collect402(){
- if(!window.currentUser)return;
- const all=[...document.querySelectorAll("button")];
- const used=new Set([...dock.querySelectorAll("button")].map(b=>norm(b.textContent)));
- for(const b of all){
-   if(b.closest("#hudDock402,#systems400,#fullPanel300,#prestigeNpc210,#questNpc310,#liveChat320"))continue;
-   let txt=b.textContent||"",label=labelFor(txt);
-   if(!label||bad(txt))continue;
-   // zachowaj oryginalny button i jego onclick/listenery
-   b.style.cssText="";
-   b.hidden=false;b.disabled=false;
-   b.style.display="block";b.style.visibility="visible";b.style.opacity="1";b.style.pointerEvents="auto";
-   b.textContent=label;
-   if(!used.has(norm(label))){dock.appendChild(b);used.add(norm(label))}
- }
- // jeśli przycisk już siedzi w starym docku 321, przenieś go stamtąd
- [...document.querySelectorAll("#rpgDock321 button")].forEach(b=>{
-   let label=labelFor(b.textContent);
-   if(label&&!bad(b.textContent)&&!used.has(norm(label))){
-     b.style.cssText="";b.hidden=false;b.disabled=false;b.textContent=label;
-     dock.appendChild(b);used.add(norm(label));
+/* ========= HUD — używamy ORYGINALNYCH przycisków z gry, bez klonów ========= */
+function hud406(){
+ const auth=document.getElementById("authScreen");
+ const logged=!!auth && getComputedStyle(auth).display==="none";
+ document.body.classList.toggle("gameStarted406",logged);
+ if(!logged)return;
+ const dock=document.getElementById("rpgDock321");
+ if(!dock)return;
+ // Przywróć konkretne oryginalne przyciski, które wcześniejsze wersje mogły ukryć.
+ [...dock.querySelectorAll("button")].forEach(b=>{
+   const t=(b.textContent||"").toLowerCase();
+   if(["ekwipun","moce","topka","profil","ustaw","osiąg","osiag","party","drop","rynek","map","muzyk"].some(x=>t.includes(x))){
+     b.style.setProperty("display","block","important");
+     b.style.setProperty("visibility","visible","important");
+     b.style.setProperty("opacity","1","important");
+     b.style.setProperty("pointer-events","auto","important");
    }
  });
- // stary dock wyłączamy dopiero po zabraniu z niego funkcjonalnych przycisków
- let old=document.getElementById("rpgDock321");if(old)old.style.setProperty("display","none","important");
 }
-setTimeout(collect402,400);setTimeout(collect402,1200);setInterval(collect402,2500);
+setInterval(hud406,200);setTimeout(hud406,300);
 
-// Ochrona przed starymi funkcjami, które co sekundę próbują ponownie schować/przesunąć przyciski.
-setInterval(()=>{
- if(!window.currentUser)return;
- dock.querySelectorAll("button").forEach(b=>{
-   b.hidden=false;b.disabled=false;
-   b.style.setProperty("display","block","important");
-   b.style.setProperty("visibility","visible","important");
-   b.style.setProperty("opacity","1","important");
-   b.style.setProperty("position","static","important");
-   b.style.setProperty("pointer-events","auto","important");
-   b.style.setProperty("inset","auto","important");
-   b.style.setProperty("transform","none","important");
- });
-},350);
-})();
-</script>
+/* ========= ZIELONA DOLINA ========= */
+// Bez bossa i bandytów — zostawiamy tylko manekiny treningowe.
+for(let i=enemies.length-1;i>=0;i--)if(enemies[i].world==="valley")enemies.splice(i,1);
+[[430,560],[590,560],[430,720],[590,720]].forEach((p,i)=>enemies.push({
+ world:"valley",name:"Manekin treningowy",level:1,x:p[0],y:p[1],maxHp:160,hp:160,
+ alive:true,rewardZeni:0,rewardExp:30,training406:true
+}));
+setInterval(()=>enemies.filter(e=>e.training406).forEach(e=>{
+ e.vx330=0;e.vy330=0;e.move330=false;
+ if(e.alive===false){e._d406??=Date.now();if(Date.now()-e._d406>1800){e.alive=true;e.hp=e.maxHp;e._d406=0}}
+}),250);
 
+// Na zewnątrz zostają TYLKO: Discord, Wróżka/Smocze Kule, Domki, Pety.
+// Rynek Graczy jest istniejącym systemem/budynkiem i go nie ruszamy.
+function outside406(n){
+ let t=(n.name||"").toLowerCase();
+ return t.includes("discord")||t.includes("wróż")||t.includes("wroz")||t.includes("smocz")||
+        t.includes("zarządca dom")||t.includes("zarzadca dom")||t.includes("opiekun zwier")||t.includes("pet");
+}
 
+// Jedyny NOWY budynek usługowy.
+if(!worlds.hub406)worlds.hub406={name:"Centrum Wojowników",bg:"#39352d",road:"#715e43",min:1,spawn:{x:1200,y:1380}};
+const door406={x:1650,y:570,w:300,h:230};
 
-<script>
-(function(){
-/* 4.0.3 — budynki Zielonej Doliny mają prawdziwe wnętrza jak Rynek Graczy */
-const interiors403=[
- {id:"mastersHouse403",name:"🏯 Dom Mistrzów",outside:[1960,870],inside:[1200,1320],bg:"#332f2a",road:"#705d43"},
- {id:"forgeHouse403",name:"⚒ Kuźnia",outside:[790,1210],inside:[1200,1320],bg:"#292724",road:"#65452f"}
-];
-
-interiors403.forEach(h=>{
- if(!worlds[h.id])worlds[h.id]={name:h.name,bg:h.bg,road:h.road,min:1,interior403:true};
- if(!portals.some(p=>p.world==="valley"&&p.to===h.id))
-   portals.push({world:"valley",x:h.outside[0],y:h.outside[1],w:85,h:90,to:h.id,label:"🚪 WEJDŹ — "+h.name,min:1,interior403:true});
- if(!portals.some(p=>p.world===h.id&&p.to==="valley"))
-   portals.push({world:h.id,x:1200,y:1480,w:95,h:100,to:"valley",label:"🚪 WYJDŹ",min:1,interiorExit403:true,return403:h.outside});
-});
-
-// Przenieś mistrzów DO Domu Mistrzów, a Kowala i Runomistrza DO Kuźni.
-const masterNames403=["Mistrz","Mistrz Mocy","Trener","Mistrz Form","Mistrz Umiejętności","Mistrz Wypraw","Mistrz Turnieju","Mistrz PvP"];
-const masterPos403=[[760,650],[980,650],[1200,650],[1420,650],[1640,650],[870,930],[1200,930],[1530,930]];
-let mi=0;
+// Wszystkich pozostałych NPC przenosimy do jednego wnętrza.
+let inside406=[];
 npcs.forEach(n=>{
- if(n.world==="valley"&&masterNames403.includes(n.name)){
-   n.world="mastersHouse403";let p=masterPos403[mi++%masterPos403.length];n.x=p[0];n.y=p[1];
- }
-});
-let smithPos403={"Kowal":[980,760],"Runomistrz":[1420,760]};
-npcs.forEach(n=>{
- if(n.world==="valley"&&smithPos403[n.name]){
-   n.world="forgeHouse403";n.x=smithPos403[n.name][0];n.y=smithPos403[n.name][1];
+ if(n.world==="valley"&&!outside406(n)){
+   // Nie przenosimy NPC, który już należy do mechaniki Rynku Graczy.
+   let t=(n.name||"").toLowerCase();
+   if(t.includes("rynek graczy"))return;
+   n.world="hub406";inside406.push(n);
  }
 });
 
-// Stare interakcje sprawdzały czasem wyłącznie valley. Wrapper chwilowo mapuje wnętrze na valley,
-// dzięki czemu wszystkie istniejące funkcje NPC nadal działają bez duplikowania systemów.
-const oldInteract403=interact;
-interact=function(){
- if(currentWorld==="mastersHouse403"||currentWorld==="forgeHouse403"){
-   let near=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<110);
-   if(near){
-     let ow=near.world;near.world="valley";
-     let cw=currentWorld;currentWorld="valley";
-     try{return oldInteract403()}finally{currentWorld=cw;near.world=ow}
-   }
- }
- return oldInteract403();
-};
+// Zewnętrzne NPC w jednym czystym rzędzie.
+let outs=npcs.filter(n=>n.world==="valley"&&outside406(n));
+[[930,900],[1130,900],[1330,900],[1030,1080],[1230,1080]].forEach((p,i)=>{
+ if(outs[i]){outs[i].x=p[0];outs[i].y=p[1]}
+});
 
-// Wnętrza.
-const oldScenery403=drawScenery;
-drawScenery=function(c){
- oldScenery403(c);
- if(!worlds[currentWorld]?.interior403)return;
- const X=x=>x-c.x,Y=y=>y-c.y;
- ctx.save();
-
- // podłoga
- ctx.fillStyle=currentWorld==="forgeHouse403"?"#3a3129":"#453b31";
- ctx.fillRect(X(260),Y(220),1880,1300);
-
- // ściany
- ctx.fillStyle="#211e1b";
- ctx.fillRect(X(230),Y(180),1940,70);ctx.fillRect(X(230),Y(1500),1940,70);
- ctx.fillRect(X(230),Y(180),70,1390);ctx.fillRect(X(2100),Y(180),70,1390);
-
- // dywan / główna alejka
- ctx.fillStyle=currentWorld==="forgeHouse403"?"#6a4730":"#72543d";
- ctx.fillRect(X(1100),Y(300),200,1180);
-
- if(currentWorld==="mastersHouse403"){
-   // podesty mistrzów
-   ctx.fillStyle="#665747";
-   [[760,650],[980,650],[1200,650],[1420,650],[1640,650],[870,930],[1200,930],[1530,930]].forEach(([x,y])=>{
-     ctx.fillRect(X(x-48),Y(y+25),96,35);
-   });
-   // stoły / biblioteki / sztandary
-   ctx.fillStyle="#34271f";
-   ctx.fillRect(X(390),Y(350),160,430);ctx.fillRect(X(1850),Y(350),160,430);
-   ctx.fillStyle="#7b593b";
-   for(let y=380;y<750;y+=70){ctx.fillRect(X(405),Y(y),130,12);ctx.fillRect(X(1865),Y(y),130,12)}
-   ctx.fillStyle="#b99445";ctx.fillRect(X(560),Y(300),50,150);ctx.fillRect(X(1790),Y(300),50,150);
-   ctx.fillStyle="#efd27b";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText("DOM MISTRZÓW",X(1200),Y(350));
- }else{
-   // prawdziwa kuźnia
-   ctx.fillStyle="#1d1b19";ctx.fillRect(X(480),Y(500),280,260);
-   ctx.fillStyle="#a94f26";ctx.fillRect(X(515),Y(535),210,160);
-   ctx.fillStyle="#f09b3f";ctx.fillRect(X(550),Y(570),140,90);
-   // kowadło
-   ctx.fillStyle="#777";ctx.fillRect(X(1080),Y(900),170,45);ctx.fillRect(X(1135),Y(945),60,100);
-   // beczki / skrzynie / stojaki
-   ctx.fillStyle="#76502f";
-   for(let x=1550;x<1950;x+=120){ctx.fillRect(X(x),Y(430),70,85)}
-   ctx.strokeStyle="#aaa";ctx.lineWidth=5;
-   for(let x=1580;x<1940;x+=110){ctx.beginPath();ctx.moveTo(X(x),Y(800));ctx.lineTo(X(x+35),Y(700));ctx.stroke()}
-   ctx.fillStyle="#f0c15d";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText("KUŹNIA",X(1200),Y(350));
- }
-
- ctx.restore();
-};
-
-// Powrót z budynku dokładnie pod drzwi, zamiast na standardowy spawn Doliny.
-const oldTp403=teleport;
-teleport=function(p){
- let r=oldTp403(p);
- if(p?.interior403){player.x=1200;player.y=1320;currentUser.x=player.x;currentUser.y=player.y;savePlayer()}
- if(p?.interiorExit403&&p.return403){player.x=p.return403[0];player.y=p.return403[1]+120;currentUser.x=player.x;currentUser.y=player.y;savePlayer()}
- return r;
-};
-
-// Ładne drzwi na zewnątrz.
-const oldSceneryDoor403=drawScenery;
-drawScenery=function(c){
- oldSceneryDoor403(c);
- if(currentWorld!=="valley")return;
- const X=x=>x-c.x,Y=y=>y-c.y;
- ctx.save();
- [[1960,870,"DOM MISTRZÓW"],[790,1210,"KUŹNIA"]].forEach(([x,y,t])=>{
-   ctx.fillStyle="#241b16";ctx.fillRect(X(x-28),Y(y-55),56,72);
-   ctx.fillStyle="#e8c66b";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("E — "+t,X(x),Y(y+34));
- });
- ctx.restore();
-};
-})();
-</script>
-
-
-
-<style>
-/* 4.0.4: stały panel HUD — nie zależy już od starych skanerów przycisków */
-#mainHud404{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:30000;
- width:155px;padding:8px;background:rgba(12,17,14,.94);border:2px solid #786b49;border-radius:9px;
- display:none;flex-direction:column;gap:5px}
-body.dbpLogged331 #mainHud404{display:flex!important}
-#mainHud404 button{display:block!important;visibility:visible!important;opacity:1!important;position:static!important;
- inset:auto!important;transform:none!important;width:100%!important;padding:8px 5px!important;margin:0!important;
- background:#2c332c!important;color:#fff!important;border:1px solid #6b644b!important;border-radius:5px!important;
- pointer-events:auto!important;cursor:pointer!important;font:11px Arial!important}
-#hudDock402,#rpgDock321{display:none!important}
-</style>
-<div id="mainHud404"></div>
-<script>
-(function(){
-/* ===== HUD: kopiujemy FUNKCJĘ kliknięcia, nie przenosimy przycisków walczących ze starym CSS ===== */
-const dock=document.getElementById("mainHud404");
-const defs=[
- ["🎒 EKWIPUNEK",["ekwipun","equipment"]],
- ["⚡ MOCE",["moce","powers"]],
- ["🏆 TOPKA",["topka","ranking"]],
- ["👤 PROFIL",["profil","profile"]],
- ["⚙️ USTAWIENIA",["ustaw","settings"]],
- ["🏅 OSIĄGNIĘCIA",["osiąg","achiev"]],
- ["👥 PARTY",["party","druż"]],
- ["💎 DROP",["drop"]],
- ["🛒 RYNEK",["rynek","market"]],
- ["🗺️ MAPA",["mapa","map"]]
+// Strefy wewnątrz jednego domu.
+const zones406=[
+ {title:"🥋 STREFA MISTRZÓW",re:/mistrz|trener/i,x:500,y:500},
+ {title:"⚒ RZEMIOSŁO I ROZWÓJ",re:/kowal|runo|badacz|kartograf/i,x:1350,y:500},
+ {title:"📜 ZADANIA I EVENTY",re:/zlecen|łowca|lowca|dzien|herold|wypraw/i,x:500,y:980},
+ {title:"🏦 USŁUGI",re:/bank|gildi|list|kupiec|handlarz|rekrut/i,x:1350,y:980}
 ];
-function n404(x){return String(x||"").trim().toLowerCase()}
-function source404(keys){
- return [...document.querySelectorAll("button")].find(b=>{
-   if(b.closest("#mainHud404,#systems400,#fullPanel300,#prestigeNpc210,#questNpc310"))return false;
-   let t=n404(b.textContent);return keys.some(k=>t.includes(k));
- });
-}
-function rebuild404(){
- if(!window.currentUser)return;
- if(dock.children.length)return;
- defs.forEach(([label,keys])=>{
-   let src=source404(keys);if(!src)return;
-   let b=document.createElement("button");b.textContent=label;
-   b.onclick=e=>{
-     e.preventDefault();e.stopPropagation();
-     // Wywołaj oryginalny przycisk; przed kliknięciem chwilowo zdejmij blokady starszych addonów.
-     src.hidden=false;src.disabled=false;
-     src.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}));
-   };
-   dock.appendChild(b);
- });
-}
-setInterval(()=>{document.body.classList.toggle("dbpLogged331",!!window.currentUser);rebuild404()},350);
-setTimeout(rebuild404,600);
-
-/* ===== MIASTO: budynki zamiast tłumu NPC =====
-   Wejście jest przez drzwi + E, bez widocznych portalowych znaczników. */
-const B=[
- {id:"mastersHouse403",name:"DOM MISTRZÓW",x:1840,y:360,w:360,h:300},
- {id:"forgeHouse403",name:"KUŹNIA",x:710,y:1000,w:145,h:150},
- {id:"bank404",name:"BANK",x:1010,y:470,w:210,h:190},
- {id:"guild404",name:"GILDIA",x:1280,y:470,w:220,h:190},
- {id:"post404",name:"POCZTA",x:1550,y:470,w:200,h:190},
- {id:"pet404",name:"HODOWLA",x:1010,y:1180,w:210,h:180},
- {id:"quest404",name:"ZLECENIA",x:1280,y:1180,w:220,h:180},
- {id:"event404",name:"EVENTY",x:1550,y:1180,w:200,h:180}
-];
-B.slice(2).forEach(b=>{if(!worlds[b.id])worlds[b.id]={name:b.name,bg:"#38332b",road:"#6d5940",min:1,interior404:true}});
-
-// Usuń widoczne portale wejściowe do budynków z Doliny. Drzwi obsługujemy sami.
-for(let i=portals.length-1;i>=0;i--){
- let p=portals[i];
- if(p.world==="valley"&&["mastersHouse403","forgeHouse403","bank404","guild404","post404","pet404","quest404","event404"].includes(p.to))portals.splice(i,1);
-}
-// Wyjścia wewnątrz nowych budynków mogą zostać portalem technicznym, ale bez markerów; E obsłużymy sami.
-const services404={
- bank404:["Bankier"],
- guild404:["Zarządca Gildii"],
- post404:["Listonosz"],
- pet404:["Opiekun Zwierząt"],
- quest404:["Zleceniodawca Doliny","Łowca","Dzienny"],
- event404:["Herold Wydarzeń"]
-};
-Object.entries(services404).forEach(([world,names])=>{
- let pts=[[900,760],[1200,760],[1500,760]];
- names.forEach((name,i)=>{
-   let n=npcs.find(x=>x.world==="valley"&&x.name===name);
-   if(n){n.world=world;n.x=pts[i][0];n.y=pts[i][1]}
- });
+let placed406=new Set();
+zones406.forEach(z=>{
+ let a=inside406.filter(n=>!placed406.has(n)&&z.re.test(n.name||""));
+ a.forEach((n,i)=>{n.x=z.x+(i%4)*145;n.y=z.y+Math.floor(i/4)*110;placed406.add(n)})
 });
+inside406.filter(n=>!placed406.has(n)).forEach((n,i)=>{n.x=900+(i%5)*145;n.y=1270+Math.floor(i/5)*100});
 
-// Inne NPC rozłóż na spokojnym placu, bez nakładania.
-const outside404={
- "Handlarz":[1040,870],"Wróżka":[1240,870],"Rekruter":[1440,870],
- "Badacz Bestiariusza":[1640,870],"Kartograf":[1040,1030],
- "Zarządca Domów":[1240,1030],"Kupiec Bezpośredni":[1440,1030]
-};
-npcs.forEach(n=>{if(n.world==="valley"&&outside404[n.name]){n.x=outside404[n.name][0];n.y=outside404[n.name][1]}});
-
-// Drzwi wejściowe.
-let doorNear404=null,return404=null;
-function nearDoor404(){
- if(currentWorld!=="valley")return null;
- return B.find(b=>Math.hypot(player.x-(b.x+b.w/2),player.y-(b.y+b.h))<105)||null;
-}
-function enter404(b){
- return404=[b.x+b.w/2,b.y+b.h+95];
- currentWorld=b.id;currentUser.world=b.id;player.x=1200;player.y=1320;currentUser.x=player.x;currentUser.y=player.y;savePlayer();
- toast("🚪 "+b.name);
-}
-function leave404(){
- currentWorld="valley";currentUser.world="valley";player.x=return404?.[0]||1200;player.y=return404?.[1]||1350;currentUser.x=player.x;currentUser.y=player.y;savePlayer();
+// Wejście jak do Rynku: drzwi + E, BEZ dodawania portalu.
+function nearDoor406(){
+ return currentWorld==="valley"&&Math.hypot(player.x-(door406.x+door406.w/2),player.y-(door406.y+door406.h))<110;
 }
 document.addEventListener("keydown",e=>{
- if(!currentUser||!["e","E"].includes(e.key))return;
- let b=nearDoor404();if(b){e.preventDefault();e.stopImmediatePropagation();enter404(b);return}
- if((worlds[currentWorld]?.interior404||currentWorld==="mastersHouse403"||currentWorld==="forgeHouse403")&&Math.hypot(player.x-1200,player.y-1480)<120){
-   e.preventDefault();e.stopImmediatePropagation();leave404();
+ if(!currentUser||!(e.key==="e"||e.key==="E"))return;
+ if(nearDoor406()){
+   e.preventDefault();e.stopImmediatePropagation();
+   currentWorld="hub406";currentUser.world="hub406";player.x=1200;player.y=1380;currentUser.x=player.x;currentUser.y=player.y;savePlayer();return;
+ }
+ if(currentWorld==="hub406"&&Math.hypot(player.x-1200,player.y-1480)<120){
+   e.preventDefault();e.stopImmediatePropagation();
+   currentWorld="valley";currentUser.world="valley";player.x=1800;player.y=880;currentUser.x=player.x;currentUser.y=player.y;savePlayer();
  }
 },true);
 
-// Interakcje NPC we wnętrzach: na moment mapujemy do valley, żeby zachować istniejące role/funkcje.
-const int404=interact;
+// Zachowaj funkcje wszystkich NPC po przeniesieniu.
+const oldInteract406=interact;
 interact=function(){
- if(currentWorld!=="valley"){
-   let n=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<110);
+ if(currentWorld==="hub406"){
+   let n=npcs.find(n=>n.world==="hub406"&&Math.hypot(player.x-n.x,player.y-n.y)<105);
    if(n){
-     let nw=n.world,cw=currentWorld;n.world="valley";currentWorld="valley";
-     try{return int404()}finally{currentWorld=cw;n.world=nw}
+     let ow=n.world,cw=currentWorld;n.world="valley";currentWorld="valley";
+     try{return oldInteract406()}finally{currentWorld=cw;n.world=ow}
    }
  }
- return int404();
+ return oldInteract406();
 };
 
-/* Rysowanie miasta i wnętrz. */
-const scene404=drawScenery;
+// TYLKO jeden nowy budynek. Nie ma zielonych prostokątów przykrywających stare domy,
+// bo ta wersja powstała od czystej 4.0.0, przed dodatkami z domkami.
+const oldScene406=drawScenery;
 drawScenery=function(c){
- scene404(c);const X=x=>x-c.x,Y=y=>y-c.y;
- ctx.save();
+ oldScene406(c);const X=x=>x-c.x,Y=y=>y-c.y;ctx.save();
  if(currentWorld==="valley"){
-   // zieleń + szeroki plac zostawia dużo miejsca na chodzenie
-   ctx.fillStyle="rgba(183,158,102,.18)";ctx.fillRect(X(920),Y(760),900,390);
-   B.forEach(b=>{
-     // nadpisz optycznie starą wielką kuźnię mniejszym budynkiem
-     ctx.fillStyle=b.id==="forgeHouse403"?"#4d3b2d":"#514638";
-     ctx.fillRect(X(b.x),Y(b.y),b.w,b.h);
-     ctx.fillStyle="#302720";ctx.beginPath();ctx.moveTo(X(b.x-12),Y(b.y+8));ctx.lineTo(X(b.x+b.w/2),Y(b.y-55));ctx.lineTo(X(b.x+b.w+12),Y(b.y+8));ctx.fill();
-     let dx=b.x+b.w/2-22,dy=b.y+b.h-64;ctx.fillStyle="#241b16";ctx.fillRect(X(dx),Y(dy),44,64);
-     ctx.fillStyle="#efd27b";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText(b.name,X(b.x+b.w/2),Y(b.y-16));
-   });
- }else if(worlds[currentWorld]?.interior404){
-   ctx.fillStyle="#443a30";ctx.fillRect(X(300),Y(220),1800,1280);
-   ctx.fillStyle="#211e1a";ctx.fillRect(X(260),Y(180),1880,60);ctx.fillRect(X(260),Y(1500),1880,60);ctx.fillRect(X(260),Y(180),60,1380);ctx.fillRect(X(2080),Y(180),60,1380);
-   ctx.fillStyle="#765d3c";ctx.fillRect(X(1100),Y(320),200,1150);
-   ctx.fillStyle="#e9ce7b";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText(worlds[currentWorld].name,X(1200),Y(360));
-   ctx.fillStyle="#241b16";ctx.fillRect(X(1160),Y(1430),80,70);
-   ctx.font="bold 11px Arial";ctx.fillText("E — WYJDŹ",X(1200),Y(1410));
- }
- ctx.restore();
-};
-
-// Hint drzwi.
-const hint404=updateHint;
-updateHint=function(){
- hint404();
- let b=nearDoor404();
- if(b){hint.textContent="E — WEJDŹ: "+b.name;hint.style.display="block";return}
- if(currentWorld!=="valley"&&(worlds[currentWorld]?.interior404||currentWorld==="mastersHouse403"||currentWorld==="forgeHouse403")&&Math.hypot(player.x-1200,player.y-1480)<120){
-   hint.textContent="E — WYJDŹ Z BUDYNKU";hint.style.display="block";
- }
-};
-})();
-</script>
-
-
-
-<style>
-/* 4.0.5 — FINALNY HUD: widoczność oparta na ekranie auth, nie na wadliwej klasie z currentUser/window */
-#mainHud405{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:50000;width:160px;
- padding:8px;background:rgba(10,15,12,.95);border:2px solid #857650;border-radius:9px;display:none;flex-direction:column;gap:5px}
-#mainHud405.on{display:flex!important}
-#mainHud405 button{display:block!important;position:static!important;visibility:visible!important;opacity:1!important;
- width:100%!important;height:auto!important;margin:0!important;padding:8px 5px!important;transform:none!important;inset:auto!important;
- pointer-events:auto!important;background:#30372f!important;color:white!important;border:1px solid #746b50!important;border-radius:5px!important;cursor:pointer!important}
-#mainHud404,#hudDock402,#rpgDock321{display:none!important}
-</style>
-<div id="mainHud405"></div>
-<script>
-(function(){
-/* ================= HUD =================
-   Nie szukamy już starych przycisków po tekście.
-   Znajdujemy ich realne handlery i budujemy stabilny panel. */
-const dock=document.getElementById("mainHud405");
-const menuDefs405=[
- ["🎒 EKWIPUNEK",["openInventory05","openInventory","inventory05","showInventory"]],
- ["⚡ MOCE",["openPowers05","openPowers","powers05"]],
- ["🏆 TOPKA",["openLeaderboard071","openTop","showTop"]],
- ["👤 PROFIL",["openProfile08","openProfile","profile08"]],
- ["⚙️ USTAWIENIA",["openSettings08","openSettings","settings08"]],
- ["🏅 OSIĄGNIĘCIA",["openAchievements08","openAchievements","achievements08"]],
- ["👥 PARTY",["openParty100","openParty"]],
- ["💎 DROP",["openDrop08","openDrops","drop08"]],
- ["🛒 RYNEK",["openMarket","openMarket072","marketOpen"]],
- ["🗺️ MAPA",["openMap08","openMap"]]
-];
-function isLogged405(){
- // auth overlay/form jest najpewniejszym źródłem; jeśli gracz/canvas działa, HUD ma być widoczny
- const auth=document.querySelector("#authScreen,#authOverlay,.auth-screen,.auth-overlay");
- if(auth){
-   const cs=getComputedStyle(auth);
-   if(cs.display!=="none"&&cs.visibility!=="hidden"&&Number(cs.opacity||1)>0.05)return false;
- }
- return !!(window.currentUser||typeof currentUser!=="undefined"&&currentUser);
-}
-function handler405(names){
- for(const n of names)if(typeof window[n]==="function")return ()=>window[n]();
- return null;
-}
-function fallbackButton405(label){
- let key=label.replace(/^[^\s]+\s*/,"").toLowerCase();
- return [...document.querySelectorAll("button")].find(b=>!b.closest("#mainHud405")&&(b.textContent||"").toLowerCase().includes(key.slice(0,5)));
-}
-function buildHud405(){
- if(dock.children.length)return;
- menuDefs405.forEach(([label,names])=>{
-   let b=document.createElement("button");b.textContent=label;
-   b.onclick=()=>{
-     let fn=handler405(names);if(fn){try{return fn()}catch(e){console.error(e)}}
-     let old=fallbackButton405(label);
-     if(old){old.disabled=false;old.hidden=false;old.click();return}
-     // znane systemy z mega menu
-     if(typeof window.openMega08==="function")return window.openMega08(label);
-     toast("Ta funkcja nie została jeszcze podpięta do nowego HUD-u.");
-   };
-   dock.appendChild(b);
- });
-}
-buildHud405();
-setInterval(()=>dock.classList.toggle("on",isLogged405()),200);
-
-/* ================= ZIELONA DOLINA CLEAN HUB ================= */
-// Usuń wszystkie budynki z 4.0.4 oprócz Rynku Graczy.
-// Stare rysunki Domu Mistrzów/Kuźni z wcześniejszych warstw przykrywamy zielenią w drawScenery niżej.
-const removeWorlds405=["mastersHouse403","forgeHouse403","bank404","guild404","post404","pet404","quest404","event404"];
-for(let i=portals.length-1;i>=0;i--){
- let p=portals[i];if(removeWorlds405.includes(p.to)||removeWorlds405.includes(p.world))portals.splice(i,1);
-}
-
-// NPC, które ZOSTAJĄ na zewnątrz.
-function keepOutside405(n){
- const t=(n.name||"").toLowerCase();
- return t.includes("discord")||t.includes("wróż")||t.includes("wroz")||
-        t.includes("smocz")||t.includes("zarządca dom")||t.includes("zarzadca dom")||
-        t.includes("opiekun zwier")||t.includes("pet");
-}
-
-// Jedno Centrum Usług dla całej reszty.
-if(!worlds.center405)worlds.center405={name:"Centrum Wojowników",bg:"#38372f",road:"#76644a",min:1,interior405:true};
-const centerDoor405={x:1540,y:520,w:300,h:230};
-
-// Przenieś wszystkich usługowych NPC z Doliny i starych wnętrz do jednego centrum,
-// poza wyraźnie zostawionymi na zewnątrz.
-let moved405=[];
-npcs.forEach(n=>{
- if((n.world==="valley"||removeWorlds405.includes(n.world))&&!keepOutside405(n)){
-   // Rynek graczy/handlarz rynku zostawiamy, jeśli już należy do osobnego market world.
-   if((n.name||"").toLowerCase().includes("handlarz rynku"))return;
-   n.world="center405";moved405.push(n);
- }
-});
-
-// Grupowanie we wnętrzu.
-const groups405=[
- {title:"🥋 STREFA MISTRZÓW",test:n=>/mistrz|trener/i.test(n.name),x:520,y:500},
- {title:"⚒ RZEMIOSŁO I ROZWÓJ",test:n=>/kowal|runo|górnik|gornik|badacz/i.test(n.name),x:1220,y:500},
- {title:"📜 ZADANIA I WYDARZENIA",test:n=>/zlecen|łowca|lowca|dzien|herold|wypraw/i.test(n.name),x:520,y:980},
- {title:"🏦 USŁUGI",test:n=>/bank|gildi|list|kartograf|kupiec|handlarz|rekrut/i.test(n.name),x:1420,y:980}
-];
-let used405=new Set();
-groups405.forEach(g=>{
- let arr=moved405.filter(n=>!used405.has(n)&&g.test(n));
- arr.forEach((n,i)=>{n.x=g.x+(i%4)*145;n.y=g.y+Math.floor(i/4)*115;used405.add(n)});
-});
-let rest405=moved405.filter(n=>!used405.has(n));
-rest405.forEach((n,i)=>{n.x=920+(i%5)*140;n.y=1250+Math.floor(i/5)*100});
-
-// Zewnętrzni NPC — szeroko i czytelnie.
-let outside405=npcs.filter(n=>n.world==="valley"&&keepOutside405(n));
-const op405=[[920,850],[1120,850],[1320,850],[920,1060],[1120,1060],[1320,1060]];
-outside405.forEach((n,i)=>{n.x=op405[i%op405.length][0];n.y=op405[i%op405.length][1]});
-
-// Drzwi bez portalowego znacznika.
-let return405=[1690,830];
-function nearCenter405(){
- if(currentWorld!=="valley")return false;
- return Math.hypot(player.x-(centerDoor405.x+centerDoor405.w/2),player.y-(centerDoor405.y+centerDoor405.h))<115;
-}
-document.addEventListener("keydown",e=>{
- if(!isLogged405()||!["e","E"].includes(e.key))return;
- if(nearCenter405()){
-   e.preventDefault();e.stopImmediatePropagation();
-   currentWorld="center405";currentUser.world="center405";player.x=1200;player.y=1370;currentUser.x=player.x;currentUser.y=player.y;savePlayer();return;
- }
- if(currentWorld==="center405"&&Math.hypot(player.x-1200,player.y-1480)<120){
-   e.preventDefault();e.stopImmediatePropagation();
-   currentWorld="valley";currentUser.world="valley";player.x=return405[0];player.y=return405[1];currentUser.x=player.x;currentUser.y=player.y;savePlayer();
- }
-},true);
-
-// Zachowaj funkcje NPC, które historycznie sprawdzały valley.
-const oldInteract405=interact;
-interact=function(){
- if(currentWorld==="center405"){
-   let n=npcs.find(n=>n.world==="center405"&&Math.hypot(player.x-n.x,player.y-n.y)<110);
-   if(n){let nw=n.world,cw=currentWorld;n.world="valley";currentWorld="valley";try{return oldInteract405()}finally{currentWorld=cw;n.world=nw}}
- }
- return oldInteract405();
-};
-
-const oldScene405=drawScenery;
-drawScenery=function(c){
- oldScene405(c);const X=x=>x-c.x,Y=y=>y-c.y;ctx.save();
- if(currentWorld==="valley"){
-   // przykrycie starych nałożonych budynków zielonym terenem
-   ctx.fillStyle=(worlds.valley&&worlds.valley.bg)||"#355c38";
-   ctx.fillRect(X(620),Y(250),1700,520);
-   ctx.fillRect(X(620),Y(940),350,500);
-   // jeden budynek centrum
-   let b=centerDoor405;ctx.fillStyle="#544938";ctx.fillRect(X(b.x),Y(b.y),b.w,b.h);
-   ctx.fillStyle="#302820";ctx.beginPath();ctx.moveTo(X(b.x-20),Y(b.y+10));ctx.lineTo(X(b.x+b.w/2),Y(b.y-75));ctx.lineTo(X(b.x+b.w+20),Y(b.y+10));ctx.fill();
+   let b=door406;
+   ctx.fillStyle="#554938";ctx.fillRect(X(b.x),Y(b.y),b.w,b.h);
+   ctx.fillStyle="#30271f";ctx.beginPath();ctx.moveTo(X(b.x-18),Y(b.y+8));ctx.lineTo(X(b.x+b.w/2),Y(b.y-78));ctx.lineTo(X(b.x+b.w+18),Y(b.y+8));ctx.fill();
    ctx.fillStyle="#211914";ctx.fillRect(X(b.x+b.w/2-28),Y(b.y+b.h-75),56,75);
-   ctx.fillStyle="#f0d27b";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText("CENTRUM WOJOWNIKÓW",X(b.x+b.w/2),Y(b.y-25));
- }else if(currentWorld==="center405"){
-   ctx.fillStyle="#40382e";ctx.fillRect(X(250),Y(180),1900,1380);
-   ctx.fillStyle="#211d19";ctx.fillRect(X(220),Y(150),1960,65);ctx.fillRect(X(220),Y(1530),1960,65);ctx.fillRect(X(220),Y(150),65,1445);ctx.fillRect(X(2115),Y(150),65,1445);
-   // cztery strefy
-   const zones=[[390,360,650,430,"🥋 STREFA MISTRZÓW"],[1110,360,850,430,"⚒ RZEMIOSŁO I ROZWÓJ"],[390,850,650,430,"📜 ZADANIA I EVENTY"],[1110,850,850,430,"🏦 USŁUGI"]];
-   zones.forEach(z=>{ctx.fillStyle="rgba(120,98,65,.28)";ctx.fillRect(X(z[0]),Y(z[1]),z[2],z[3]);ctx.strokeStyle="#8c7650";ctx.strokeRect(X(z[0]),Y(z[1]),z[2],z[3]);ctx.fillStyle="#efd27c";ctx.font="bold 13px Arial";ctx.textAlign="left";ctx.fillText(z[4],X(z[0]+18),Y(z[1]+28))});
-   ctx.fillStyle="#211914";ctx.fillRect(X(1160),Y(1460),80,70);ctx.fillStyle="#eee";ctx.textAlign="center";ctx.fillText("E — WYJDŹ",X(1200),Y(1440));
+   ctx.fillStyle="#efd27b";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText("CENTRUM WOJOWNIKÓW",X(b.x+b.w/2),Y(b.y-25));
+   // strefa manekinów
+   ctx.strokeStyle="#9b845b";ctx.lineWidth=3;ctx.strokeRect(X(330),Y(450),370,380);
+   ctx.fillStyle="#efd27b";ctx.font="bold 11px Arial";ctx.fillText("STREFA TRENINGOWA",X(515),Y(430));
+ }else if(currentWorld==="hub406"){
+   ctx.fillStyle="#433a30";ctx.fillRect(X(260),Y(180),1880,1380);
+   ctx.fillStyle="#211d19";ctx.fillRect(X(220),Y(145),1960,65);ctx.fillRect(X(220),Y(1530),1960,65);ctx.fillRect(X(220),Y(145),65,1450);ctx.fillRect(X(2115),Y(145),65,1450);
+   [[380,350,760,420,"🥋 STREFA MISTRZÓW"],[1260,350,760,420,"⚒ RZEMIOSŁO I ROZWÓJ"],
+    [380,840,760,420,"📜 ZADANIA I EVENTY"],[1260,840,760,420,"🏦 USŁUGI"]].forEach(z=>{
+      ctx.fillStyle="rgba(125,102,68,.25)";ctx.fillRect(X(z[0]),Y(z[1]),z[2],z[3]);
+      ctx.strokeStyle="#8d7651";ctx.strokeRect(X(z[0]),Y(z[1]),z[2],z[3]);
+      ctx.fillStyle="#efd27b";ctx.font="bold 13px Arial";ctx.textAlign="left";ctx.fillText(z[4],X(z[0]+18),Y(z[1]+28));
+   });
+   ctx.fillStyle="#211914";ctx.fillRect(X(1160),Y(1450),80,80);
+   ctx.fillStyle="#eee";ctx.textAlign="center";ctx.fillText("E — WYJDŹ",X(1200),Y(1435));
  }
  ctx.restore();
 };
 
-const oldHint405=updateHint;
+const oldHint406=updateHint;
 updateHint=function(){
- oldHint405();
- if(nearCenter405()){hint.textContent="E — WEJDŹ DO CENTRUM WOJOWNIKÓW";hint.style.display="block"}
- if(currentWorld==="center405"&&Math.hypot(player.x-1200,player.y-1480)<120){hint.textContent="E — WYJDŹ DO ZIELONEJ DOLINY";hint.style.display="block"}
+ oldHint406();
+ if(nearDoor406()){hint.textContent="E — WEJDŹ DO CENTRUM WOJOWNIKÓW";hint.style.display="block"}
+ if(currentWorld==="hub406"&&Math.hypot(player.x-1200,player.y-1480)<120){hint.textContent="E — WYJDŹ";hint.style.display="block"}
 };
 })();
 </script>
