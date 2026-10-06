@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.9.0 — PIXEL WORLD + MOBY + BOSSY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 2.0.0 — KRAINA PRESTIGE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3192,6 +3192,193 @@ document.addEventListener("pointerdown",e=>{
     const oldScenery190=drawScenery;
     drawScenery=function(c){oldScenery190(c);pixelDecor190(c)}
   }
+})();
+</script>
+
+
+
+<script>
+/* 2.0.0 — prawdziwa Kraina Prestige: osobna, bardziej rozbudowana mapa pixel RPG */
+(function(){
+  if(typeof worlds==="undefined"||typeof portals==="undefined"||typeof npcs==="undefined"||typeof enemies==="undefined")return;
+
+  worlds.prestige={
+    name:"Kraina Odrodzenia",bg:"#314c32",road:"#8b7049",min:1
+  };
+
+  // Usuwamy atrapę portalu 1.8.3c i wstawiamy działający portal.
+  for(let i=portals.length-1;i>=0;i--){
+    if(portals[i] && (portals[i].prestigePortal183b || portals[i].to==="__prestige_locked__"))portals.splice(i,1);
+  }
+  portals.push(
+    {world:"valley",x:2050,y:800,w:92,h:118,to:"prestige",label:"⭐ KRAINA PRESTIGE",min:1,prestigeGate200:true},
+    {world:"prestige",x:1135,y:1480,w:105,h:105,to:"valley",label:"POWRÓT DO DOLINY",min:1}
+  );
+
+  // Osobne NPC — fundament nowej zawartości Prestige.
+  npcs.push(
+    {world:"prestige",x:1160,y:770,name:"Strażnik Odrodzenia",text:"Witaj w Krainie Odrodzenia. Tutaj zaczyna się dalsza droga wojownika."},
+    {world:"prestige",x:790,y:680,name:"Kupiec Odrodzenia",text:"Wkrótce sprowadzę wyposażenie dostępne tylko za Prestige."},
+    {world:"prestige",x:1510,y:680,name:"Mistrz Odrodzenia",text:"W kolejnej aktualizacji przygotuję dla ciebie nowe próby."},
+    {world:"prestige",x:540,y:1110,name:"Badacz Katakumb",text:"Pod ruinami podobno znajduje się coś znacznie starszego od tej osady."}
+  );
+
+  // Nowe potwory tylko dla krainy Prestige.
+  const pmobs=[
+    ["Odrodzony Wilk",6,720,1030,520],
+    ["Odrodzony Wilk",7,900,1180,590],
+    ["Leśny Demon",8,1580,1050,720],
+    ["Leśny Demon",8,1770,1190,720],
+    ["Strażnik Ruin",9,470,420,850],
+    ["Strażnik Ruin",10,660,350,940],
+    ["Cienisty Wojownik",10,1710,380,1000],
+    ["Cienisty Wojownik",11,1880,520,1120],
+    ["Bestia Odrodzenia",12,1180,270,1500]
+  ];
+  pmobs.forEach((a,i)=>enemies.push({
+    world:"prestige",name:a[0],level:a[1],x:a[2],y:a[3],
+    maxHp:a[4],hp:a[4],alive:true,respawn:0,prestigeMob200:true
+  }));
+  enemies.push({
+    world:"prestige",x:2050,y:300,name:"Strażnik Odrodzenia — BOSS",
+    level:15,maxHp:4800,hp:4800,alive:true,respawn:0,boss:true,bossKey:"prestige",
+    rewardZeni:26000,rewardExp:4800,prestigeMob200:true
+  });
+
+  // Gate: ten portal sprawdza PRESTIGE, nie level.
+  const oldTeleport200=teleport;
+  teleport=function(p){
+    if(p&&p.prestigeGate200){
+      if(Number(currentUser?.prestige||0)<1){toast("🔒 Potrzebujesz minimum 1 PRESTIGE.");return}
+    }
+    return oldTeleport200(p);
+  };
+
+  // Kraina ma całkiem inny layout niż stare mapy: kamienne place, ścieżki,
+  // domy, mury, most, rzeka, ruiny, latarnie i gęstą roślinność.
+  function house200(x,y,w,h,roof){
+    ctx.fillStyle="#392b21";ctx.fillRect(x+7,y+10,w,h);
+    ctx.fillStyle="#a58a61";ctx.fillRect(x+12,y+22,w-10,h-22);
+    ctx.fillStyle=roof;ctx.fillRect(x,y,w+14,22);
+    ctx.fillStyle="#523522";ctx.fillRect(x+w/2-13,y+h-30,26,30);
+    ctx.fillStyle="#e7bf62";ctx.fillRect(x+20,y+43,15,15);ctx.fillRect(x+w-38,y+43,15,15);
+  }
+  function tree200(x,y,t=0){
+    ctx.fillStyle="#493523";ctx.fillRect(x+18,y+36,13,34);
+    ctx.fillStyle=t?"#285538":"#326a3c";ctx.fillRect(x+2,y+16,48,37);ctx.fillRect(x+10,y+3,34,48);
+    ctx.fillStyle="rgba(113,166,69,.5)";ctx.fillRect(x+9,y+9,18,12);
+  }
+  function rock200(x,y){
+    ctx.fillStyle="#50565a";ctx.fillRect(x+4,y+7,25,16);ctx.fillStyle="#737b7d";ctx.fillRect(x+9,y+3,15,8);
+    ctx.fillStyle="#353a3c";ctx.fillRect(x+3,y+20,26,5)
+  }
+  function prestigeScenery200(c){
+    if(currentWorld!=="prestige")return;
+    const X=v=>v-c.x,Y=v=>v-c.y;
+    ctx.save();
+
+    // Ziemia z subtelną kafelkową teksturą.
+    for(let gx=0;gx<2400;gx+=32)for(let gy=0;gy<1700;gy+=32){
+      let h=((gx/32)*17+(gy/32)*31)%7;
+      ctx.fillStyle=h<2?"rgba(95,126,66,.11)":"rgba(20,45,28,.06)";
+      ctx.fillRect(X(gx),Y(gy),32,32);
+    }
+
+    // Rzeka po prawej + kamienny most.
+    ctx.fillStyle="#285d78";ctx.fillRect(X(1870),Y(0),230,1700);
+    for(let yy=20;yy<1680;yy+=42){ctx.fillStyle="rgba(125,205,220,.22)";ctx.fillRect(X(1890+(yy%70)),Y(yy),100,4)}
+    ctx.fillStyle="#777064";ctx.fillRect(X(1840),Y(760),290,125);
+    for(let xx=1840;xx<2130;xx+=38){ctx.strokeStyle="#45423d";ctx.strokeRect(X(xx),Y(760),38,125)}
+
+    // Główna brukowana osada — zamiast prostego krzyża jak w starych mapach.
+    ctx.fillStyle="#756b56";ctx.fillRect(X(680),Y(570),980,390);
+    ctx.fillStyle="#8a7b60";ctx.fillRect(X(1070),Y(180),190,1300);
+    for(let xx=690;xx<1640;xx+=38)for(let yy=580;yy<950;yy+=30){
+      ctx.strokeStyle="rgba(48,42,34,.28)";ctx.strokeRect(X(xx),Y(yy),36,28)
+    }
+
+    // Domy / sklepy / gildia.
+    house200(X(720),Y(500),190,125,"#774c31");
+    house200(X(1390),Y(490),210,135,"#5f3e2d");
+    house200(X(880),Y(960),190,125,"#6b4230");
+    house200(X(1310),Y(980),225,135,"#514033");
+
+    // Ruiny na północnym zachodzie.
+    ctx.fillStyle="#5e5b4d";
+    for(let i=0;i<7;i++){ctx.fillRect(X(280+i*65),Y(230+(i%2)*28),48,70+(i%3)*18)}
+    ctx.fillStyle="#34372f";ctx.fillRect(X(300),Y(390),440,24);
+
+    // Kamienne mury osady.
+    ctx.fillStyle="#565b54";
+    for(let xx=650;xx<=1660;xx+=48){ctx.fillRect(X(xx),Y(540),42,25);ctx.fillRect(X(xx),Y(1140),42,25)}
+    for(let yy=565;yy<1140;yy+=48){ctx.fillRect(X(650),Y(yy),25,42);ctx.fillRect(X(1640),Y(yy),25,42)}
+
+    // Bramy.
+    ctx.clearRect(X(1080),Y(1128),170,45);ctx.clearRect(X(1630),Y(770),45,130);
+
+    // Drzewa / skały — ręcznie rozłożone jak na pełnej mapie RPG.
+    const trees=[[120,150],[210,310],[110,520],[260,700],[170,930],[320,1320],[510,1450],[1740,1300],[2180,120],[2210,350],[2160,1080],[2210,1390],[820,140],[1450,150],[1570,250],[460,850]];
+    trees.forEach((p,i)=>tree200(X(p[0]),Y(p[1]),i%3===0));
+    const rocks=[[420,170],[520,300],[340,620],[1780,190],[1740,600],[2200,690],[360,1180],[1770,1430],[2140,1510]];
+    rocks.forEach(p=>rock200(X(p[0]),Y(p[1])));
+
+    // Latarnie w mieście.
+    [[760,760],[990,760],[1340,760],[1570,760],[1110,1040]].forEach(p=>{
+      ctx.fillStyle="#302b25";ctx.fillRect(X(p[0]),Y(p[1]),5,30);
+      ctx.shadowBlur=13;ctx.shadowColor="#ffc95c";ctx.fillStyle="#ffd36c";ctx.fillRect(X(p[0]-4),Y(p[1]-6),13,10);ctx.shadowBlur=0;
+    });
+
+    // Nazwy dzielnic.
+    ctx.textAlign="center";ctx.font="bold 16px Arial";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.75)";
+    [["OSADA ODRODZENIA",1160,620],["STARE RUINY",510,190],["RZEKA DUCHÓW",1985,1100]].forEach(a=>{
+      ctx.strokeText(a[0],X(a[1]),Y(a[2]));ctx.fillStyle="#f1e4bd";ctx.fillText(a[0],X(a[1]),Y(a[2]))
+    });
+    ctx.restore();
+  }
+
+  // W starej funkcji draw() droga byłaby nadal rysowana, więc zakrywamy ją
+  // własnym pełnym terenem podczas drawScenery i dopiero potem rysujemy szczegóły.
+  const oldScenery200=drawScenery;
+  drawScenery=function(c){
+    if(currentWorld==="prestige"){
+      // przykrywa stare uniwersalne drogi świeżą bazą mapy
+      ctx.fillStyle="#314c32";ctx.fillRect(0,0,canvas.width,canvas.height);
+      prestigeScenery200(c);
+    }else oldScenery200(c);
+  };
+
+  // Wygląd mobów Prestige — ciemniejszy / bardziej RPG.
+  const oldEnemy200=drawEnemy;
+  drawEnemy=function(e,c){
+    if(e.world!=="prestige")return oldEnemy200(e,c);
+    let x=e.x-c.x,y=e.y-c.y,b=e.boss;
+    ctx.save();
+    ctx.fillStyle="rgba(0,0,0,.35)";ctx.beginPath();ctx.ellipse(x+16,y+37,b?26:17,6,0,0,Math.PI*2);ctx.fill();
+    let body=e.name.includes("Wilk")?"#58635a":e.name.includes("Demon")?"#355d3b":e.name.includes("Ruiny")?"#77705d":e.name.includes("Cienisty")?"#332d4c":"#713b30";
+    if(b)body="#8d3f32";
+    ctx.fillStyle=body;
+    if(e.name.includes("Wilk")){
+      ctx.fillRect(x+2,y+13,31,17);ctx.fillRect(x+23,y+4,15,15);ctx.fillRect(x+26,y,4,7);ctx.fillRect(x+35,y,4,7);
+      ctx.fillStyle="#e5c35a";ctx.fillRect(x+33,y+9,3,3);
+    }else{
+      ctx.fillRect(x+4,y+13,b?38:27,b?35:24);ctx.fillStyle=b?"#c7a06c":"#9c866b";ctx.fillRect(x+9,y,b?25:18,b?17:14);
+      ctx.fillStyle="#171717";ctx.fillRect(x+12,y+5,3,2);ctx.fillRect(x+(b?27:21),y+5,3,2);
+      ctx.fillStyle="#25222c";ctx.fillRect(x+7,y-7,b?31:23,8);
+    }
+    if(b){ctx.shadowBlur=18;ctx.shadowColor="#e66b4d";ctx.strokeStyle="#e66b4d";ctx.lineWidth=3;ctx.strokeRect(x-6,y-13,55,61);ctx.shadowBlur=0}
+    ctx.font="bold "+(b?13:11)+"px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="#111";ctx.strokeText(e.name,x+17,y-(b?22:10));ctx.fillStyle=b?"#ffd46b":"#fff";ctx.fillText(e.name,x+17,y-(b?22:10));
+    let bw=b?70:42;ctx.fillStyle="#351313";ctx.fillRect(x+17-bw/2,y-(b?16:5),bw,5);ctx.fillStyle=b?"#ff9c35":"#d84a3c";ctx.fillRect(x+17-bw/2,y-(b?16:5),bw*(e.hp/e.maxHp),5);
+    ctx.restore();
+  };
+
+  // Spawn w centrum miasta po wejściu.
+  const oldTp200b=teleport;
+  teleport=function(p){
+    const before=currentWorld;
+    const r=oldTp200b(p);
+    if(p&&p.to==="prestige"){player.x=1160;player.y=1320;currentUser.x=player.x;currentUser.y=player.y}
+    return r;
+  };
 })();
 </script>
 
