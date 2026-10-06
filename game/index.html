@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.1.0 — QUESTY PRESTIGE RYNEK ŚWIATY PVP</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.2.0 — RPG UI CHAT OSIĄGNIĘCIA NPC</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3522,7 +3522,7 @@ document.addEventListener("pointerdown",e=>{
 #fullPanel300 h2{margin:0 0 10px;color:#f1d27b}.fullRow300{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 #fullPanel300 button{padding:10px 13px;background:#302a20;color:#fff;border:1px solid #8b7650;border-radius:5px;cursor:pointer}
 .card300{background:#202720;border:1px solid #465244;padding:10px;margin:7px 0;border-radius:5px}
-#questTracker300{position:fixed;right:14px;top:155px;z-index:2200;width:220px;background:rgba(12,18,15,.88);border:1px solid #786846;border-radius:7px;padding:9px;color:#eee;font:12px Arial;pointer-events:none}
+#questTracker300{display:none!important}
 </style>
 <div id="fullPanel300"><div class="box"><h2 id="fullTitle300"></h2><div id="fullBody300"></div><div id="fullButtons300" class="fullRow300"></div></div></div>
 <div id="questTracker300">📖 <b>PRZYGODA</b><br><span id="questTrackText300">Podejdź do Mistrza w Zielonej Dolinie.</span></div>
@@ -3925,6 +3925,163 @@ document.addEventListener("pointerdown",e=>{
  let audio310=new Audio("game-music.mp3");audio310.loop=true;audio310.volume=.55;
  window.startCustomMusic310=()=>audio310.play().catch(()=>{});
  document.addEventListener("pointerdown",()=>{if(audio310.paused)audio310.play().catch(()=>{})},{once:true});
+})();
+</script>
+
+
+
+<style>
+/* 3.2 — czysty RPG HUD: akcje po prawej, stały czat po lewej */
+#megaMenu{left:auto!important;right:12px!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:138px!important;max-width:138px!important;display:flex!important;flex-direction:column!important;gap:5px!important;padding:6px!important}
+#megaMenu button,#megaMenu .menuBtn{width:124px!important;min-width:124px!important;height:34px!important;font-size:10px!important}
+#quickActions100{right:12px!important;left:auto!important;bottom:14px!important;display:flex!important;flex-direction:column!important;gap:5px!important}
+#quickActions100 button{min-width:124px!important}
+#liveChat320{position:fixed;left:12px;bottom:16px;width:min(330px,34vw);z-index:4200;background:rgba(6,10,13,.76);border:1px solid rgba(220,220,220,.3);border-radius:8px;padding:8px;font:12px Arial;color:#fff;backdrop-filter:blur(3px)}
+#liveChat320.hidden320 #liveChatLines320{display:none}
+#liveChat320 button{font-size:10px;padding:5px 8px;background:#242a2d;color:#fff;border:1px solid #666;border-radius:4px;cursor:pointer}
+#liveChatLines320{max-height:170px;overflow:hidden;margin-top:6px;text-shadow:1px 1px 2px #000}
+.chatLine320{margin:3px 0;line-height:1.25}.chatName320{font-weight:bold;color:#f2d07b}
+#activity320{position:fixed;right:160px;bottom:14px;z-index:3900;background:rgba(10,15,13,.86);border:1px solid #5d6b59;border-radius:7px;padding:8px;color:#eee;font:11px Arial;max-width:230px}
+</style>
+<div id="liveChat320"><button id="chatToggle320">SCHOWAJ CHAT</button><div id="liveChatLines320">Ładowanie czatu...</div></div>
+<div id="activity320">🎯 <b>AKTYWNOŚĆ</b><br><span id="activityText320">Eksploruj świat i rozwijaj postać.</span></div>
+<script>
+/* 3.2.0 — porządek HUD, NPC zamiast przycisków, live chat, achievementy i więcej progresji */
+(function(){
+ function txt320(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+ // 1) KUŹNIA i FORMY: tylko NPC. Fabuła/trener/PvP też zostają usługami świata.
+ function clean320(){
+   document.getElementById("questTracker300")?.remove();
+   const forbidden=["KUŹNIA","KUŹNIA","FORMY","FABUŁA","TRENER","PVP"];
+   document.querySelectorAll("button").forEach(b=>{
+     if(b.closest("#fullPanel300")||b.closest("#prestigeNpc210")||b.closest("#questNpc310"))return;
+     const t=(b.textContent||"").replace(/\s+/g," ").trim().toUpperCase();
+     if(forbidden.some(w=>t===w||t.includes(" "+w)||t.includes(w+" "))){
+       if(t.includes("DROPY")||t.includes("PARTY"))return;
+       b.style.display="none";
+     }
+   });
+   // stare mega przyciski: Kuźnia/Fabuła/Czat nie są potrzebne jako modale.
+   document.querySelectorAll("#megaMenu button").forEach(b=>{
+     const t=(b.textContent||"").toUpperCase();
+     if(t.includes("KUŹN")||t.includes("FABU")||t.includes("CZAT"))b.style.display="none";
+   });
+ }
+ clean320();setInterval(clean320,800);
+
+ // 2) Kowal dostaje PRAWDZIWE ulepszanie ekwipunku ze starego przycisku Kuźnia.
+ const smith320=npcs.find(n=>n.world==="valley"&&n.name==="Kowal");
+ if(smith320)smith320.role320="realForge";
+ const forms320=npcs.find(n=>n.world==="valley"&&n.name==="Mistrz Form");
+ if(forms320)forms320.role320="forms";
+
+ function realForge320(){
+   if(typeof open300!=="function")return;
+   const inv=(currentUser.inventory||[]).map(id=>typeof item05==="function"?item05(id):null).filter(Boolean);
+   let html='<div class="card300"><b>⚒️ Ulepszanie wyposażenia</b><br>Kowal ulepsza przedmioty do +10. Bonus zależy od typu wyposażenia.</div>';
+   html+=inv.length?inv.map(it=>{
+     let l=currentUser.itemUpgrades?.[it.id]||0,c=typeof upgradeCost08==="function"?upgradeCost08(it.id):1000;
+     return `<div class="card300"><b>${txt320(it.name)} +${l}</b><br>${txt320(it.desc||"")}<br>Koszt: ${Number(c).toLocaleString("pl-PL")} Zeni<br><button onclick="upgradeItem08('${it.id}');setTimeout(realForge320,50)" ${l>=10?"disabled":""}>ULEPSZ</button></div>`
+   }).join(""):"<div class='card300'>Nie masz wyposażenia do ulepszenia.</div>";
+   open300("⚒️ Kowal — Kuźnia",html);
+ }
+ window.realForge320=realForge320;
+
+ // 3) Live global chat bez otwierania okna.
+ const chatBox=document.getElementById("liveChat320"),chatLines=document.getElementById("liveChatLines320"),chatToggle=document.getElementById("chatToggle320");
+ let hidden=localStorage.getItem("dbp_chat_hidden")==="1";
+ function applyChat320(){chatBox.classList.toggle("hidden320",hidden);chatToggle.textContent=hidden?"POKAŻ CHAT":"SCHOWAJ CHAT"}
+ chatToggle.onclick=()=>{hidden=!hidden;localStorage.setItem("dbp_chat_hidden",hidden?"1":"0");applyChat320()};applyChat320();
+
+ async function liveChatLoad320(){
+   if(!window.dbpSupabase||!currentUser)return;
+   try{
+     const {data,error}=await dbpSupabase.from("chat_messages").select("username,message,created_at").order("created_at",{ascending:false}).limit(9);
+     if(error)return;
+     chatLines.innerHTML=(data||[]).reverse().map(x=>`<div class="chatLine320"><span class="chatName320">${txt320(x.username)}:</span> ${txt320(x.message)}</div>`).join("")||"Brak wiadomości.";
+   }catch(e){}
+ }
+ setInterval(liveChatLoad320,2500);setTimeout(liveChatLoad320,700);
+
+ // 4) Dużo więcej achievementów.
+ const extraAchievements320=[
+  ["kills10","⚔️ Pierwsze kroki",u=>(u.totalKills||0)>=10,500],
+  ["kills500","⚔️ Łowca 500",u=>(u.totalKills||0)>=500,8000],
+  ["kills1000","⚔️ Pogromca 1000",u=>(u.totalKills||0)>=1000,18000],
+  ["lvl10","⭐ Wojownik LVL 10",u=>u.level>=10,1000],
+  ["lvl25","⭐ Wojownik LVL 25",u=>u.level>=25,3000],
+  ["lvl50","⭐ Mistrz LVL 50",u=>u.level>=50,7000],
+  ["lvl100","⭐ Legenda LVL 100",u=>u.level>=100,15000],
+  ["prestige1","✨ Pierwsze Odrodzenie",u=>(u.prestige||0)>=1,15000],
+  ["prestige2","✨ Drugie Odrodzenie",u=>(u.prestige||0)>=2,30000],
+  ["boss10","👹 Łowca Bossów",u=>Object.values(u.bossKills||{}).reduce((a,b)=>a+(Number(b)||0),0)>=10,9000],
+  ["boss50","👑 Pogromca Bossów",u=>Object.values(u.bossKills||{}).reduce((a,b)=>a+(Number(b)||0),0)>=50,25000],
+  ["million","💰 Milioner",u=>(u.zeni||0)>=1000000,30000],
+  ["forge5","⚒️ Kowal +5",u=>Object.values(u.itemUpgrades||{}).some(v=>v>=5),5000],
+  ["forge10","⚒️ Mistrz Kuźni",u=>Object.values(u.itemUpgrades||{}).some(v=>v>=10),12000],
+  ["fish20","🎣 Wędkarz",u=>((u.fishing130?.caught||u.fishing?.caught||0)>=20),4000],
+  ["mine20","⛏️ Górnik",u=>((u.mining140?.level||0)>=5),5000],
+  ["marketRich","🏪 Handlarz",u=>(u.market_earnings||0)>=10000,5000],
+  ["prestigeWorld","🌀 Nowy Świat",u=>["prestige","rebirthWilds","spiritCaves","crimsonWastes"].includes(u.world),4000]
+ ];
+ if(Array.isArray(window.achievements08||achievements08)){
+   const a=window.achievements08||achievements08;
+   extraAchievements320.forEach(x=>{if(!a.some(y=>y[0]===x[0]))a.push([x[0],x[1],()=>x[2](currentUser),x[3]])});
+ }
+
+ // 5) Dodatkowa aktywność: kontrakty świata zmieniają się wraz z mapą.
+ function activity320(){
+   if(!currentUser)return;
+   const el=document.getElementById("activityText320"); if(!el)return;
+   let w=currentWorld,k=currentUser.totalKills||0;
+   if(w==="valley")el.textContent="NPC z zadaniami, Kowal, Mistrz Form, łowienie, kopalnia i portale.";
+   else if(w==="prestige")el.textContent="Zlecenia Prestige, Rynek, trening i 3 krainy endgame.";
+   else if(["rebirthWilds","spiritCaves","crimsonWastes"].includes(w))el.textContent="Poluj na elity i bossa, zdobywaj EXP i wykonuj zlecenia Prestige.";
+   else el.textContent="Eksploruj, wykonuj questy świata, zbieraj drop i poluj na bossów. Pokonani łącznie: "+k;
+ }
+ setInterval(activity320,1000);
+
+ // 6) Interakcja Kowala przejmuje starą kuźnię. Mistrz Form nadal używa NPC systemu 3.0.
+ const oldInteract320=interact;
+ interact=function(){
+   if(currentUser&&currentWorld==="valley"){
+     let n=npcs.find(n=>n.world==="valley"&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+     if(n?.role320==="realForge"){realForge320();return}
+   }
+   return oldInteract320();
+ };
+ const oldHint320=updateHint;
+ updateHint=function(){
+   oldHint320();
+   if(!currentUser||currentWorld!=="valley")return;
+   let n=npcs.find(n=>n.world==="valley"&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+   if(n?.role320==="realForge"){hint.textContent="E — ⚒️ KOWAL / ULEPSZANIE";hint.style.display="block"}
+ };
+
+ // 7) Wszystkie pozostałe przyciski użytkowe po prawej.
+ function rightButtons320(){
+   const mega=document.getElementById("megaMenu");
+   if(mega){mega.style.left="auto";mega.style.right="12px";mega.style.top="50%";mega.style.bottom="auto";mega.style.transform="translateY(-50%)"}
+   // stare stałe przyciski HUD (ekwipunek/moce/topka/kule/profil) też na prawą stronę.
+   let candidates=[...document.querySelectorAll("button")].filter(b=>{
+     if(b.closest("#megaMenu")||b.closest("#quickActions100")||b.closest(".modal")||b.closest("#fullPanel300")||b.closest("#prestigeNpc210")||b.closest("#questNpc310"))return false;
+     let t=(b.textContent||"").toLowerCase();
+     return ["ekwipun","moce","topka","profil","bestiariusz"].some(x=>t.includes(x));
+   });
+   candidates.forEach((b,i)=>{
+     b.style.position="fixed";b.style.right="158px";b.style.left="auto";b.style.bottom=(14+i*39)+"px";b.style.transform="none";b.style.zIndex="3900";
+   });
+ }
+ setInterval(rightButtons320,1000);setTimeout(rightButtons320,200);
+
+ // 8) NPC questowi także w nowych krainach Prestige — nie tylko w hubie.
+ function addQuestNpc320(world,name,x,y){
+   if(!npcs.some(n=>n.world===world&&n.name===name))npcs.push({world,x,y,name,text:"",role310:"prestigeQuest"});
+ }
+ addQuestNpc320("rebirthWilds","Łowca Dziczy",760,1250);
+ addQuestNpc320("spiritCaves","Badacz Grot",760,1250);
+ addQuestNpc320("crimsonWastes","Łowca Pustkowi",760,1250);
 })();
 </script>
 
