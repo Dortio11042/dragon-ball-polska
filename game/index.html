@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.4b — NPC REAL FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.9.0 — PIXEL WORLD + MOBY + BOSSY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1452,7 +1452,46 @@ function drawNPC(n,c){
  ctx.strokeText(n.name,x+18,y-34);ctx.fillStyle="#fff";ctx.fillText(n.name,x+18,y-34);
  ctx.restore();
 }
-function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.boss?"#9b1c1c":e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,e.boss?30:22,e.boss?31:23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
+function drawEnemy(e,c){
+ let x=e.x-c.x,y=e.y-c.y,W=e.world||currentWorld;
+ ctx.save();
+ ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(x+15,y+34,e.boss?22:15,5,0,0,Math.PI*2);ctx.fill();
+ let body="#444",skin="#d9a06d",accent="#aaa",kind="bandit";
+ if(W==="desert"){body="#b87932";skin="#c9935d";accent="#ead27d";kind="desert"}
+ if(W==="mountains"){body="#60686d";skin="#b98c6c";accent="#b8d2db";kind="rock"}
+ if(W==="forest"){body="#287047";skin="#73a85a";accent="#9bd34f";kind="forest"}
+ if(W==="ice"){body="#69b8d0";skin="#d9f5ff";accent="#b9efff";kind="ice"}
+ if(W==="volcano"){body="#7c2720";skin="#c75436";accent="#ff9b35";kind="lava"}
+ if(W==="sky"){body="#e6e7e9";skin="#e4c8a0";accent="#e7d45a";kind="sky"}
+ if(W==="alien"){body="#62338c";skin="#80b866";accent="#db68ff";kind="alien"}
+ if(W==="masters"){body="#b94e29";skin="#d8a075";accent="#e5c34f";kind="master"}
+ if(W==="ruins"){body="#806943";skin="#9d8765";accent="#d8bd70";kind="ruins"}
+ if(W==="voidzone"){body="#241c3f";skin="#7551a4";accent="#b563ff";kind="void"}
+ if(e.boss){body=accent;accent="#fff";}
+
+ const S=e.boss?1.45:1, ox=x+(e.boss?-6:0), oy=y+(e.boss?-10:0);
+ function R(a,b,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.round(ox+a*S),Math.round(oy+b*S),Math.ceil(w*S),Math.ceil(h*S))}
+ // feet/body/head
+ R(5,27,8,8,"#19191d");R(19,27,8,8,"#19191d");R(4,12,25,18,body);R(9,0,17,13,skin);
+ R(0,15,6,13,skin);R(28,15,6,13,skin);
+ R(12,5,3,2,"#111");R(21,5,3,2,"#111");
+ if(kind==="rock"){R(5,-4,6,6,"#777f83");R(18,-6,8,7,"#777f83")}
+ else if(kind==="forest"){R(5,-5,7,8,"#245f37");R(22,-7,5,10,"#245f37")}
+ else if(kind==="ice"){R(7,-8,5,9,accent);R(20,-9,5,10,accent)}
+ else if(kind==="lava"){R(7,-7,5,8,accent);R(19,-10,6,11,accent)}
+ else if(kind==="alien"){R(10,-8,3,9,skin);R(22,-8,3,9,skin)}
+ else if(kind==="void"){ctx.shadowBlur=10;ctx.shadowColor=accent;R(7,-5,20,5,accent);ctx.shadowBlur=0}
+ else {R(6,-5,6,7,accent);R(21,-7,6,9,accent)}
+ if(e.boss){
+   ctx.shadowBlur=16;ctx.shadowColor=body;ctx.strokeStyle=body;ctx.lineWidth=3;
+   ctx.strokeRect(ox-5,oy-8,45*S,48*S);ctx.shadowBlur=0;
+ }
+ ctx.font="bold "+(e.boss?13:11)+"px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.85)";
+ ctx.strokeText(e.name,x+15,y-(e.boss?27:12));ctx.fillStyle=e.boss?"#ffd76a":"#fff";ctx.fillText(e.name,x+15,y-(e.boss?27:12));
+ let bw=e.boss?62:40,bx=x+15-bw/2,by=y-(e.boss?20:7);
+ ctx.fillStyle="#321313";ctx.fillRect(bx,by,bw,5);ctx.fillStyle=e.boss?"#ffb52e":"#d84a3c";ctx.fillRect(bx,by,bw*Math.max(0,e.hp/e.maxHp),5);
+ ctx.restore();
+}
 
 function drawRemotePlayers072(c){
  remotePlayers072.forEach(r=>{
@@ -3082,6 +3121,76 @@ document.addEventListener("pointerdown",e=>{
         ctx.restore();
       }catch(err){}
     };
+  }
+})();
+</script>
+
+
+
+<script>
+/* 1.9.0 — pixel-art mapa + gęstsze potwory */
+(function(){
+  // Więcej mobów w każdym świecie. Są kopiami archetypów danego świata,
+  // więc zachowują istniejący system walki/respawnu.
+  function addMobs190(){
+    if(typeof enemies==="undefined"||enemies.some(e=>e.extra190))return;
+    const worlds190=["valley","desert","mountains","forest","ice","volcano","sky","alien","masters","ruins","voidzone"];
+    for(const w of worlds190){
+      const base=enemies.find(e=>e.world===w&&!e.boss);
+      if(!base)continue;
+      for(let i=0;i<7;i++){
+        let e={...base};
+        e.x=300+((i*287+(w.length*91))%1800);
+        e.y=250+((i*193+(w.length*57))%1150);
+        e.maxHp=Math.round(base.maxHp*(.85+(i%3)*.12));e.hp=e.maxHp;
+        e.level=Math.max(1,base.level+(i%2));
+        e.alive=true;e.respawn=0;e.extra190=true;
+        e.name=base.name+(i%3===2?" Elita":"");
+        enemies.push(e);
+      }
+    }
+  }
+  addMobs190();
+
+  // Pixelowe dekoracje inspirowane referencją: drzewa, skały, trawa, skrzynki,
+  // płoty i kamienne ścieżki. Wszystko rysowane w Canvas — bez zewnętrznych assetów.
+  function hash190(a,b){let n=Math.sin(a*12.9898+b*78.233)*43758.5453;return n-Math.floor(n)}
+  function pixelDecor190(c){
+    const w=currentWorld;
+    ctx.save();
+    // drobne kępki / kamienie
+    for(let i=0;i<55;i++){
+      let wx=70+(i*421)%2250,wy=90+(i*263)%1550;
+      if(Math.abs(wy-820)<90||Math.abs(wx-1065)<90)continue;
+      let x=wx-c.x,y=wy-c.y,h=hash190(i,w.length);
+      if(h<.48){
+        ctx.fillStyle=w==="ice"?"#b8dbe4":w==="desert"?"#9c7539":w==="volcano"?"#493a38":"#355f34";
+        ctx.fillRect(x,y,3,10);ctx.fillRect(x+5,y+3,3,7);ctx.fillRect(x-4,y+5,3,5);
+      }else{
+        ctx.fillStyle=w==="ice"?"#7597a2":w==="volcano"?"#3b3332":"#666c62";
+        ctx.fillRect(x,y+5,15,8);ctx.fillStyle="rgba(255,255,255,.12)";ctx.fillRect(x+3,y+3,8,3);
+      }
+    }
+    // duże drzewa tylko na zielonych mapach
+    if(["valley","forest"].includes(w)){
+      for(let i=0;i<12;i++){
+        let wx=130+(i*367)%2100,wy=150+(i*311)%1400;
+        if(Math.abs(wy-820)<130||Math.abs(wx-1065)<130)continue;
+        let x=wx-c.x,y=wy-c.y;
+        ctx.fillStyle="#5b3b25";ctx.fillRect(x+19,y+31,14,35);ctx.fillStyle="#37271d";ctx.fillRect(x+23,y+35,6,31);
+        ctx.fillStyle=w==="forest"?"#1f633a":"#287847";
+        ctx.fillRect(x+5,y+12,43,35);ctx.fillRect(x+13,y,31,48);
+        ctx.fillStyle="rgba(104,178,61,.65)";ctx.fillRect(x+11,y+7,17,12);
+      }
+    }
+    ctx.restore();
+  }
+
+  // Dekoracje muszą być ZA postaciami, więc wpinamy je po tle/ścieżkach,
+  // ale przed NPC/mobami poprzez drawScenery.
+  if(typeof drawScenery==="function"){
+    const oldScenery190=drawScenery;
+    drawScenery=function(c){oldScenery190(c);pixelDecor190(c)}
   }
 })();
 </script>
