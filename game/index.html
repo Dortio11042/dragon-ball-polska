@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.6 — CLEAN ZIELONA DOLINA + HUD</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.7 — CLEAN HUD + NPC LOKACJE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4861,6 +4861,90 @@ updateHint=function(){
  oldHint406();
  if(nearDoor406()){hint.textContent="E — WEJDŹ DO CENTRUM WOJOWNIKÓW";hint.style.display="block"}
  if(currentWorld==="hub406"&&Math.hypot(player.x-1200,player.y-1480)<120){hint.textContent="E — WYJDŹ";hint.style.display="block"}
+};
+})();
+</script>
+
+
+
+<style>
+/* 4.0.7 — tylko podstawowy HUD. Dynamiczne/losowo dokładane akcje są ukryte. */
+body.gameStarted406 #quickActions100,
+body.gameStarted406 #megaMenu,
+body.gameStarted406 #quickActions,
+body.gameStarted406 [id*="quickAction" i],
+body.gameStarted406 [class*="quickAction" i]{display:none!important}
+</style>
+<script>
+(function(){
+const basic407=["ekwipun","moce","topka","profil","ustaw","osiąg","osiag","party","drop","rynek","map","muzyk"];
+
+function cleanHud407(){
+ if(!document.body.classList.contains("gameStarted406"))return;
+ const dock=document.getElementById("rpgDock321");
+ if(dock){
+   [...dock.querySelectorAll("button")].forEach(b=>{
+     const t=(b.textContent||"").trim().toLowerCase();
+     const ok=basic407.some(x=>t.includes(x));
+     b.style.setProperty("display",ok?"block":"none","important");
+     b.style.setProperty("visibility",ok?"visible":"hidden","important");
+     b.style.setProperty("pointer-events",ok?"auto":"none","important");
+   });
+ }
+ // Ukryj dokładane przyciski akcji poza podstawowym dockiem:
+ // leczenie, wydobycie, łowienie, zbieranie itd. mają działać przez świat/NPC/E, nie HUD.
+ [...document.querySelectorAll("button")].forEach(b=>{
+   if(b.closest("#rpgDock321")||b.closest("#authScreen")||b.closest(".modal")||b.closest("[role='dialog']"))return;
+   const t=(b.textContent||"").toLowerCase();
+   if(/wydob|leczen|ulecz|heal|łowi|lowi|zbierz|kop|craft|wytw|atak specjal|ultimate/.test(t)){
+     b.style.setProperty("display","none","important");
+     b.style.setProperty("pointer-events","none","important");
+   }
+ });
+}
+setInterval(cleanHud407,250);
+
+/* ===== NPC specjalistyczni wracają do swoich miejsc pracy ===== */
+function txt407(n){return (n?.name||"").toLowerCase()}
+
+// Rybacy -> łowisko w Zielonej Dolinie.
+// Ustawieni przy wodzie, a nie w Centrum Wojowników.
+let fishers407=npcs.filter(n=>/rybak|wędkar|wedkar/.test(txt407(n)));
+const fishPos407=[[360,1260],[500,1260],[640,1260]];
+fishers407.forEach((n,i)=>{
+ n.world="valley"; n.x=fishPos407[i%fishPos407.length][0]; n.y=fishPos407[i%fishPos407.length][1];
+});
+
+// Górnicy -> wejście do kopalni w Zielonej Dolinie.
+let miners407=npcs.filter(n=>/górnik|gornik|kopaln/.test(txt407(n)));
+const minePos407=[[650,350],[790,350],[930,350]];
+miners407.forEach((n,i)=>{
+ n.world="valley"; n.x=minePos407[i%minePos407.length][0]; n.y=minePos407[i%minePos407.length][1];
+});
+
+// Jeżeli w nazwie jest NPC od wydobycia/ryb, ale nie został złapany po nazwie,
+// role z poprzednich systemów też kierujemy do odpowiedniej lokacji.
+npcs.forEach(n=>{
+ const role=((n.role||"")+" "+(n.role300||"")+" "+(n.role310||"")+" "+(n.role400||"")).toLowerCase();
+ if(/fish|ryb|wędk|wedk/.test(role)&&n.world==="hub406"){
+   n.world="valley";n.x=500;n.y=1260;
+ }
+ if(/mine|gór|gor|kopal/.test(role)&&n.world==="hub406"){
+   n.world="valley";n.x=790;n.y=350;
+ }
+});
+
+// Małe podpisy lokacji, żeby od razu było wiadomo gdzie iść.
+const oldScene407=drawScenery;
+drawScenery=function(c){
+ oldScene407(c);
+ if(currentWorld!=="valley")return;
+ const X=x=>x-c.x,Y=y=>y-c.y;
+ ctx.save();
+ ctx.font="bold 11px Arial";ctx.textAlign="center";
+ ctx.fillStyle="#d9ecff";ctx.fillText("🎣 ŁOWISKO",X(500),Y(1195));
+ ctx.fillStyle="#e4d2a1";ctx.fillText("⛏ KOPALNIA",X(790),Y(290));
+ ctx.restore();
 };
 })();
 </script>
