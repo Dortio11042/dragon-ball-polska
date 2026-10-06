@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.3c — PORTAL PRAWA DROGA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.4 — NPC DB WYGLĄD</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3029,6 +3029,120 @@ document.addEventListener("pointerdown",e=>{
       }catch(err){}
     };
   }
+})();
+</script>
+
+
+
+<script>
+/* 1.8.4 — unikalny wygląd NPC inspirowany klasycznym anime DB */
+(function(){
+  function npcLook184(name){
+    const n=(name||"").toLowerCase();
+    if(n.includes("wróż")||n.includes("czarown")||n.includes("wiedź"))
+      return {kind:"witch",skin:"#d7a073",hair:"#e7e5ef",body:"#52276f",accent:"#efc95e"};
+    if(n.includes("mistrz"))
+      return {kind:"master",skin:"#d8a277",hair:"#f4f4f1",body:"#e57a2c",accent:"#202b43"};
+    if(n.includes("trener"))
+      return {kind:"fighter",skin:"#d39b6e",hair:"#171719",body:"#d96728",accent:"#244b9a"};
+    if(n.includes("wędk")||n.includes("skup ryb"))
+      return {kind:"fisher",skin:"#d09a70",hair:"#eee5cb",body:"#315e78",accent:"#c7a85c"};
+    if(n.includes("kowal"))
+      return {kind:"smith",skin:"#c78e64",hair:"#2b211d",body:"#56332a",accent:"#d9863d"};
+    if(n.includes("górnik"))
+      return {kind:"miner",skin:"#c99368",hair:"#39291e",body:"#b98731",accent:"#bbc2c4"};
+    if(n.includes("handlarz"))
+      return {kind:"merchant",skin:"#d29a70",hair:"#3a281e",body:"#3e7049",accent:"#e0bd58"};
+    if(n.includes("strażnik"))
+      return {kind:"guard",skin:"#78b469",hair:"#20251f",body:"#56368b",accent:"#f0eee4"};
+    if(n.includes("łowca"))
+      return {kind:"hunter",skin:"#cf986d",hair:"#171719",body:"#813b2c",accent:"#c9aa60"};
+    if(n.includes("badacz")||n.includes("archeolog"))
+      return {kind:"scholar",skin:"#d09a70",hair:"#65462f",body:"#9a7539",accent:"#dfd0a8"};
+    if(n.includes("rekruter"))
+      return {kind:"recruit",skin:"#d19a70",hair:"#263d79",body:"#5865f2",accent:"#fff"};
+    return {kind:"fighter",skin:"#d29b70",hair:"#171719",body:"#7449a2",accent:"#e6bd4d"};
+  }
+
+  function rect184(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
+  function drawNpcDB184(c,n,x,y){
+    const a=npcLook184(n.name), X=Math.round(x),Y=Math.round(y);
+    c.save();
+    c.fillStyle="rgba(0,0,0,.28)";c.beginPath();c.ellipse(X,Y+24,16,5,0,0,Math.PI*2);c.fill();
+
+    // nogi, buty, tors i ręce
+    rect184(c,X-11,Y+5,8,17,a.body); rect184(c,X+3,Y+5,8,17,a.body);
+    rect184(c,X-13,Y+19,11,5,"#17181b"); rect184(c,X+2,Y+19,12,5,"#17181b");
+    rect184(c,X-14,Y-10,28,18,a.body); rect184(c,X-3,Y-10,6,18,a.accent);
+    rect184(c,X-19,Y-8,6,16,a.skin); rect184(c,X+13,Y-8,6,16,a.skin);
+
+    // głowa
+    rect184(c,X-10,Y-26,20,16,a.skin);
+    rect184(c,X-7,Y-18,3,2,"#111"); rect184(c,X+4,Y-18,3,2,"#111");
+
+    if(a.kind==="master"){
+      // łysy/siwy mistrz: okulary, wielka broda, laska
+      rect184(c,X-11,Y-28,22,4,a.hair);
+      rect184(c,X-10,Y-14,20,9,a.hair);
+      c.strokeStyle="#181818";c.lineWidth=2;c.strokeRect(X-9,Y-21,7,5);c.strokeRect(X+2,Y-21,7,5);
+      c.beginPath();c.moveTo(X-2,Y-19);c.lineTo(X+2,Y-19);c.stroke();
+      c.strokeStyle="#9a6b35";c.lineWidth=3;c.beginPath();c.moveTo(X+20,Y-7);c.lineTo(X+22,Y+25);c.stroke();
+    } else if(a.kind==="witch"){
+      // czarownica/wróżka: wielki kapelusz, jasne włosy, kryształowa kula
+      rect184(c,X-13,Y-29,26,5,a.hair); rect184(c,X-14,Y-25,5,14,a.hair);rect184(c,X+9,Y-25,5,14,a.hair);
+      c.fillStyle="#3b174f";c.beginPath();c.moveTo(X-17,Y-30);c.lineTo(X+17,Y-30);c.lineTo(X+5,Y-45);c.lineTo(X-1,Y-31);c.closePath();c.fill();
+      rect184(c,X-19,Y-32,38,4,"#5e2b77");
+      c.fillStyle="#b67cff";c.shadowBlur=10;c.shadowColor="#b67cff";c.beginPath();c.arc(X+22,Y+6,6,0,Math.PI*2);c.fill();c.shadowBlur=0;
+    } else {
+      // charakterystyczne kolczaste włosy wojowników
+      c.fillStyle=a.hair;c.beginPath();
+      c.moveTo(X-11,Y-23);c.lineTo(X-14,Y-37);c.lineTo(X-7,Y-31);c.lineTo(X-4,Y-42);
+      c.lineTo(X+1,Y-32);c.lineTo(X+8,Y-40);c.lineTo(X+8,Y-29);c.lineTo(X+14,Y-33);
+      c.lineTo(X+10,Y-23);c.closePath();c.fill();
+    }
+
+    if(a.kind==="fisher"){
+      rect184(c,X-15,Y-33,30,4,"#c49b55");
+      c.strokeStyle="#9c7041";c.lineWidth=2;c.beginPath();c.moveTo(X+18,Y);c.lineTo(X+36,Y-33);c.stroke();
+    }
+    if(a.kind==="smith"){
+      rect184(c,X+16,Y+3,15,5,"#aab1b5");rect184(c,X+25,Y-3,4,17,"#754c2c");
+    }
+    if(a.kind==="miner"){
+      rect184(c,X-13,Y-31,26,6,"#d0a431");
+      c.fillStyle="#eee";c.beginPath();c.arc(X,Y-28,3,0,Math.PI*2);c.fill();
+    }
+    if(a.kind==="merchant"){rect184(c,X+15,Y+8,12,12,"#8c6335")}
+    if(a.kind==="guard"){rect184(c,X-19,Y-10,5,31,"#e7e7dd")}
+
+    c.restore();
+  }
+
+  // Wpinamy wygląd w istniejące rysowanie NPC, bez ruszania ich questów/interakcji.
+  const oldDrawNPC184=window.drawNPC;
+  if(typeof oldDrawNPC184==="function"){
+    window.drawNPC=function(){
+      const args=[...arguments];
+      try{
+        // Obsługa najczęstszych podpisów drawNPC(ctx,npc,x,y) i drawNPC(npc,ctx).
+        let c=args.find(v=>v&&typeof v.fillRect==="function");
+        let n=args.find(v=>v&&typeof v==="object"&&typeof v.name==="string");
+        if(c&&n){
+          let x,y;
+          const nums=args.filter(v=>typeof v==="number");
+          if(nums.length>=2){x=nums[0];y=nums[1]}
+          else{
+            const cam=(typeof camera==="function")?camera():{x:0,y:0};
+            x=Number(n.x||0)-Number(cam.x||0);y=Number(n.y||0)-Number(cam.y||0);
+          }
+          drawNpcDB184(c,n,x,y);
+          return;
+        }
+      }catch(e){}
+      return oldDrawNPC184.apply(this,args);
+    };
+  }
+  window.drawNpcDB184=drawNpcDB184;
 })();
 </script>
 
