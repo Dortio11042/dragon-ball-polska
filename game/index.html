@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.8 — DYNAMICZNE PRZYCISKI FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.9 — MANEKINY + PETY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5014,6 +5014,141 @@ setInterval(()=>{
    if(!ok){b.style.setProperty("display","none","important");b.style.setProperty("pointer-events","none","important")}
  });
 },300);
+})();
+</script>
+
+
+
+<style>
+#pets409{position:fixed;inset:0;z-index:60000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center}
+#pets409.on{display:flex!important}
+#pets409 .box409{width:min(650px,92vw);max-height:78vh;overflow:auto;background:#171c18;color:#fff;border:2px solid #82744d;border-radius:10px;padding:16px}
+#pets409 .pet409{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#262d27;border:1px solid #575f51;border-radius:7px;padding:10px;margin:7px 0}
+#pets409 button{cursor:pointer;padding:7px 10px;border-radius:5px;border:1px solid #7a704e;background:#343c33;color:#fff}
+</style>
+<div id="pets409"><div class="box409"><div style="display:flex;justify-content:space-between;align-items:center">
+<b>🐾 PETY</b><button id="closePets409">✕</button></div><div id="petsList409"></div></div></div>
+<script>
+(function(){
+/* ===== 1. MANEKINY =====
+   Manekin ma służyć TYLKO do treningu. Blokujemy interakccyjne E/NPC przy manekinie,
+   żeby nie otwierało Drzewka Umiejętności lub innego panelu stojącego w tym samym miejscu. */
+function nearDummy409(){
+ return currentWorld==="valley" && enemies.some(e=>e.training406&&e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<105);
+}
+document.addEventListener("keydown",e=>{
+ if((e.key==="e"||e.key==="E")&&nearDummy409()){
+   e.preventDefault();e.stopImmediatePropagation();
+   if(typeof hint!=="undefined"){hint.textContent="🥋 MANEKIN TRENINGOWY — atakuj go normalnie, E nic tutaj nie otwiera";hint.style.display="block"}
+ }
+},true);
+
+// Odsuń wszystkie NPC od strefy manekinów, nawet jeśli starszy addon spróbuje je przywrócić.
+setInterval(()=>{
+ if(typeof npcs==="undefined")return;
+ npcs.filter(n=>n.world==="valley").forEach(n=>{
+   if(enemies.some(e=>e.training406&&Math.hypot(n.x-e.x,n.y-e.y)<180)){
+     n.x=1050;n.y=900;
+   }
+ });
+},1000);
+
+/* ===== 2. PETY — przycisk w podstawowym HUD ===== */
+const petModal=document.getElementById("pets409"), list=document.getElementById("petsList409");
+document.getElementById("closePets409").onclick=()=>petModal.classList.remove("on");
+
+function petState409(){
+ if(!currentUser)return null;
+ currentUser.systems400??={};
+ currentUser.systems400.pets??=[];
+ currentUser.systems400.pet??=null;
+ return currentUser.systems400;
+}
+function petName409(p){
+ if(typeof p==="string")return p;
+ return p?.name||p?.id||p?.type||"Pet";
+}
+function renderPets409(){
+ let st=petState409();if(!st)return;
+ list.innerHTML="";
+ let pets=Array.isArray(st.pets)?st.pets:[];
+ if(!pets.length){
+   list.innerHTML="<div style='padding:18px;text-align:center;opacity:.8'>Nie masz jeszcze żadnego peta. Zdobądź jajko lub odwiedź Opiekuna Zwierząt.</div>";
+   return;
+ }
+ pets.forEach((p,i)=>{
+   let name=petName409(p),row=document.createElement("div");row.className="pet409";
+   let equipped=(st.pet===i)||(typeof st.pet==="string"&&st.pet===name)||(st.pet?.name&&st.pet.name===name);
+   row.innerHTML="<span>🐾 <b>"+String(name).replace(/[<>]/g,"")+"</b></span>";
+   let b=document.createElement("button");b.textContent=equipped?"ZDEJMIJ":"ZAŁÓŻ";
+   b.onclick=()=>{
+     if(equipped)st.pet=null;else st.pet=i;
+     if(typeof savePlayer==="function")savePlayer();
+     renderPets409();
+     if(typeof toast==="function")toast(equipped?"🐾 Pet zdjęty":"🐾 "+name+" teraz za tobą chodzi!");
+   };
+   row.appendChild(b);list.appendChild(row);
+ });
+}
+function openPets409(){renderPets409();petModal.classList.add("on")}
+window.openPets409=openPets409;
+
+function addPetButton409(){
+ const dock=document.getElementById("rpgDock321");if(!dock)return;
+ if(document.getElementById("petsBtn409"))return;
+ let b=document.createElement("button");b.id="petsBtn409";b.textContent="🐾 PETY";b.onclick=openPets409;
+ dock.appendChild(b);
+}
+// Poprzedni filtr HUD musi uznawać PETY za podstawowy przycisk.
+// Ponieważ stary interval go chowa, wymuszamy jego widoczność po nim.
+setInterval(()=>{
+ addPetButton409();
+ let b=document.getElementById("petsBtn409");
+ if(b&&document.body.classList.contains("gameStarted406")){
+   b.style.setProperty("display","block","important");
+   b.style.setProperty("visibility","visible","important");
+   b.style.setProperty("opacity","1","important");
+   b.style.setProperty("pointer-events","auto","important");
+ }
+},300);
+
+/* ===== 3. PET CHODZI ZA GRACZEM ===== */
+let petVisual409={x:0,y:0,ready:false};
+function equippedPet409(){
+ let st=petState409();if(!st||st.pet===null||st.pet===undefined)return null;
+ let pets=Array.isArray(st.pets)?st.pets:[];
+ if(typeof st.pet==="number")return pets[st.pet]||null;
+ if(typeof st.pet==="string")return pets.find(p=>petName409(p)===st.pet)||st.pet;
+ return st.pet;
+}
+setInterval(()=>{
+ if(!currentUser)return;
+ let p=equippedPet409();if(!p){petVisual409.ready=false;return}
+ let tx=player.x-48,ty=player.y+28;
+ if(!petVisual409.ready){petVisual409.x=tx;petVisual409.y=ty;petVisual409.ready=true}
+ petVisual409.x+=(tx-petVisual409.x)*.22;
+ petVisual409.y+=(ty-petVisual409.y)*.22;
+},33);
+
+const oldPlayer409=drawPlayer;
+drawPlayer=function(){
+ let r=oldPlayer409.apply(this,arguments);
+ let p=equippedPet409();
+ if(!p||!petVisual409.ready)return r;
+ // kamera jest zwykle pierwszym argumentem drawPlayer albo global camera
+ let c=arguments[0]||window.camera||{x:0,y:0};
+ let x=petVisual409.x-(c.x||0),y=petVisual409.y-(c.y||0);
+ let name=petName409(p);
+ ctx.save();
+ // prosty oryginalny pixel-pet; różne uszy/kolorystyczne detale bez zewnętrznych assetów
+ ctx.fillStyle="#e6d6aa";ctx.fillRect(x-10,y-8,20,17);
+ ctx.fillRect(x-8,y-18,5,11);ctx.fillRect(x+3,y-18,5,11);
+ ctx.fillStyle="#222";ctx.fillRect(x-5,y-4,3,3);ctx.fillRect(x+3,y-4,3,3);
+ ctx.fillStyle="#fff";ctx.font="bold 9px Arial";ctx.textAlign="center";ctx.strokeStyle="#222";ctx.lineWidth=3;
+ ctx.strokeText(name,x,y-24);ctx.fillText(name,x,y-24);
+ ctx.restore();
+ return r;
+};
 })();
 </script>
 
