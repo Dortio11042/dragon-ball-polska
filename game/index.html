@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.4 — NPC DB WYGLĄD</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 1.8.4b — NPC REAL FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -1397,7 +1397,61 @@ function pvpArenaNotice081(){if(!currentUser||currentWorld!=="pvp")return;if(!cu
 function draw(){pvpArenaNotice081();hiddenChest08();drawMiniMap08();let c=camera(),w=worlds[currentWorld];ctx.fillStyle=w.bg;ctx.fillRect(0,0,canvas.width,canvas.height);for(let x=0;x<2400;x+=32)for(let y=0;y<1700;y+=32){if((x/32+y/32)%2===0){ctx.fillStyle="rgba(0,0,0,.035)";ctx.fillRect(x-c.x,y-c.y,32,32)}}ctx.fillStyle=w.road;ctx.fillRect(-c.x,760-c.y,2400,125);ctx.fillRect(1000-c.x,-c.y,135,1700);drawScenery(c);portals.filter(p=>p.world===currentWorld).forEach(p=>drawPortal(p,c));npcs.filter(n=>n.world===currentWorld).forEach(n=>drawNPC(n,c));enemies.filter(e=>e.world===currentWorld&&e.alive).forEach(e=>drawEnemy(e,c));drawRemotePlayers072(c);drawPlayer(c)}
 function drawScenery(c){if(currentWorld==="valley"){for(let i=0;i<20;i++){let x=100+(i*317)%2100,y=120+(i*193)%1400;if(Math.abs(x-1050)<180&&Math.abs(y-800)<180)continue;ctx.fillStyle="#754126";ctx.fillRect(x-c.x+14,y-c.y+30,12,25);ctx.fillStyle="#23874b";ctx.fillRect(x-c.x,y-c.y,40,38)}/* Budynek Rynku Graczy */ctx.fillStyle="#6b3f22";ctx.fillRect(250-c.x,930-c.y,250,190);ctx.fillStyle="#d69a3a";ctx.fillRect(230-c.x,900-c.y,290,45);ctx.fillStyle="#2d1c13";ctx.fillRect(330-c.x,1030-c.y,90,90);ctx.fillStyle="#fff";ctx.font="bold 18px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",375-c.x,975-c.y)}else if(currentWorld==="market"){ctx.fillStyle="#3b2618";ctx.fillRect(350-c.x,260-c.y,1400,1150);ctx.fillStyle="#d7b37a";ctx.fillRect(400-c.x,310-c.y,1300,1050);ctx.fillStyle="#70451f";ctx.fillRect(650-c.x,610-c.y,800,85);ctx.fillStyle="#4a2c17";for(let i=0;i<5;i++)ctx.fillRect(500+i*280-c.x,390-c.y,150,120);ctx.fillStyle="#fff";ctx.font="bold 28px Arial";ctx.textAlign="center";ctx.fillText("🏪 RYNEK GRACZY",1050-c.x,350-c.y);ctx.font="16px Arial";ctx.fillText("Podejdź do Handlarza Rynku i naciśnij E",1050-c.x,720-c.y)}else if(currentWorld==="desert"){for(let i=0;i<16;i++){let x=120+(i*401)%2100,y=140+(i*251)%1350;ctx.fillStyle="#a67c38";ctx.fillRect(x-c.x,y-c.y,45,22)}}else if(currentWorld==="mountains"){for(let i=0;i<14;i++){let x=100+(i*433)%2150,y=100+(i*277)%1400;ctx.fillStyle="#555b5e";ctx.beginPath();ctx.moveTo(x-c.x,y-c.y+90);ctx.lineTo(x-c.x+55,y-c.y);ctx.lineTo(x-c.x+110,y-c.y+90);ctx.fill()}}else{ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(600-c.x,400-c.y,1200,850);ctx.beginPath();ctx.arc(1200-c.x,825-c.y,260,0,Math.PI*2);ctx.stroke()}}
 function drawPortal(p,c){let x=p.x-c.x,y=p.y-c.y;ctx.fillStyle=p.min>currentUser.level?"#555":"#684cff";ctx.fillRect(x,y,p.w,p.h);ctx.fillStyle="#b7aaff";ctx.fillRect(x+14,y+14,p.w-28,p.h-28);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.label,x+p.w/2,y-8);if(p.min>1)ctx.fillText("LVL "+p.min,x+p.w/2,y+p.h+18)}
-function drawNPC(n,c){let x=n.x-c.x,y=n.y-c.y;ctx.fillStyle="#e3ad7a";ctx.fillRect(x+10,y,14,13);ctx.fillStyle="#754ac5";ctx.fillRect(x+6,y+14,22,22);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(n.name,x+18,y-9)}
+function drawNPC(n,c){
+ let x=n.x-c.x,y=n.y-c.y,N=(n.name||"").toLowerCase();
+ ctx.save();
+ // cień
+ ctx.fillStyle="rgba(0,0,0,.25)";ctx.beginPath();ctx.ellipse(x+18,y+39,18,5,0,0,Math.PI*2);ctx.fill();
+
+ function r(X,Y,W,H,C){ctx.fillStyle=C;ctx.fillRect(Math.round(X),Math.round(Y),W,H)}
+ let skin="#e3ad7a",body="#754ac5",accent="#f1c75b",hair="#181818",type="fighter";
+ if(N.includes("wróż")){body="#5b2678";accent="#e8c35b";hair="#eee9f6";type="witch"}
+ else if(N.includes("mistrz")||N.includes("mędrzec")){body="#e67d2d";accent="#233f7e";hair="#f4f4f0";type="master"}
+ else if(N.includes("trener")){body="#d96529";accent="#244b94";type="fighter"}
+ else if(N.includes("wędr")||N.includes("wędk")||N.includes("skup ryb")){body="#37677a";accent="#d0ae5d";hair="#6a4a31";type="fisher"}
+ else if(N.includes("kowal")){body="#5a352b";accent="#c77839";hair="#30231d";type="smith"}
+ else if(N.includes("górnik")){body="#b88934";accent="#d7ad3e";hair="#493225";type="miner"}
+ else if(N.includes("handlarz")){body="#397047";accent="#e1bd58";hair="#3a281e";type="merchant"}
+ else if(N.includes("strażnik")){skin="#79b66d";body="#59398b";accent="#eee9dc";hair="#1d211d";type="guard"}
+ else if(N.includes("łowca")){body="#823c2e";accent="#cbaa61";type="hunter"}
+ else if(N.includes("badacz")||N.includes("archeolog")){body="#9b763b";accent="#ddd0a9";hair="#67482f";type="scholar"}
+ else if(N.includes("rekruter")){body="#5865f2";accent="#fff";hair="#263e78";type="recruit"}
+
+ // nogi / buty
+ r(x+7,y+27,8,12,body);r(x+21,y+27,8,12,body);r(x+5,y+37,12,5,"#17191d");r(x+20,y+37,12,5,"#17191d");
+ // ciało + ręce
+ r(x+5,y+12,27,18,body);r(x+16,y+12,5,18,accent);r(x,y+15,6,15,skin);r(x+31,y+15,6,15,skin);
+ // głowa
+ r(x+9,y-2,20,15,skin);r(x+12,y+4,3,2,"#111");r(x+23,y+4,3,2,"#111");
+
+ if(type==="master"){
+   // stary mistrz sztuk walki: łysa głowa, białe brwi/broda, okulary, laska
+   r(x+8,y-5,22,4,hair);r(x+10,y+10,18,9,hair);
+   ctx.strokeStyle="#171717";ctx.lineWidth=2;ctx.strokeRect(x+10,y+1,7,5);ctx.strokeRect(x+21,y+1,7,5);
+   ctx.beginPath();ctx.moveTo(x+17,y+3);ctx.lineTo(x+21,y+3);ctx.stroke();
+   ctx.strokeStyle="#916332";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+39,y+12);ctx.lineTo(x+41,y+42);ctx.stroke();
+ }else if(type==="witch"){
+   // wróżka/czarownica: jasne włosy, fioletowy spiczasty kapelusz, magiczna kula
+   r(x+6,y-7,26,6,hair);r(x+5,y-2,6,16,hair);r(x+28,y-2,6,16,hair);
+   ctx.fillStyle="#421857";ctx.beginPath();ctx.moveTo(x+3,y-10);ctx.lineTo(x+35,y-10);ctx.lineTo(x+23,y-30);ctx.lineTo(x+17,y-11);ctx.closePath();ctx.fill();
+   r(x+1,y-11,37,4,"#6f328b");
+   ctx.shadowBlur=10;ctx.shadowColor="#b76cff";ctx.fillStyle="#b76cff";ctx.beginPath();ctx.arc(x+42,y+20,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ }else{
+   // anime/DB-owy kolczasty fryz
+   ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(x+8,y);ctx.lineTo(x+5,y-13);ctx.lineTo(x+12,y-8);ctx.lineTo(x+16,y-19);ctx.lineTo(x+20,y-9);ctx.lineTo(x+27,y-17);ctx.lineTo(x+27,y-6);ctx.lineTo(x+33,y-10);ctx.lineTo(x+29,y+1);ctx.closePath();ctx.fill();
+ }
+
+ if(type==="fisher"){r(x+5,y-10,29,4,"#c39b55");ctx.strokeStyle="#9b7040";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+36,y+17);ctx.lineTo(x+52,y-15);ctx.stroke()}
+ if(type==="smith"){r(x+34,y+20,14,5,"#adb4b7");r(x+42,y+14,4,17,"#714a2c")}
+ if(type==="miner"){r(x+6,y-9,27,6,"#d0a431");ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x+20,y-6,3,0,Math.PI*2);ctx.fill()}
+ if(type==="merchant"){r(x+33,y+25,12,12,"#8c6335")}
+ if(type==="guard"){r(x,y+11,5,28,"#eee")}
+
+ // nazwa
+ ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="rgba(0,0,0,.85)";
+ ctx.strokeText(n.name,x+18,y-34);ctx.fillStyle="#fff";ctx.fillText(n.name,x+18,y-34);
+ ctx.restore();
+}
 function drawEnemy(e,c){let x=e.x-c.x,y=e.y-c.y;ctx.fillStyle="#e0a06f";ctx.fillRect(x+8,y,14,13);ctx.fillStyle=e.boss?"#9b1c1c":e.level>=10?"#5b1a78":e.level>=5?"#8a4f19":"#34343f";ctx.fillRect(x+4,y+13,e.boss?30:22,e.boss?31:23);ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(e.name,x+15,y-10);ctx.fillStyle="#351313";ctx.fillRect(x-5,y-4,40,5);ctx.fillStyle="#d84a3c";ctx.fillRect(x-5,y-4,40*(e.hp/e.maxHp),5)}
 
 function drawRemotePlayers072(c){
@@ -3029,120 +3083,6 @@ document.addEventListener("pointerdown",e=>{
       }catch(err){}
     };
   }
-})();
-</script>
-
-
-
-<script>
-/* 1.8.4 — unikalny wygląd NPC inspirowany klasycznym anime DB */
-(function(){
-  function npcLook184(name){
-    const n=(name||"").toLowerCase();
-    if(n.includes("wróż")||n.includes("czarown")||n.includes("wiedź"))
-      return {kind:"witch",skin:"#d7a073",hair:"#e7e5ef",body:"#52276f",accent:"#efc95e"};
-    if(n.includes("mistrz"))
-      return {kind:"master",skin:"#d8a277",hair:"#f4f4f1",body:"#e57a2c",accent:"#202b43"};
-    if(n.includes("trener"))
-      return {kind:"fighter",skin:"#d39b6e",hair:"#171719",body:"#d96728",accent:"#244b9a"};
-    if(n.includes("wędk")||n.includes("skup ryb"))
-      return {kind:"fisher",skin:"#d09a70",hair:"#eee5cb",body:"#315e78",accent:"#c7a85c"};
-    if(n.includes("kowal"))
-      return {kind:"smith",skin:"#c78e64",hair:"#2b211d",body:"#56332a",accent:"#d9863d"};
-    if(n.includes("górnik"))
-      return {kind:"miner",skin:"#c99368",hair:"#39291e",body:"#b98731",accent:"#bbc2c4"};
-    if(n.includes("handlarz"))
-      return {kind:"merchant",skin:"#d29a70",hair:"#3a281e",body:"#3e7049",accent:"#e0bd58"};
-    if(n.includes("strażnik"))
-      return {kind:"guard",skin:"#78b469",hair:"#20251f",body:"#56368b",accent:"#f0eee4"};
-    if(n.includes("łowca"))
-      return {kind:"hunter",skin:"#cf986d",hair:"#171719",body:"#813b2c",accent:"#c9aa60"};
-    if(n.includes("badacz")||n.includes("archeolog"))
-      return {kind:"scholar",skin:"#d09a70",hair:"#65462f",body:"#9a7539",accent:"#dfd0a8"};
-    if(n.includes("rekruter"))
-      return {kind:"recruit",skin:"#d19a70",hair:"#263d79",body:"#5865f2",accent:"#fff"};
-    return {kind:"fighter",skin:"#d29b70",hair:"#171719",body:"#7449a2",accent:"#e6bd4d"};
-  }
-
-  function rect184(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
-  function drawNpcDB184(c,n,x,y){
-    const a=npcLook184(n.name), X=Math.round(x),Y=Math.round(y);
-    c.save();
-    c.fillStyle="rgba(0,0,0,.28)";c.beginPath();c.ellipse(X,Y+24,16,5,0,0,Math.PI*2);c.fill();
-
-    // nogi, buty, tors i ręce
-    rect184(c,X-11,Y+5,8,17,a.body); rect184(c,X+3,Y+5,8,17,a.body);
-    rect184(c,X-13,Y+19,11,5,"#17181b"); rect184(c,X+2,Y+19,12,5,"#17181b");
-    rect184(c,X-14,Y-10,28,18,a.body); rect184(c,X-3,Y-10,6,18,a.accent);
-    rect184(c,X-19,Y-8,6,16,a.skin); rect184(c,X+13,Y-8,6,16,a.skin);
-
-    // głowa
-    rect184(c,X-10,Y-26,20,16,a.skin);
-    rect184(c,X-7,Y-18,3,2,"#111"); rect184(c,X+4,Y-18,3,2,"#111");
-
-    if(a.kind==="master"){
-      // łysy/siwy mistrz: okulary, wielka broda, laska
-      rect184(c,X-11,Y-28,22,4,a.hair);
-      rect184(c,X-10,Y-14,20,9,a.hair);
-      c.strokeStyle="#181818";c.lineWidth=2;c.strokeRect(X-9,Y-21,7,5);c.strokeRect(X+2,Y-21,7,5);
-      c.beginPath();c.moveTo(X-2,Y-19);c.lineTo(X+2,Y-19);c.stroke();
-      c.strokeStyle="#9a6b35";c.lineWidth=3;c.beginPath();c.moveTo(X+20,Y-7);c.lineTo(X+22,Y+25);c.stroke();
-    } else if(a.kind==="witch"){
-      // czarownica/wróżka: wielki kapelusz, jasne włosy, kryształowa kula
-      rect184(c,X-13,Y-29,26,5,a.hair); rect184(c,X-14,Y-25,5,14,a.hair);rect184(c,X+9,Y-25,5,14,a.hair);
-      c.fillStyle="#3b174f";c.beginPath();c.moveTo(X-17,Y-30);c.lineTo(X+17,Y-30);c.lineTo(X+5,Y-45);c.lineTo(X-1,Y-31);c.closePath();c.fill();
-      rect184(c,X-19,Y-32,38,4,"#5e2b77");
-      c.fillStyle="#b67cff";c.shadowBlur=10;c.shadowColor="#b67cff";c.beginPath();c.arc(X+22,Y+6,6,0,Math.PI*2);c.fill();c.shadowBlur=0;
-    } else {
-      // charakterystyczne kolczaste włosy wojowników
-      c.fillStyle=a.hair;c.beginPath();
-      c.moveTo(X-11,Y-23);c.lineTo(X-14,Y-37);c.lineTo(X-7,Y-31);c.lineTo(X-4,Y-42);
-      c.lineTo(X+1,Y-32);c.lineTo(X+8,Y-40);c.lineTo(X+8,Y-29);c.lineTo(X+14,Y-33);
-      c.lineTo(X+10,Y-23);c.closePath();c.fill();
-    }
-
-    if(a.kind==="fisher"){
-      rect184(c,X-15,Y-33,30,4,"#c49b55");
-      c.strokeStyle="#9c7041";c.lineWidth=2;c.beginPath();c.moveTo(X+18,Y);c.lineTo(X+36,Y-33);c.stroke();
-    }
-    if(a.kind==="smith"){
-      rect184(c,X+16,Y+3,15,5,"#aab1b5");rect184(c,X+25,Y-3,4,17,"#754c2c");
-    }
-    if(a.kind==="miner"){
-      rect184(c,X-13,Y-31,26,6,"#d0a431");
-      c.fillStyle="#eee";c.beginPath();c.arc(X,Y-28,3,0,Math.PI*2);c.fill();
-    }
-    if(a.kind==="merchant"){rect184(c,X+15,Y+8,12,12,"#8c6335")}
-    if(a.kind==="guard"){rect184(c,X-19,Y-10,5,31,"#e7e7dd")}
-
-    c.restore();
-  }
-
-  // Wpinamy wygląd w istniejące rysowanie NPC, bez ruszania ich questów/interakcji.
-  const oldDrawNPC184=window.drawNPC;
-  if(typeof oldDrawNPC184==="function"){
-    window.drawNPC=function(){
-      const args=[...arguments];
-      try{
-        // Obsługa najczęstszych podpisów drawNPC(ctx,npc,x,y) i drawNPC(npc,ctx).
-        let c=args.find(v=>v&&typeof v.fillRect==="function");
-        let n=args.find(v=>v&&typeof v==="object"&&typeof v.name==="string");
-        if(c&&n){
-          let x,y;
-          const nums=args.filter(v=>typeof v==="number");
-          if(nums.length>=2){x=nums[0];y=nums[1]}
-          else{
-            const cam=(typeof camera==="function")?camera():{x:0,y:0};
-            x=Number(n.x||0)-Number(cam.x||0);y=Number(n.y||0)-Number(cam.y||0);
-          }
-          drawNpcDB184(c,n,x,y);
-          return;
-        }
-      }catch(e){}
-      return oldDrawNPC184.apply(this,args);
-    };
-  }
-  window.drawNpcDB184=drawNpcDB184;
 })();
 </script>
 
