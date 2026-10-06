@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.9 — MANEKINY + PETY</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.10 — PETY + MANEKINY HOTFIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5147,6 +5147,80 @@ drawPlayer=function(){
  ctx.fillStyle="#fff";ctx.font="bold 9px Arial";ctx.textAlign="center";ctx.strokeStyle="#222";ctx.lineWidth=3;
  ctx.strokeText(name,x,y-24);ctx.fillText(name,x,y-24);
  ctx.restore();
+ return r;
+};
+})();
+</script>
+
+
+
+<style>
+/* 4.0.10 — PETY jest stałym podstawowym przyciskiem */
+#petsBtn409{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+</style>
+<script>
+(function(){
+/* PETY: starsze filtry HUD chowały przycisk co ~300 ms.
+   Dodajemy "pet" do ich dozwolonego tekstu przez przejęcie końcowego stanu CSS. */
+setInterval(()=>{
+ const b=document.getElementById("petsBtn409");
+ if(!b)return;
+ const auth=document.getElementById("authScreen");
+ const logged=!auth || getComputedStyle(auth).display==="none";
+ b.style.setProperty("display",logged?"block":"none","important");
+ b.style.setProperty("visibility",logged?"visible":"hidden","important");
+ b.style.setProperty("opacity",logged?"1":"0","important");
+ b.style.setProperty("pointer-events",logged?"auto":"none","important");
+},50);
+
+/* MANEKINY: poprzedni hotfix blokował E, ale walka używa istniejącego systemu celu/ataku.
+   Zamiast udawać zwykłego moba, obsługujemy trafienie manekina bezpośrednio. */
+function dummyNear410(range=115){
+ if(currentWorld!=="valley")return null;
+ let a=enemies.filter(e=>e.training406&&e.alive);
+ a.sort((x,y)=>Math.hypot(player.x-x.x,player.y-x.y)-Math.hypot(player.x-y.x,player.y-y.y));
+ let d=a[0];return d&&Math.hypot(player.x-d.x,player.y-d.y)<=range?d:null;
+}
+function hitDummy410(){
+ let d=dummyNear410();if(!d)return false;
+ // bezpieczne obrażenia treningowe, niezależne od starego combat targetera
+ let dmg=Math.max(12,Math.round(18+(currentUser?.level||1)*2));
+ d.hp=Math.max(0,(d.hp||d.maxHp||160)-dmg);
+ if(typeof toast==="function")toast("🥋 Manekin: -"+dmg+" HP");
+ if(d.hp<=0){
+   d.alive=false;d._d406=Date.now();
+   // mała nagroda EXP; próbujemy istniejących pól używanych w projekcie
+   if(typeof currentUser.exp==="number")currentUser.exp+=30;
+   else if(typeof currentUser.xp==="number")currentUser.xp+=30;
+   if(typeof savePlayer==="function")savePlayer();
+   if(typeof toast==="function")toast("🥋 +30 EXP za trening");
+ }
+ return true;
+}
+// Najczęstsze klawisze ataku w tej grze: spacja / F.
+// Nie blokujemy E — E pozostaje interakcją świata, ale przy manekinie niczego nie otwiera dzięki 4.0.9.
+document.addEventListener("keydown",e=>{
+ if(e.repeat)return;
+ if((e.code==="Space"||e.key==="f"||e.key==="F")&&dummyNear410()){
+   e.preventDefault();e.stopImmediatePropagation();hitDummy410();
+ }
+},true);
+
+// Kliknięcie/tap blisko manekina też pozwala trenować — przydatne jeśli stary combat działa myszką.
+canvas.addEventListener("mousedown",()=>{
+ if(dummyNear410())hitDummy410();
+},true);
+
+// Pasek HP nad manekinem, żeby było widać, że faktycznie dostaje obrażenia.
+const oldEnemy410=drawEnemy;
+drawEnemy=function(e,c){
+ let r=oldEnemy410(e,c);
+ if(e?.training406&&e.alive){
+   let x=e.x-c.x,y=e.y-c.y,w=42;
+   ctx.save();ctx.fillStyle="#271f1f";ctx.fillRect(x-w/2,y-38,w,5);
+   ctx.fillStyle="#ddd";ctx.fillRect(x-w/2,y-38,w*Math.max(0,e.hp/e.maxHp),5);
+   ctx.restore();
+ }
  return r;
 };
 })();
