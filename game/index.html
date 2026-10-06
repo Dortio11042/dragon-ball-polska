@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.7 — CLEAN HUD + NPC LOKACJE</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.8 — DYNAMICZNE PRZYCISKI FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4946,6 +4946,74 @@ drawScenery=function(c){
  ctx.fillStyle="#e4d2a1";ctx.fillText("⛏ KOPALNIA",X(790),Y(290));
  ctx.restore();
 };
+})();
+</script>
+
+
+
+<style>
+/* 4.0.8 — nigdy nie pokazuj spamujących przycisków wystaw/drop */
+.dbpSpamButton408{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+</style>
+<script>
+(function(){
+/*
+ Problem ze screena: jakiś starszy interval cały czas DOKŁADA nowe przyciski
+ "📦 WYSTAW ... / DROP". Samo ukrywanie pojedynczego elementu nie wystarczało.
+ Ten watcher usuwa KAŻDĄ nową kopię natychmiast po dodaniu do DOM.
+*/
+const spam408=[
+ "wystaw","/ drop","drop /","leczenie","ulecz","wydobycie","wydobądź","wydobadz",
+ "łowienie","lowienie","złów","zlow","zbierz rud","kop rud"
+];
+
+function isSpam408(el){
+ if(!(el instanceof HTMLElement))return false;
+ const t=(el.textContent||"").replace(/\s+/g," ").trim().toLowerCase();
+ if(!t)return false;
+ // Najważniejszy spam widoczny na screenie.
+ if(t.includes("wystaw") && t.includes("drop"))return true;
+ // Dynamiczne akcje, których użytkownik nie chce w HUD.
+ return spam408.some(x=>t.includes(x)) &&
+        !["drop"].includes(t); // nie ruszaj podstawowego przycisku "DROP"
+}
+
+function purge408(root=document){
+ const nodes=[];
+ if(root instanceof HTMLElement && (root.matches("button")||root.getAttribute("role")==="button"))nodes.push(root);
+ if(root.querySelectorAll)nodes.push(...root.querySelectorAll("button,[role='button']"));
+ nodes.forEach(el=>{
+   if(el.closest("#authScreen"))return;
+   if(isSpam408(el)){
+     el.classList.add("dbpSpamButton408");
+     // Usuwamy z DOM, żeby stos kopii nie rósł w nieskończoność.
+     el.remove();
+   }
+ });
+}
+
+// wyczyść to, co już istnieje
+purge408();
+
+// usuwaj nowe kopie w tej samej chwili, gdy stary kod je tworzy
+const obs408=new MutationObserver(muts=>{
+ for(const m of muts)for(const node of m.addedNodes)if(node.nodeType===1)purge408(node);
+});
+obs408.observe(document.body,{childList:true,subtree:true});
+
+// zapasowo, gdy stary kod zmienia tekst istniejącego elementu zamiast tworzyć nowy
+setInterval(purge408,500);
+
+// Podstawowy dock: tylko ustalona lista.
+const allowed408=["ekwipun","moce","topka","profil","ustaw","osiąg","osiag","party","drop","rynek","mapa","muzyk"];
+setInterval(()=>{
+ const d=document.getElementById("rpgDock321");if(!d)return;
+ [...d.querySelectorAll("button")].forEach(b=>{
+   const t=(b.textContent||"").toLowerCase();
+   const ok=allowed408.some(x=>t.includes(x)) && !(t.includes("wystaw")||t.includes("/ drop"));
+   if(!ok){b.style.setProperty("display","none","important");b.style.setProperty("pointer-events","none","important")}
+ });
+},300);
 })();
 </script>
 
