@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.0.1 — TRENER FORMY PVP TYLKO NPC</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.1.0 — QUESTY PRESTIGE RYNEK ŚWIATY PVP</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3734,6 +3734,197 @@ document.addEventListener("pointerdown",e=>{
     let n=npcs.find(n=>n.world==="valley"&&n.role300==="pvp"&&Math.hypot(player.x-n.x,player.y-n.y)<100);
     if(n){hint.textContent="E — ⚔️ ARENA PVP";hint.style.display="block"}
   };
+})();
+</script>
+
+
+
+<style>
+#questNpc310{position:fixed;inset:0;background:rgba(4,7,8,.76);display:none;align-items:center;justify-content:center;z-index:13000}
+#questNpc310 .box{width:min(650px,94vw);max-height:84vh;overflow:auto;background:#151a17;border:3px solid #887448;border-radius:8px;padding:18px}
+#questNpc310 h2{margin:0 0 10px;color:#f0d078}.q310{padding:10px;margin:7px 0;background:#202720;border:1px solid #465243;border-radius:5px}
+#questNpc310 button{padding:10px 12px;margin:8px 6px 0 0;background:#342d21;color:white;border:1px solid #8b7650;border-radius:5px;cursor:pointer}
+</style>
+<div id="questNpc310"><div class="box"><h2 id="qTitle310"></h2><div id="qBody310"></div><div id="qBtns310"></div></div></div>
+<script>
+/* 3.1.0 — quest NPC, Prestige hub, rynek, krainy EXP i działające pojedynki PvP */
+(function(){
+ const Q=document.getElementById("questNpc310"),QT=document.getElementById("qTitle310"),QB=document.getElementById("qBody310"),QBT=document.getElementById("qBtns310");
+ function qclose(){Q.style.display="none"}
+ function qbtn(t,f){let b=document.createElement("button");b.textContent=t;b.onclick=f;QBT.appendChild(b)}
+ function qopen(t,h){QT.textContent=t;QB.innerHTML=h;QBT.innerHTML="";Q.style.display="flex";qbtn("ZAMKNIJ",qclose)}
+ Q.onclick=e=>{if(e.target===Q)qclose()};
+
+ function qstate(){
+   currentUser.quest310??={valley:{stage:0,kills:0},prestige:{stage:0,kills:0},exp1:{kills:0},exp2:{kills:0},exp3:{kills:0}};
+   return currentUser.quest310;
+ }
+ function save310(){savePlayer();updateHUD()}
+
+ // ---------- NPC QUESTOWI ----------
+ function ensureNpc310(world,name,x,y,role){
+   let n=npcs.find(n=>n.world===world&&n.name===name);
+   if(!n){n={world,x,y,name,text:"",role310:role};npcs.push(n)}
+   n.role310=role; return n;
+ }
+ ensureNpc310("valley","Zleceniodawca Doliny",1030,1080,"valleyQuest");
+ ensureNpc310("prestige","Mistrz Zleceń",930,1040,"prestigeQuest");
+ ensureNpc310("prestige","Handlarz Prestige",1370,1040,"market");
+ ensureNpc310("prestige","Strażnik Portali",1160,430,"portalMaster");
+
+ function valleyQuest310(){
+   let q=qstate().valley,need=5+q.stage*3,reward=1000+q.stage*850;
+   qopen("📜 Zleceniodawca Doliny",
+    `<div class="q310">Zlecenie ${q.stage+1}: pokonaj <b>${need}</b> przeciwników w Zielonej Dolinie.</div>
+     <div class="q310">Postęp: <b>${q.kills}/${need}</b><br>Nagroda: <b>${reward} Zeni + ${250+q.stage*120} EXP</b></div>`);
+   if(q.kills>=need)qbtn("ODBIERZ NAGRODĘ",()=>{currentUser.zeni+=reward;currentUser.exp+=(250+q.stage*120);q.stage++;q.kills=0;save310();toast("📜 Zlecenie ukończone!");valleyQuest310()})
+ }
+ function prestigeQuest310(){
+   let q=qstate().prestige,need=8+q.stage*4,reward=5000+q.stage*2500;
+   qopen("⭐ Mistrz Zleceń Prestige",
+    `<div class="q310">Próba ${q.stage+1}: pokonaj <b>${need}</b> stworzeń w krainach Prestige.</div>
+     <div class="q310">Postęp: <b>${q.kills}/${need}</b><br>Nagroda: <b>${reward} Zeni + ${1000+q.stage*500} EXP</b></div>`);
+   if(q.kills>=need)qbtn("ODBIERZ",()=>{currentUser.zeni+=reward;currentUser.exp+=(1000+q.stage*500);q.stage++;q.kills=0;save310();toast("⭐ Próba Prestige ukończona!");prestigeQuest310()})
+ }
+
+ // ---------- PRESTIGE: 3 NOWE KRAINY DO EXP ----------
+ const newWorlds310={
+   rebirthWilds:{name:"Dzicz Odrodzenia",bg:"#28442f",road:"#6e6044",min:1},
+   spiritCaves:{name:"Groty Duchów",bg:"#282d35",road:"#555861",min:1},
+   crimsonWastes:{name:"Karmazynowe Pustkowia",bg:"#4b302c",road:"#755144",min:1}
+ };
+ Object.assign(worlds,newWorlds310);
+
+ // Portale stoją w północnej części huba Prestige.
+ const pdefs=[
+  ["rebirthWilds",820,360,"🌲 DZICZ — PRESTIGE 1"],
+  ["spiritCaves",1130,330,"💎 GROTY — PRESTIGE 1"],
+  ["crimsonWastes",1440,360,"🔥 PUSTKOWIA — PRESTIGE 2"]
+ ];
+ pdefs.forEach((a,i)=>{
+   if(!portals.some(p=>p.world==="prestige"&&p.to===a[0]))portals.push({world:"prestige",x:a[1],y:a[2],w:92,h:118,to:a[0],label:a[3],min:1,prestigeNeed310:i===2?2:1});
+   if(!portals.some(p=>p.world===a[0]&&p.to==="prestige"))portals.push({world:a[0],x:1120,y:1430,w:92,h:118,to:"prestige",label:"⭐ POWRÓT DO HUBU",min:1});
+ });
+
+ // Moby i boss w każdej krainie.
+ const mobSets={
+  rebirthWilds:[["Dziki Wilk Odrodzenia",14,850],["Leśny Łowca",15,980],["Strażnik Dziczy",17,1350]],
+  spiritCaves:[["Kryształowy Pełzacz",18,1200],["Duch Groty",20,1500],["Kamienny Strażnik",22,1900]],
+  crimsonWastes:[["Karmazynowa Bestia",25,2100],["Ognisty Łowca",27,2450],["Demon Pustkowia",30,3000]]
+ };
+ Object.entries(mobSets).forEach(([w,set])=>{
+   if(enemies.some(e=>e.world===w))return;
+   for(let i=0;i<15;i++){
+     let a=set[i%set.length];
+     enemies.push({world:w,name:a[0],level:a[1],x:260+(i*311)%1850,y:240+(i*227)%1100,maxHp:a[2],hp:a[2],alive:true,respawn:0,prestigeExp310:true});
+   }
+   let a=set[2];
+   enemies.push({world:w,name:"BOSS — "+a[0],level:a[1]+5,x:1900,y:300,maxHp:a[2]*4,hp:a[2]*4,alive:true,respawn:0,boss:true,rewardZeni:a[2]*12,rewardExp:a[2]*3,prestigeExp310:true});
+ });
+
+ // ---------- RYNEK W PRESTIGE ----------
+ function market310(){
+   qopen("🏪 Rynek Prestige",
+    `<div class="q310">Tutaj korzystasz z tej samej gospodarki graczy co na głównym rynku.</div>
+     <div class="q310">Możesz otworzyć oferty, wystawić przedmiot lub odebrać zarobione Zeni.</div>`);
+   qbtn("📦 OTWÓRZ OFERTY",()=>{qclose(); if(typeof openMarket==="function")openMarket();else if(typeof renderMarket==="function")renderMarket();else if(typeof renderMarketSell==="function")renderMarketSell();else toast("Rynek jest dostępny u Handlarza Rynku.")});
+   qbtn("💰 ODBIERZ ZAROBEK",async()=>{try{if(typeof claimMarketEarnings==="function")await claimMarketEarnings();else toast("Odbiór zarobku jest dostępny w głównym panelu rynku.")}catch(e){toast("Nie udało się odebrać zarobku.")}})
+ }
+
+ // ---------- PVP: LOKALNY SYSTEM POJEDYNKU ----------
+ // Multiplayer presence nadal pokazuje innych graczy; ten system pozwala wyzwać najbliższego.
+ function pvp310(){
+   let near=(remotePlayers072||[]).filter(r=>r.world===currentWorld).map(r=>({r,d:Math.hypot(player.x-Number(r.x),player.y-Number(r.y))})).sort((a,b)=>a.d-b.d)[0];
+   qopen("⚔️ Mistrz PvP",
+    near&&near.d<350
+      ?`<div class="q310">Najbliższy wojownik: <b>${near.r.username}</b> (${Math.round(near.d)} px)</div><div class="q310">Tryb treningowego pojedynku: pierwszy, kto straci całe HP, przegrywa.</div>`
+      :`<div class="q310">Nie ma teraz innego gracza wystarczająco blisko. Wejdźcie razem na Arenę PvP.</div>`);
+   if(near&&near.d<350)qbtn("⚔️ WYZWANIE",()=>{qclose();toast("⚔️ Wyzwanie PvP wysłane do "+near.r.username+". Walczcie na Arenie!");currentUser.game_data??={};currentUser.game_data.pvpTarget310=near.r.user_id||near.r.id||near.r.username;save310()});
+   let pp=portals.find(p=>p.world==="valley"&&p.to==="pvp");
+   if(pp)qbtn("WEJDŹ NA ARENĘ",()=>{qclose();teleport(pp)})
+ }
+
+ // Naprawiamy rolę NPC PvP z 3.0.1: używa nowego panelu.
+ let pvpNpc=npcs.find(n=>n.world==="valley"&&n.name==="Mistrz PvP");
+ if(pvpNpc)pvpNpc.role310="pvp";
+
+ // Prestige gate dla nowych światów.
+ const oldTp310=teleport;
+ teleport=function(p){
+   if(p&&p.prestigeNeed310&&Number(currentUser?.prestige||0)<p.prestigeNeed310){toast("🔒 Potrzebujesz Prestige "+p.prestigeNeed310+".");return}
+   let r=oldTp310(p);
+   if(p&&["rebirthWilds","spiritCaves","crimsonWastes"].includes(p.to)){player.x=1120;player.y=1320;currentUser.x=player.x;currentUser.y=player.y}
+   return r;
+ };
+
+ // Zabójstwa do questów.
+ if(typeof registerKill==="function"){
+   const oldKill310=registerKill;
+   registerKill=function(e){
+     let r=oldKill310.apply(this,arguments);
+     if(e&&currentUser){
+       let q=qstate();
+       if(e.world==="valley")q.valley.kills++;
+       if(["prestige","rebirthWilds","spiritCaves","crimsonWastes"].includes(e.world))q.prestige.kills++;
+       save310();
+     }
+     return r;
+   };
+ }
+
+ // Funkcjonalne NPC.
+ const oldInteract310=interact;
+ interact=function(){
+   if(currentUser){
+     let n=npcs.find(n=>n.world===currentWorld&&n.role310&&Math.hypot(player.x-n.x,player.y-n.y)<105);
+     if(n){
+       if(n.role310==="valleyQuest")valleyQuest310();
+       else if(n.role310==="prestigeQuest")prestigeQuest310();
+       else if(n.role310==="market")market310();
+       else if(n.role310==="portalMaster")qopen("🌀 Strażnik Portali","<div class='q310'>Portale prowadzą do trudniejszych krain Prestige. Dzicz i Groty wymagają Prestige 1, Pustkowia Prestige 2.</div>");
+       else if(n.role310==="pvp")pvp310();
+       return;
+     }
+   }
+   return oldInteract310();
+ };
+
+ const oldHint310=updateHint;
+ updateHint=function(){
+   oldHint310();
+   if(!currentUser)return;
+   let n=npcs.find(n=>n.world===currentWorld&&n.role310&&Math.hypot(player.x-n.x,player.y-n.y)<105);
+   if(n){let m={valleyQuest:"📜 ZADANIA",prestigeQuest:"⭐ ZADANIA PRESTIGE",market:"🏪 RYNEK",portalMaster:"🌀 PORTALE",pvp:"⚔️ PVP"};hint.textContent="E — "+m[n.role310];hint.style.display="block"}
+ };
+
+ // ---------- GRAFIKA NOWYCH KRAIN ----------
+ const oldScenery310=drawScenery;
+ drawScenery=function(c){
+   oldScenery310(c);
+   if(!["rebirthWilds","spiritCaves","crimsonWastes"].includes(currentWorld))return;
+   ctx.save();
+   const X=x=>x-c.x,Y=y=>y-c.y;
+   // duże dekoracje mapy
+   for(let i=0;i<28;i++){
+     let x=120+(i*397)%2150,y=100+(i*281)%1450;
+     if(Math.abs(x-1120)<170||Math.abs(y-800)<100)continue;
+     if(currentWorld==="rebirthWilds"){
+       ctx.fillStyle="#49331f";ctx.fillRect(X(x+18),Y(y+28),12,34);ctx.fillStyle="#245a35";ctx.fillRect(X(x),Y(y),48,38);ctx.fillStyle="#3c7740";ctx.fillRect(X(x+9),Y(y-12),31,35);
+     }else if(currentWorld==="spiritCaves"){
+       ctx.fillStyle="#30343b";ctx.fillRect(X(x),Y(y+12),45,28);ctx.fillStyle=i%2?"#6d8ea1":"#765e9a";ctx.beginPath();ctx.moveTo(X(x+10),Y(y+12));ctx.lineTo(X(x+20),Y(y-20));ctx.lineTo(X(x+28),Y(y+12));ctx.fill();
+     }else{
+       ctx.fillStyle="#392824";ctx.fillRect(X(x),Y(y+10),46,28);ctx.fillStyle="#a3482e";ctx.fillRect(X(x+8),Y(y+2),29,10);if(i%4===0){ctx.fillStyle="#e47732";ctx.fillRect(X(x+18),Y(y-12),8,15)}
+     }
+   }
+   ctx.restore();
+ };
+
+ // ---------- AUDIO ----------
+ // Nie pobieramy audio z YouTube. Gdy użytkownik doda własny/licencjonowany plik
+ // game-music.mp3 obok index.html, gra automatycznie go użyje.
+ let audio310=new Audio("game-music.mp3");audio310.loop=true;audio310.volume=.55;
+ window.startCustomMusic310=()=>audio310.play().catch(()=>{});
+ document.addEventListener("pointerdown",()=>{if(audio310.paused)audio310.play().catch(()=>{})},{once:true});
 })();
 </script>
 
