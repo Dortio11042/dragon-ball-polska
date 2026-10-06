@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.4 — HUD + MIASTO + BUDYNKI FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.5 — CLEAN HUB + HUD FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5270,6 +5270,184 @@ updateHint=function(){
  if(currentWorld!=="valley"&&(worlds[currentWorld]?.interior404||currentWorld==="mastersHouse403"||currentWorld==="forgeHouse403")&&Math.hypot(player.x-1200,player.y-1480)<120){
    hint.textContent="E — WYJDŹ Z BUDYNKU";hint.style.display="block";
  }
+};
+})();
+</script>
+
+
+
+<style>
+/* 4.0.5 — FINALNY HUD: widoczność oparta na ekranie auth, nie na wadliwej klasie z currentUser/window */
+#mainHud405{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:50000;width:160px;
+ padding:8px;background:rgba(10,15,12,.95);border:2px solid #857650;border-radius:9px;display:none;flex-direction:column;gap:5px}
+#mainHud405.on{display:flex!important}
+#mainHud405 button{display:block!important;position:static!important;visibility:visible!important;opacity:1!important;
+ width:100%!important;height:auto!important;margin:0!important;padding:8px 5px!important;transform:none!important;inset:auto!important;
+ pointer-events:auto!important;background:#30372f!important;color:white!important;border:1px solid #746b50!important;border-radius:5px!important;cursor:pointer!important}
+#mainHud404,#hudDock402,#rpgDock321{display:none!important}
+</style>
+<div id="mainHud405"></div>
+<script>
+(function(){
+/* ================= HUD =================
+   Nie szukamy już starych przycisków po tekście.
+   Znajdujemy ich realne handlery i budujemy stabilny panel. */
+const dock=document.getElementById("mainHud405");
+const menuDefs405=[
+ ["🎒 EKWIPUNEK",["openInventory05","openInventory","inventory05","showInventory"]],
+ ["⚡ MOCE",["openPowers05","openPowers","powers05"]],
+ ["🏆 TOPKA",["openLeaderboard071","openTop","showTop"]],
+ ["👤 PROFIL",["openProfile08","openProfile","profile08"]],
+ ["⚙️ USTAWIENIA",["openSettings08","openSettings","settings08"]],
+ ["🏅 OSIĄGNIĘCIA",["openAchievements08","openAchievements","achievements08"]],
+ ["👥 PARTY",["openParty100","openParty"]],
+ ["💎 DROP",["openDrop08","openDrops","drop08"]],
+ ["🛒 RYNEK",["openMarket","openMarket072","marketOpen"]],
+ ["🗺️ MAPA",["openMap08","openMap"]]
+];
+function isLogged405(){
+ // auth overlay/form jest najpewniejszym źródłem; jeśli gracz/canvas działa, HUD ma być widoczny
+ const auth=document.querySelector("#authScreen,#authOverlay,.auth-screen,.auth-overlay");
+ if(auth){
+   const cs=getComputedStyle(auth);
+   if(cs.display!=="none"&&cs.visibility!=="hidden"&&Number(cs.opacity||1)>0.05)return false;
+ }
+ return !!(window.currentUser||typeof currentUser!=="undefined"&&currentUser);
+}
+function handler405(names){
+ for(const n of names)if(typeof window[n]==="function")return ()=>window[n]();
+ return null;
+}
+function fallbackButton405(label){
+ let key=label.replace(/^[^\s]+\s*/,"").toLowerCase();
+ return [...document.querySelectorAll("button")].find(b=>!b.closest("#mainHud405")&&(b.textContent||"").toLowerCase().includes(key.slice(0,5)));
+}
+function buildHud405(){
+ if(dock.children.length)return;
+ menuDefs405.forEach(([label,names])=>{
+   let b=document.createElement("button");b.textContent=label;
+   b.onclick=()=>{
+     let fn=handler405(names);if(fn){try{return fn()}catch(e){console.error(e)}}
+     let old=fallbackButton405(label);
+     if(old){old.disabled=false;old.hidden=false;old.click();return}
+     // znane systemy z mega menu
+     if(typeof window.openMega08==="function")return window.openMega08(label);
+     toast("Ta funkcja nie została jeszcze podpięta do nowego HUD-u.");
+   };
+   dock.appendChild(b);
+ });
+}
+buildHud405();
+setInterval(()=>dock.classList.toggle("on",isLogged405()),200);
+
+/* ================= ZIELONA DOLINA CLEAN HUB ================= */
+// Usuń wszystkie budynki z 4.0.4 oprócz Rynku Graczy.
+// Stare rysunki Domu Mistrzów/Kuźni z wcześniejszych warstw przykrywamy zielenią w drawScenery niżej.
+const removeWorlds405=["mastersHouse403","forgeHouse403","bank404","guild404","post404","pet404","quest404","event404"];
+for(let i=portals.length-1;i>=0;i--){
+ let p=portals[i];if(removeWorlds405.includes(p.to)||removeWorlds405.includes(p.world))portals.splice(i,1);
+}
+
+// NPC, które ZOSTAJĄ na zewnątrz.
+function keepOutside405(n){
+ const t=(n.name||"").toLowerCase();
+ return t.includes("discord")||t.includes("wróż")||t.includes("wroz")||
+        t.includes("smocz")||t.includes("zarządca dom")||t.includes("zarzadca dom")||
+        t.includes("opiekun zwier")||t.includes("pet");
+}
+
+// Jedno Centrum Usług dla całej reszty.
+if(!worlds.center405)worlds.center405={name:"Centrum Wojowników",bg:"#38372f",road:"#76644a",min:1,interior405:true};
+const centerDoor405={x:1540,y:520,w:300,h:230};
+
+// Przenieś wszystkich usługowych NPC z Doliny i starych wnętrz do jednego centrum,
+// poza wyraźnie zostawionymi na zewnątrz.
+let moved405=[];
+npcs.forEach(n=>{
+ if((n.world==="valley"||removeWorlds405.includes(n.world))&&!keepOutside405(n)){
+   // Rynek graczy/handlarz rynku zostawiamy, jeśli już należy do osobnego market world.
+   if((n.name||"").toLowerCase().includes("handlarz rynku"))return;
+   n.world="center405";moved405.push(n);
+ }
+});
+
+// Grupowanie we wnętrzu.
+const groups405=[
+ {title:"🥋 STREFA MISTRZÓW",test:n=>/mistrz|trener/i.test(n.name),x:520,y:500},
+ {title:"⚒ RZEMIOSŁO I ROZWÓJ",test:n=>/kowal|runo|górnik|gornik|badacz/i.test(n.name),x:1220,y:500},
+ {title:"📜 ZADANIA I WYDARZENIA",test:n=>/zlecen|łowca|lowca|dzien|herold|wypraw/i.test(n.name),x:520,y:980},
+ {title:"🏦 USŁUGI",test:n=>/bank|gildi|list|kartograf|kupiec|handlarz|rekrut/i.test(n.name),x:1420,y:980}
+];
+let used405=new Set();
+groups405.forEach(g=>{
+ let arr=moved405.filter(n=>!used405.has(n)&&g.test(n));
+ arr.forEach((n,i)=>{n.x=g.x+(i%4)*145;n.y=g.y+Math.floor(i/4)*115;used405.add(n)});
+});
+let rest405=moved405.filter(n=>!used405.has(n));
+rest405.forEach((n,i)=>{n.x=920+(i%5)*140;n.y=1250+Math.floor(i/5)*100});
+
+// Zewnętrzni NPC — szeroko i czytelnie.
+let outside405=npcs.filter(n=>n.world==="valley"&&keepOutside405(n));
+const op405=[[920,850],[1120,850],[1320,850],[920,1060],[1120,1060],[1320,1060]];
+outside405.forEach((n,i)=>{n.x=op405[i%op405.length][0];n.y=op405[i%op405.length][1]});
+
+// Drzwi bez portalowego znacznika.
+let return405=[1690,830];
+function nearCenter405(){
+ if(currentWorld!=="valley")return false;
+ return Math.hypot(player.x-(centerDoor405.x+centerDoor405.w/2),player.y-(centerDoor405.y+centerDoor405.h))<115;
+}
+document.addEventListener("keydown",e=>{
+ if(!isLogged405()||!["e","E"].includes(e.key))return;
+ if(nearCenter405()){
+   e.preventDefault();e.stopImmediatePropagation();
+   currentWorld="center405";currentUser.world="center405";player.x=1200;player.y=1370;currentUser.x=player.x;currentUser.y=player.y;savePlayer();return;
+ }
+ if(currentWorld==="center405"&&Math.hypot(player.x-1200,player.y-1480)<120){
+   e.preventDefault();e.stopImmediatePropagation();
+   currentWorld="valley";currentUser.world="valley";player.x=return405[0];player.y=return405[1];currentUser.x=player.x;currentUser.y=player.y;savePlayer();
+ }
+},true);
+
+// Zachowaj funkcje NPC, które historycznie sprawdzały valley.
+const oldInteract405=interact;
+interact=function(){
+ if(currentWorld==="center405"){
+   let n=npcs.find(n=>n.world==="center405"&&Math.hypot(player.x-n.x,player.y-n.y)<110);
+   if(n){let nw=n.world,cw=currentWorld;n.world="valley";currentWorld="valley";try{return oldInteract405()}finally{currentWorld=cw;n.world=nw}}
+ }
+ return oldInteract405();
+};
+
+const oldScene405=drawScenery;
+drawScenery=function(c){
+ oldScene405(c);const X=x=>x-c.x,Y=y=>y-c.y;ctx.save();
+ if(currentWorld==="valley"){
+   // przykrycie starych nałożonych budynków zielonym terenem
+   ctx.fillStyle=(worlds.valley&&worlds.valley.bg)||"#355c38";
+   ctx.fillRect(X(620),Y(250),1700,520);
+   ctx.fillRect(X(620),Y(940),350,500);
+   // jeden budynek centrum
+   let b=centerDoor405;ctx.fillStyle="#544938";ctx.fillRect(X(b.x),Y(b.y),b.w,b.h);
+   ctx.fillStyle="#302820";ctx.beginPath();ctx.moveTo(X(b.x-20),Y(b.y+10));ctx.lineTo(X(b.x+b.w/2),Y(b.y-75));ctx.lineTo(X(b.x+b.w+20),Y(b.y+10));ctx.fill();
+   ctx.fillStyle="#211914";ctx.fillRect(X(b.x+b.w/2-28),Y(b.y+b.h-75),56,75);
+   ctx.fillStyle="#f0d27b";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText("CENTRUM WOJOWNIKÓW",X(b.x+b.w/2),Y(b.y-25));
+ }else if(currentWorld==="center405"){
+   ctx.fillStyle="#40382e";ctx.fillRect(X(250),Y(180),1900,1380);
+   ctx.fillStyle="#211d19";ctx.fillRect(X(220),Y(150),1960,65);ctx.fillRect(X(220),Y(1530),1960,65);ctx.fillRect(X(220),Y(150),65,1445);ctx.fillRect(X(2115),Y(150),65,1445);
+   // cztery strefy
+   const zones=[[390,360,650,430,"🥋 STREFA MISTRZÓW"],[1110,360,850,430,"⚒ RZEMIOSŁO I ROZWÓJ"],[390,850,650,430,"📜 ZADANIA I EVENTY"],[1110,850,850,430,"🏦 USŁUGI"]];
+   zones.forEach(z=>{ctx.fillStyle="rgba(120,98,65,.28)";ctx.fillRect(X(z[0]),Y(z[1]),z[2],z[3]);ctx.strokeStyle="#8c7650";ctx.strokeRect(X(z[0]),Y(z[1]),z[2],z[3]);ctx.fillStyle="#efd27c";ctx.font="bold 13px Arial";ctx.textAlign="left";ctx.fillText(z[4],X(z[0]+18),Y(z[1]+28))});
+   ctx.fillStyle="#211914";ctx.fillRect(X(1160),Y(1460),80,70);ctx.fillStyle="#eee";ctx.textAlign="center";ctx.fillText("E — WYJDŹ",X(1200),Y(1440));
+ }
+ ctx.restore();
+};
+
+const oldHint405=updateHint;
+updateHint=function(){
+ oldHint405();
+ if(nearCenter405()){hint.textContent="E — WEJDŹ DO CENTRUM WOJOWNIKÓW";hint.style.display="block"}
+ if(currentWorld==="center405"&&Math.hypot(player.x-1200,player.y-1480)<120){hint.textContent="E — WYJDŹ DO ZIELONEJ DOLINY";hint.style.display="block"}
 };
 })();
 </script>
