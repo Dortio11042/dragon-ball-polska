@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.0.0 — FULL SYSTEMS + NPC UI</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.0.1 — TRENER FORMY PVP TYLKO NPC</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -3533,6 +3533,7 @@ document.addEventListener("pointerdown",e=>{
  function close300(){P.style.display="none"}
  function open300(t,h){T.textContent=t;B.innerHTML=h;BT.innerHTML="";P.style.display="flex";button300("ZAMKNIJ",close300)}
  function button300(t,fn){let b=document.createElement("button");b.textContent=t;b.onclick=fn;BT.appendChild(b)}
+ window.open300=open300; window.button300=button300; window.close300=close300;
  P.onclick=e=>{if(e.target===P)close300()};
 
  function st300(){
@@ -3660,6 +3661,79 @@ document.addEventListener("pointerdown",e=>{
  // Przycisk Bestiariusza zostaje, bo nie jest usługą NPC.
  let best=document.createElement("button");best.textContent="📚 BESTIARIUSZ";best.style.cssText="position:fixed;left:12px;bottom:12px;z-index:3500;padding:9px 12px";
  best.onclick=bestiary300;document.body.appendChild(best);
+})();
+</script>
+
+
+
+<script>
+/* 3.0.1 — Trener, Formy i PvP wyłącznie przez NPC */
+(function(){
+  function hideLegacyButtons301(){
+    document.querySelectorAll("button").forEach(b=>{
+      const t=(b.textContent||"").replace(/\s+/g," ").trim().toUpperCase();
+      // Nie chowamy przycisków wewnątrz okien NPC.
+      if(b.closest("#fullPanel300")||b.closest("#prestigeNpc210"))return;
+      if(
+        t==="TRENER" || t.includes("🥋 TRENER") ||
+        t==="FORMY" || t.includes("✨ FORMY") ||
+        t==="PVP" || t.includes("⚔️ PVP") || t.includes("PVP ARENA")
+      ) b.style.display="none";
+    });
+  }
+  hideLegacyButtons301();
+  setInterval(hideLegacyButtons301,700);
+
+  function ensure301(name,x,y,role,text){
+    let n=npcs.find(n=>n.world==="valley"&&n.name===name);
+    if(!n){n={world:"valley",x:x,y:y,name:name,text:text};npcs.push(n)}
+    n.role300=role;
+    return n;
+  }
+
+  // Trener i Mistrz Form są fizycznymi NPC w Zielonej Dolinie.
+  let trainer=npcs.find(n=>n.world==="valley"&&(n.name==="Mistrz Mocy"||n.name==="Trener"));
+  if(trainer) trainer.role300="trainer";
+  else ensure301("Trener",1360,1010,"trainer","Trening wojownika.");
+
+  let forms=npcs.find(n=>n.world==="valley"&&n.name==="Mistrz Form");
+  if(forms) forms.role300="forms";
+  else ensure301("Mistrz Form",1510,990,"forms","Nauka form.");
+
+  // Osobny NPC od PvP przy drodze do areny.
+  let pvp=npcs.find(n=>n.world==="valley"&&n.name==="Mistrz PvP");
+  if(!pvp){pvp={world:"valley",x:1770,y:1260,name:"Mistrz PvP",text:"Pojedynki wojowników.",role300:"pvp"};npcs.push(pvp)}
+  else pvp.role300="pvp";
+
+  function pvpNpc301(){
+    open300("⚔️ Mistrz PvP",
+      '<div class="card300"><b>Arena PvP</b><br>Wejdź na arenę, aby walczyć z innymi wojownikami.</div>'+
+      '<div class="card300">Wymagany poziom: <b>10</b>. PvP nie jest już osobnym przyciskiem na ekranie.</div>');
+    button300("⚔️ WEJDŹ NA ARENĘ",()=>{
+      if((currentUser.level||1)<10)return toast("🔒 Arena PvP wymaga LVL 10.");
+      const pp=portals.find(p=>p.world==="valley"&&(p.to==="pvp"||p.to==="arena"));
+      if(pp && typeof teleport==="function"){ close300(); teleport(pp); }
+      else toast("⚔️ Podejdź do portalu Areny obok Mistrza PvP.");
+    });
+  }
+
+  // Nadpisujemy tylko warstwę interakcji 3.0, aby dodać rolę PvP.
+  const previousInteract301=interact;
+  interact=function(){
+    if(currentUser&&currentWorld==="valley"){
+      let n=npcs.find(n=>n.world==="valley"&&n.role300==="pvp"&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+      if(n){pvpNpc301();return}
+    }
+    return previousInteract301();
+  };
+
+  const previousHint301=updateHint;
+  updateHint=function(){
+    previousHint301();
+    if(!currentUser||currentWorld!=="valley")return;
+    let n=npcs.find(n=>n.world==="valley"&&n.role300==="pvp"&&Math.hypot(player.x-n.x,player.y-n.y)<100);
+    if(n){hint.textContent="E — ⚔️ ARENA PVP";hint.style.display="block"}
+  };
 })();
 </script>
 
