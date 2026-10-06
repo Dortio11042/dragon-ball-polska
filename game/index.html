@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.2.1 — HUD NPC BESTIARIUSZ MINIMAPA FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 3.3.0 — KOPALNIA W ŚWIECIE + EKWIPUNEK VISUAL + FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4221,6 +4221,172 @@ document.addEventListener("pointerdown",e=>{
    document.getElementById("questTracker300")?.remove();
  }
  observer321.observe(document.body,{childList:true,subtree:true});cleanLate321();
+})();
+</script>
+
+
+
+<style>
+/* 3.3 — kopalnia jest częścią świata, bez ekranowego dungeonu */
+#mineDungeon150,#minePanel140:has(.minebar140){display:none!important}
+</style>
+<script>
+(function(){
+/* ===== 3.3.0: stabilizacja + prawdziwa kopalnia na canvasie ===== */
+const mineWorlds330={};
+const mineRuntime330={world:null,source:null,rocks:[],exit:null,spawn:{x:220,y:820}};
+let mineAttackCd330=0,mineHitCd330=0;
+
+function esc330(v){return String(v??"").replace(/[<>&"]/g,"")}
+function mineWorldId330(m){return "mine_"+String(m.name||"mine").toLowerCase().replace(/[^a-z0-9]+/g,"_")}
+function makeMineWorld330(m){
+ const id=mineWorldId330(m); if(worlds[id])return id;
+ worlds[id]={name:m.name,bg:m.tier>=4?"#17151c":"#292b2d",road:"#37393b",min:1,isMine330:true};
+ mineWorlds330[id]=m;
+ // powrót przy wejściu
+ if(!portals.some(p=>p.world===id&&p.mineExit330))portals.push({world:id,x:150,y:820,w:80,h:110,to:m.world,label:"🚪 WYJŚCIE",min:1,mineExit330:true,returnX330:m.x,returnY330:m.y+160});
+ // chodzące moby
+ if(!enemies.some(e=>e.world===id)){
+   const names=["Jaskiniowy Pająk","Nietoperz Ki","Kamienny Pełzacz","Górniczy Golem"];
+   for(let i=0;i<13;i++){
+     let hp=100+m.tier*65+(i%4)*30;
+     enemies.push({world:id,name:names[i%names.length],level:Math.max(2,m.tier*5+i%4),x:430+(i*317)%1650,y:250+(i*211)%1050,
+       maxHp:hp,hp,alive:true,respawn:0,mineMob330:true,move330:true,vx330:(i%2?1:-1)*(0.55+m.tier*.08),vy330:((i%3)-1)*.45,
+       rewardZeni:80+m.tier*70,rewardExp:55+m.tier*40});
+   }
+   let hp=900+m.tier*650;
+   enemies.push({world:id,name:"BOSS — Strażnik "+m.name,level:m.tier*8+8,x:2050,y:350,maxHp:hp,hp,alive:true,respawn:0,boss:true,mineMob330:true,move330:true,vx330:.45,vy330:.3,rewardZeni:1000+m.tier*1200,rewardExp:500+m.tier*500});
+ }
+ return id;
+}
+mines140.forEach(makeMineWorld330);
+
+function generateRocks330(id){
+ const m=mineWorlds330[id]; if(!m)return[];
+ let a=[];
+ for(let i=0;i<48;i++){
+   let x=300+(i*431)%1850,y=160+(i*283)%1320;
+   // zostaw korytarze
+   if(Math.abs(y-820)<95||Math.abs(x-1120)<90)continue;
+   a.push({id:"rock330_"+i,x,y,hp:2+m.tier,dead:false,size:18+(i%3)*4});
+ }
+ return a;
+}
+function enterMine330(m){
+ norm140();
+ if(!pickPower140())return toast("❌ Najpierw kup i załóż kilof u Górnika.");
+ const id=makeMineWorld330(m);
+ mineRuntime330.world=id;mineRuntime330.source=m;
+ if(!mineRuntime330.rocks.length||mineRuntime330.world!==id)mineRuntime330.rocks=generateRocks330(id);
+ currentWorld=id;currentUser.world=id;player.x=220;player.y=820;currentUser.x=player.x;currentUser.y=player.y;
+ savePlayer();toast("⛏️ Wchodzisz do "+m.name+". Znajdź wyjście albo eksploruj dalej.");
+}
+window.startMine140=enterMine330;
+
+// Stare kopalniane okno nie może już się otworzyć.
+window.makeDungeon150=function(){};
+const oldTeleport330=teleport;
+teleport=function(p){
+ let r=oldTeleport330(p);
+ if(p?.mineExit330){player.x=p.returnX330||500;player.y=p.returnY330||1200;currentUser.x=player.x;currentUser.y=player.y;savePlayer()}
+ return r;
+};
+
+// Ruch mobów w kopalni + agresja.
+function updateMineMobs330(){
+ if(!worlds[currentWorld]?.isMine330||!currentUser)return;
+ let now=performance.now(),dt=Math.min(.035,Math.max(.008,(now-(updateMineMobs330.last||now))/1000));updateMineMobs330.last=now;
+ enemies.filter(e=>e.world===currentWorld&&e.alive&&e.move330).forEach(e=>{
+   let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);
+   if(d<330&&d>35){let sp=e.boss?58:46;e.x+=dx/d*sp*dt;e.y+=dy/d*sp*dt}
+   else{e.x+=e.vx330*55*dt;e.y+=e.vy330*55*dt;if(e.x<250||e.x>2200)e.vx330*=-1;if(e.y<120||e.y>1500)e.vy330*=-1}
+   e.x=Math.max(120,Math.min(2280,e.x));e.y=Math.max(100,Math.min(1580,e.y));
+   if(d<38&&now>mineHitCd330){mineHitCd330=now+850;let dmg=(e.boss?20:8)+Math.floor((e.level||1)*.55);currentUser.hp=Math.max(1,Number(currentUser.hp||100)-dmg);updateHUD();if(currentUser.hp<=1){toast("💥 Potwory wypędziły Cię z kopalni!");let m=mineWorlds330[currentWorld];currentWorld=m.world;currentUser.world=m.world;player.x=m.x;player.y=m.y+160;savePlayer()}}
+ });
+}
+setInterval(updateMineMobs330,33);
+
+// Niszczenie skał kilofem: E przy skale. Kilof ma realny wpływ na szybkość.
+function nearestRock330(){
+ if(!worlds[currentWorld]?.isMine330)return null;
+ return mineRuntime330.rocks.filter(r=>!r.dead).map(r=>({r,d:Math.hypot(player.x-r.x,player.y-r.y)})).sort((a,b)=>a.d-b.d)[0]||null;
+}
+function hitRock330(){
+ let q=nearestRock330();if(!q||q.d>75)return false;
+ let power=pickPower140();if(!power){toast("❌ Załóż kilof.");return true}
+ q.r.hp-=power;
+ if(q.r.hp<=0){
+   q.r.dead=true;let m=mineWorlds330[currentWorld],ore=rollOre140(m.tier,power),o=ores140[ore];
+   addOre140(ore);mineXp140(o.xp);addExp(Math.floor(o.xp*.65));savePlayer();toast("⛏️ "+o.name);
+ }
+ return true;
+}
+document.addEventListener("keydown",e=>{if((e.key==="e"||e.key==="E")&&currentUser&&worlds[currentWorld]?.isMine330){if(hitRock330()){e.preventDefault();e.stopImmediatePropagation()} }},true);
+
+// Rysowanie kopalni: ściany, rudy, pochodnie, drogowskazy.
+const oldScenery330=drawScenery;
+drawScenery=function(c){
+ oldScenery330(c);
+ if(!worlds[currentWorld]?.isMine330)return;
+ let m=mineWorlds330[currentWorld];ctx.save();
+ const X=x=>x-c.x,Y=y=>y-c.y;
+ // kamienne ściany i korytarze
+ ctx.fillStyle=m.tier>=4?"#24202b":"#3b3c3e";
+ for(let x=0;x<2400;x+=64){ctx.fillRect(X(x),Y(0),62,70);ctx.fillRect(X(x),Y(1630),62,70)}
+ for(let y=64;y<1630;y+=64){ctx.fillRect(X(0),Y(y),70,62);ctx.fillRect(X(2330),Y(y),70,62)}
+ // skały do wydobycia
+ mineRuntime330.rocks.filter(r=>!r.dead).forEach((r,i)=>{
+   ctx.fillStyle=i%5===0?"#57626c":"#55514c";ctx.fillRect(X(r.x-r.size),Y(r.y-r.size),r.size*2,r.size*2);
+   if(i%5===0){ctx.fillStyle=m.tier>=3?"#bb6f45":"#7ca4b5";ctx.fillRect(X(r.x-5),Y(r.y-8),7,7);ctx.fillRect(X(r.x+5),Y(r.y+4),5,5)}
+ });
+ // pochodnie
+ for(let x=380;x<2200;x+=390){ctx.fillStyle="#5b3a22";ctx.fillRect(X(x),Y(775),5,20);ctx.fillStyle="#efaa43";ctx.fillRect(X(x-4),Y(765),13,12)}
+ ctx.fillStyle="#eee";ctx.font="bold 12px Arial";ctx.textAlign="left";ctx.fillText("← WYJŚCIE",X(95),Y(750));
+ ctx.restore();
+};
+
+// Hint skały ma pierwszeństwo.
+const oldHint330=updateHint;
+updateHint=function(){
+ oldHint330();
+ let q=nearestRock330();
+ if(q&&q.d<75){hint.textContent="E — ⛏️ ROZBIJ SKAŁĘ ("+Math.max(0,q.r.hp)+" HP)";hint.style.display="block"}
+};
+
+// ===== Widoczny założony ekwipunek na postaci =====
+function drawEquipment330(c){
+ if(!currentUser)return;
+ let x=player.x-c.x,y=player.y-c.y,eq=currentUser.equipment||{};
+ ctx.save();
+ // outfit/pancerz
+ if(eq.outfit){
+   ctx.fillStyle=String(eq.outfit).includes("void")?"#66518b":String(eq.outfit).includes("magma")?"#9b3d24":"#d9dfe5";
+   ctx.globalAlpha=.82;ctx.fillRect(x+3,y+14,23,12);ctx.globalAlpha=1;
+ }
+ // rękawice
+ if(eq.gloves){ctx.fillStyle="#d2b06b";ctx.fillRect(x,y+18,5,7);ctx.fillRect(x+25,y+18,5,7)}
+ // buty
+ if(eq.boots){ctx.fillStyle=String(eq.boots).includes("crystal")?"#70b8cf":"#34383f";ctx.fillRect(x+4,y+32,9,5);ctx.fillRect(x+17,y+32,9,5)}
+ // amulet
+ if(eq.amulet){ctx.fillStyle="#f2d45c";ctx.fillRect(x+13,y+16,4,4)}
+ // kilof — widoczny gdy założony; szczególnie w kopalni
+ let pick=currentUser.mining140?.pick;
+ if(pick){
+   let tier=Number((String(pick).match(/\d+/)||[1])[0]);ctx.strokeStyle=tier>=4?"#d98cff":tier>=3?"#7fc7e8":"#c7c7c7";ctx.lineWidth=3;
+   ctx.beginPath();ctx.moveTo(x+27,y+17);ctx.lineTo(x+36,y+31);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(x+29,y+16);ctx.lineTo(x+39,y+13);ctx.stroke();
+ }
+ ctx.restore();
+}
+const oldDrawPlayer330=drawPlayer;
+drawPlayer=function(c){oldDrawPlayer330(c);drawEquipment330(c)};
+
+// ===== drobne zabezpieczenia funkcji =====
+// HP nigdy nie przekracza max po zmianie sprzętu.
+const oldEquip330=window.equipItem05;
+window.equipItem05=function(id){try{oldEquip330(id);currentUser.hp=Math.min(Number(currentUser.hp||1),Number(maxHp05()||100));savePlayer();updateHUD()}catch(e){console.error("equip",e);toast("❌ Nie udało się zmienić wyposażenia.")}};
+// nie pozwalaj na ujemne Zeni/NaN po starych systemach
+setInterval(()=>{if(!currentUser)return;if(!Number.isFinite(Number(currentUser.zeni)))currentUser.zeni=0;currentUser.zeni=Math.max(0,Math.floor(Number(currentUser.zeni||0)));if(!Number.isFinite(Number(currentUser.hp)))currentUser.hp=1},1500);
 })();
 </script>
 
