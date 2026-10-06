@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.2 — PRZYCISKI HUD FIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.3 — WNĘTRZA BUDYNKÓW</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -4970,6 +4970,132 @@ setInterval(()=>{
    b.style.setProperty("transform","none","important");
  });
 },350);
+})();
+</script>
+
+
+
+<script>
+(function(){
+/* 4.0.3 — budynki Zielonej Doliny mają prawdziwe wnętrza jak Rynek Graczy */
+const interiors403=[
+ {id:"mastersHouse403",name:"🏯 Dom Mistrzów",outside:[1960,870],inside:[1200,1320],bg:"#332f2a",road:"#705d43"},
+ {id:"forgeHouse403",name:"⚒ Kuźnia",outside:[790,1210],inside:[1200,1320],bg:"#292724",road:"#65452f"}
+];
+
+interiors403.forEach(h=>{
+ if(!worlds[h.id])worlds[h.id]={name:h.name,bg:h.bg,road:h.road,min:1,interior403:true};
+ if(!portals.some(p=>p.world==="valley"&&p.to===h.id))
+   portals.push({world:"valley",x:h.outside[0],y:h.outside[1],w:85,h:90,to:h.id,label:"🚪 WEJDŹ — "+h.name,min:1,interior403:true});
+ if(!portals.some(p=>p.world===h.id&&p.to==="valley"))
+   portals.push({world:h.id,x:1200,y:1480,w:95,h:100,to:"valley",label:"🚪 WYJDŹ",min:1,interiorExit403:true,return403:h.outside});
+});
+
+// Przenieś mistrzów DO Domu Mistrzów, a Kowala i Runomistrza DO Kuźni.
+const masterNames403=["Mistrz","Mistrz Mocy","Trener","Mistrz Form","Mistrz Umiejętności","Mistrz Wypraw","Mistrz Turnieju","Mistrz PvP"];
+const masterPos403=[[760,650],[980,650],[1200,650],[1420,650],[1640,650],[870,930],[1200,930],[1530,930]];
+let mi=0;
+npcs.forEach(n=>{
+ if(n.world==="valley"&&masterNames403.includes(n.name)){
+   n.world="mastersHouse403";let p=masterPos403[mi++%masterPos403.length];n.x=p[0];n.y=p[1];
+ }
+});
+let smithPos403={"Kowal":[980,760],"Runomistrz":[1420,760]};
+npcs.forEach(n=>{
+ if(n.world==="valley"&&smithPos403[n.name]){
+   n.world="forgeHouse403";n.x=smithPos403[n.name][0];n.y=smithPos403[n.name][1];
+ }
+});
+
+// Stare interakcje sprawdzały czasem wyłącznie valley. Wrapper chwilowo mapuje wnętrze na valley,
+// dzięki czemu wszystkie istniejące funkcje NPC nadal działają bez duplikowania systemów.
+const oldInteract403=interact;
+interact=function(){
+ if(currentWorld==="mastersHouse403"||currentWorld==="forgeHouse403"){
+   let near=npcs.find(n=>n.world===currentWorld&&Math.hypot(player.x-n.x,player.y-n.y)<110);
+   if(near){
+     let ow=near.world;near.world="valley";
+     let cw=currentWorld;currentWorld="valley";
+     try{return oldInteract403()}finally{currentWorld=cw;near.world=ow}
+   }
+ }
+ return oldInteract403();
+};
+
+// Wnętrza.
+const oldScenery403=drawScenery;
+drawScenery=function(c){
+ oldScenery403(c);
+ if(!worlds[currentWorld]?.interior403)return;
+ const X=x=>x-c.x,Y=y=>y-c.y;
+ ctx.save();
+
+ // podłoga
+ ctx.fillStyle=currentWorld==="forgeHouse403"?"#3a3129":"#453b31";
+ ctx.fillRect(X(260),Y(220),1880,1300);
+
+ // ściany
+ ctx.fillStyle="#211e1b";
+ ctx.fillRect(X(230),Y(180),1940,70);ctx.fillRect(X(230),Y(1500),1940,70);
+ ctx.fillRect(X(230),Y(180),70,1390);ctx.fillRect(X(2100),Y(180),70,1390);
+
+ // dywan / główna alejka
+ ctx.fillStyle=currentWorld==="forgeHouse403"?"#6a4730":"#72543d";
+ ctx.fillRect(X(1100),Y(300),200,1180);
+
+ if(currentWorld==="mastersHouse403"){
+   // podesty mistrzów
+   ctx.fillStyle="#665747";
+   [[760,650],[980,650],[1200,650],[1420,650],[1640,650],[870,930],[1200,930],[1530,930]].forEach(([x,y])=>{
+     ctx.fillRect(X(x-48),Y(y+25),96,35);
+   });
+   // stoły / biblioteki / sztandary
+   ctx.fillStyle="#34271f";
+   ctx.fillRect(X(390),Y(350),160,430);ctx.fillRect(X(1850),Y(350),160,430);
+   ctx.fillStyle="#7b593b";
+   for(let y=380;y<750;y+=70){ctx.fillRect(X(405),Y(y),130,12);ctx.fillRect(X(1865),Y(y),130,12)}
+   ctx.fillStyle="#b99445";ctx.fillRect(X(560),Y(300),50,150);ctx.fillRect(X(1790),Y(300),50,150);
+   ctx.fillStyle="#efd27b";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText("DOM MISTRZÓW",X(1200),Y(350));
+ }else{
+   // prawdziwa kuźnia
+   ctx.fillStyle="#1d1b19";ctx.fillRect(X(480),Y(500),280,260);
+   ctx.fillStyle="#a94f26";ctx.fillRect(X(515),Y(535),210,160);
+   ctx.fillStyle="#f09b3f";ctx.fillRect(X(550),Y(570),140,90);
+   // kowadło
+   ctx.fillStyle="#777";ctx.fillRect(X(1080),Y(900),170,45);ctx.fillRect(X(1135),Y(945),60,100);
+   // beczki / skrzynie / stojaki
+   ctx.fillStyle="#76502f";
+   for(let x=1550;x<1950;x+=120){ctx.fillRect(X(x),Y(430),70,85)}
+   ctx.strokeStyle="#aaa";ctx.lineWidth=5;
+   for(let x=1580;x<1940;x+=110){ctx.beginPath();ctx.moveTo(X(x),Y(800));ctx.lineTo(X(x+35),Y(700));ctx.stroke()}
+   ctx.fillStyle="#f0c15d";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.fillText("KUŹNIA",X(1200),Y(350));
+ }
+
+ ctx.restore();
+};
+
+// Powrót z budynku dokładnie pod drzwi, zamiast na standardowy spawn Doliny.
+const oldTp403=teleport;
+teleport=function(p){
+ let r=oldTp403(p);
+ if(p?.interior403){player.x=1200;player.y=1320;currentUser.x=player.x;currentUser.y=player.y;savePlayer()}
+ if(p?.interiorExit403&&p.return403){player.x=p.return403[0];player.y=p.return403[1]+120;currentUser.x=player.x;currentUser.y=player.y;savePlayer()}
+ return r;
+};
+
+// Ładne drzwi na zewnątrz.
+const oldSceneryDoor403=drawScenery;
+drawScenery=function(c){
+ oldSceneryDoor403(c);
+ if(currentWorld!=="valley")return;
+ const X=x=>x-c.x,Y=y=>y-c.y;
+ ctx.save();
+ [[1960,870,"DOM MISTRZÓW"],[790,1210,"KUŹNIA"]].forEach(([x,y,t])=>{
+   ctx.fillStyle="#241b16";ctx.fillRect(X(x-28),Y(y-55),56,72);
+   ctx.fillStyle="#e8c66b";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("E — "+t,X(x),Y(y+34));
+ });
+ ctx.restore();
+};
 })();
 </script>
 
