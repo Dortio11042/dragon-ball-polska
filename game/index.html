@@ -196,7 +196,7 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head><body>
-<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.10 — PETY + MANEKINY HOTFIX</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
+<div id="authScreen"><div class="authBox"><div class="ball">★★★★</div><h1>DRAGON BALL<br>POLSKA ONLINE</h1><div class="version">ALPHA 4.0.11 — STABILNY HUD + MINIMAPA</div><div class="tabs"><button id="loginTab" class="tab active" onclick="setAuthMode('login')">LOGOWANIE</button><button id="registerTab" class="tab" onclick="setAuthMode('register')">REJESTRACJA</button></div><input id="usernameInput" maxlength="16" placeholder="Nazwa wojownika"><input id="passwordInput" type="password" maxlength="40" placeholder="Hasło"><button id="authButton" class="authButton" onclick="submitAuth()">ZALOGUJ SIĘ</button><button class="action" style="width:100%;margin-top:8px" onclick="window.location.href='../'">← STRONA GŁÓWNA</button><p id="authMessage"></p><p class="small">Wersja testowa — używaj testowego hasła.</p></div></div>
 <div id="gameContainer">
 <div id="hud" class="panel"><div id="playerName" class="title">Wojownik</div>❤️ <span id="hpText"></span><br>⭐ LVL <span id="levelText"></span><br>✨ EXP <span id="expText"></span><br>💰 Zeni <span id="zeniText"></span><br>🧪 Leczenie <span id="potionText"></span><br>🟠 Smocze Kule <span id="ballsText"></span><br>🟢 Online <span id="onlineCount">1</span><br><button class="logout" onclick="logout()">Wyloguj</button></div>
 <div id="worldName" class="panel">🌿 Zielona Dolina</div>
@@ -5223,6 +5223,53 @@ drawEnemy=function(e,c){
  }
  return r;
 };
+})();
+</script>
+
+
+
+<style>
+#rpgDock321{position:fixed!important;right:12px!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:160px!important;display:flex!important;flex-direction:column!important;gap:5px!important;z-index:25000!important}
+#rpgDock321 button{position:static!important;transform:none!important;inset:auto!important;width:100%!important;height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;box-sizing:border-box!important;flex:0 0 32px!important}
+#questTracker,#questTracker08,#questTracker100,#activityTracker,[id*="questTracker" i],[class*="questTracker" i],[id*="activeQuest" i],[class*="activeQuest" i]{display:none!important}
+</style>
+<script>
+(function(){
+const allowed411=["ekwipun","moce","topka","profil","ustaw","osiąg","osiag","party","drop","rynek","mapa","muzyk","pety"];
+let busy411=false;
+function stabilize411(){
+ if(busy411)return; busy411=true;
+ try{
+  const auth=document.getElementById("authScreen"),logged=!auth||getComputedStyle(auth).display==="none";
+  const dock=document.getElementById("rpgDock321");
+  if(dock){
+   dock.style.setProperty("display",logged?"flex":"none","important");
+   [...dock.querySelectorAll("button")].forEach(b=>{
+    const t=(b.textContent||"").toLowerCase(),ok=allowed411.some(x=>t.includes(x))&&!(t.includes("wystaw")||t.includes("/ drop"));
+    b.style.setProperty("display",ok?"block":"none","important");
+    b.style.setProperty("visibility",ok?"visible":"hidden","important");
+    b.style.setProperty("opacity",ok?"1":"0","important");
+    b.style.setProperty("pointer-events",ok?"auto":"none","important");
+   });
+  }
+  // usuń tabelę "Aktualne questy", także gdy stary skrypt tworzy ją ponownie
+  [...document.querySelectorAll("div,section,aside")].forEach(el=>{
+   const t=(el.textContent||"").replace(/\s+/g," ").trim().toLowerCase();
+   if((t.startsWith("aktualne quest")||t.startsWith("aktualne zadania"))&&t.length<900)
+    el.style.setProperty("display","none","important");
+  });
+  // minimapa na górę ekranu
+  [...document.querySelectorAll("#miniMap08,#minimap08,#miniMap,#minimap,[id*='minimap' i],[class*='minimap' i]")].forEach(m=>{
+   let el=m.parentElement||m;
+   el.style.setProperty("position","fixed","important");
+   el.style.setProperty("top","12px","important");
+   el.style.setProperty("bottom","auto","important");
+  });
+ }finally{busy411=false}
+}
+setInterval(stabilize411,250);
+setTimeout(stabilize411,100);
+new MutationObserver(()=>setTimeout(stabilize411,0)).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 
